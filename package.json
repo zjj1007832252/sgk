@@ -1,0 +1,17 @@
+{
+  "name": "sanguosha-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "三国杀标准版 - 网页单机 / 局域网对战",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "gen-avatars": "node scripts/gen_avatars.js",
+    "simulate": "node test/simulate.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "ws": "^8.18.0"
+  }
+}

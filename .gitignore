@@ -1,0 +1,13 @@
+node_modules/
+.DS_Store
+*.log
+.env
+/server/data/customs.json
+/tmp
+/public/assets/avatars/diy-*.png
+/public/assets/avatars/diy-*.svg
+/dist
+.vscode/
+.idea/
+*.swp
+*.swo
