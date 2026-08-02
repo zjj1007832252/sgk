@@ -3,6 +3,8 @@ const { buildDeck, cardColor, rankLabel, publicCard, SUITS } = require('./cards'
 const { GENERALS } = require('./generals');
 const { SKILLS } = require('./skills');
 const AI = require('./ai');
+const { AIBrain } = require('./ai');
+const { CustomSkillExecutor } = require('./custom-skill-executor');
 
 const IDENTITIES = { zhu: '主公', zhong: '忠臣', fan: '反贼', nei: '内奸' };
 const IDENTITY_DIST = {
@@ -52,7 +54,7 @@ class Game {
     this.opts = opts;
     this.hooks = hooks;
     this.players = playerInfos.map((info, i) => new Player(info, i));
-    this.deck = buildDeck();
+    this.deck = buildDeck(this.opts.bannedCards || []);
     this.discardPile = [];
     this.logs = [];
     this.pending = null; // {seat, prompt, resolve}
@@ -63,13 +65,25 @@ class Game {
     this.finished = false;
     this.resolving = []; // 结算中的牌 [{key, cards, user}]
     this.claimed = new Set();
+    this.replayEvents = []; // 回放事件记录
+    this.startTime = Date.now();
     this.hostility = {}; // attackerPid -> victimPid -> dmg
     this.aiDelay = opts.aiDelay != null ? opts.aiDelay : 800;
+    this.aiDifficulty = opts.aiDifficulty || 'normal';
+    // 游戏速度：影响动画延迟和AI思考时间
+    const speedMult = { fast: 0.4, normal: 1.0, slow: 1.8 }[opts.gameSpeed] || 1.0;
+    this.aiDelay = Math.round(this.aiDelay * speedMult);
+    this.stepDelay = Math.round((opts.stepDelay != null ? opts.stepDelay : 300) * speedMult);
+    this.turnTimer = opts.turnTimer || 0; // 出牌倒计时（秒）
     this.stepDelay = opts.stepDelay != null ? opts.stepDelay : 300;
     this.publicCard = publicCard;
     this.cardColor = cardColor;
     this.rankLabel = rankLabel;
     this.suitLabel = s => SUITS[s];
+    this.customExecutor = new CustomSkillExecutor(this);
+    // 游戏模式
+    const { createGameMode } = require('./game-modes');
+    this.gameMode = createGameMode(this, opts.gameMode || 'identity');
   }
 
   // ============ 基础设施 ============
@@ -82,6 +96,8 @@ class Game {
     if (this.hooks.broadcastAll) this.hooks.broadcastAll();
   }
   broadcastEvent(ev) {
+    // 记录回放事件
+    this.replayEvents.push({ ...ev, round: this.round, phase: this.phase, t: Date.now() - this.startTime });
     if (this.hooks.broadcastEvent) this.hooks.broadcastEvent(ev);
   }
   sendTo(player, msg) {
@@ -106,18 +122,70 @@ class Game {
   ask(player, prompt) {
     if (!player.alive && prompt.kind !== 'respond') return Promise.resolve(null);
     if (player.isAI || player.offline) {
+      // 根据难度调整思考时间
+      const diffMult = { easy: 1.5, normal: 1.0, hard: 0.7 }[this.aiDifficulty] || 1.0;
       return Promise.resolve()
-        .then(() => this.delay(this.aiDelay))
+        .then(() => this.delay(Math.round(this.aiDelay * diffMult)))
         .then(() => {
-          try { return AI.decide(this, player, prompt); } catch (e) { console.error('AI error', e); return null; }
+          try {
+            const { createAI } = require('./ai');
+            const brain = createAI(this, this.aiDifficulty);
+            return brain.decide(this, player, prompt);
+          } catch (e) { console.error('AI error', e); return null; }
         })
-        .then(ans => (ans == null ? AI.fallback(this, player, prompt) : ans));
+        .then(ans => {
+          if (ans == null) {
+            const { createAI } = require('./ai');
+            const brain = createAI(this, this.aiDifficulty);
+            return brain._fallback ? brain._fallback(this, player, prompt) : null;
+          }
+          return ans;
+        });
     }
     return new Promise(resolve => {
       this.pending = { seat: player.seat, prompt, resolve };
-      this.sendTo(player, { type: 'prompt', prompt });
+      this.sendTo(player, { type: 'prompt', prompt, turnTimer: this.turnTimer });
       this.sync();
+      // 出牌倒计时
+      if (this.turnTimer > 0) {
+        let remaining = this.turnTimer;
+        // 发送倒计时更新
+        const tickTimer = setInterval(() => {
+          remaining--;
+          if (remaining <= 10 && remaining > 0) {
+            this.sendTo(player, { type: 'timer', remaining });
+          }
+          if (remaining <= 0) {
+            clearInterval(tickTimer);
+            if (this.pending && this.pending.seat === player.seat) {
+              // 超时自动操作
+              const auto = this._autoAnswer(prompt);
+              this.pending = null;
+              this.log(`${player.name} 超时，自动操作`);
+              resolve(auto);
+            }
+          }
+        }, 1000);
+        // 存储定时器以便手动操作时清除
+        this.pending.timer = tickTimer;
+      }
     });
+  }
+
+  // 超时自动回答
+  _autoAnswer(prompt) {
+    switch (prompt.kind) {
+      case 'play': return { action: 'end' };
+      case 'respond': return { pass: true };
+      case 'confirm': return { yes: false };
+      case 'chooseOption': return { option: prompt.options?.[0]?.id };
+      case 'choosePlayers': return { targetIds: (prompt.candidates || []).slice(0, prompt.min || 0) };
+      case 'chooseCards': return { cardIds: (prompt.cards || []).slice(0, prompt.min || 0).map(c => c.uid) };
+      case 'chooseCardOf': return { zone: 'hand' };
+      case 'arrange': return { top: (prompt.cards || []).map(c => c.uid), bottom: [] };
+      case 'chooseGeneral': return { generalId: prompt.candidates?.[0]?.id };
+      default: return null;
+    }
   }
 
   async confirm(player, skill, title) {
@@ -188,7 +256,8 @@ class Game {
   handleAction(pid, action) {
     const p = this.byPid(pid);
     if (!p || !this.pending || this.pending.seat !== p.seat) return false;
-    const { resolve } = this.pending;
+    const { resolve, timer } = this.pending;
+    if (timer) clearInterval(timer);
     this.pending = null;
     resolve(action);
     return true;
@@ -225,6 +294,8 @@ class Game {
     }
     if (drawn.length) {
       this.log(`${player.name} 摸了 ${drawn.length} 张牌`);
+      this.broadcastEvent({ type: 'draw', seat: player.seat, count: drawn.length });
+      this.broadcastEvent({ type: 'fxstep' });
       this.sync();
     }
     return drawn;
@@ -333,6 +404,7 @@ class Game {
     if (!this.deck.length) this.reshuffle();
     let card = this.deck.shift();
     this.log(`${player.name} 的判定牌：【${card.name}】${this.suitLabel(card.suit)}${this.rankLabel(card.rank)}`);
+    this.broadcastEvent({ type: 'judge', seat: player.seat, card: { suit: card.suit, rank: card.rank, name: card.name, rankLabel: this.rankLabel(card.rank) } });
     this.sync();
     await this.delay(this.stepDelay);
     // 鬼才改判
@@ -373,6 +445,12 @@ class Game {
     target.hp -= n;
     this.log(`${target.name} 受到 ${source ? source.name + ' 造成的 ' : ''}${n} 点伤害${target.hp <= 0 ? '，进入濒死！' : ''}`);
     this.recordHostility(source, target, n);
+    // AI 行为追踪
+    if (this.__brain && this.__brain.tracker) this.__brain.tracker.recordDamage(source ? source.seat : null, target.seat, n);
+    // 自定义技能：受到伤害后
+    await this.customExecutor.checkAndExecute(target, 'damage:after', { source, damage: n });
+    // 自定义技能：造成伤害后
+    if (source) await this.customExecutor.checkAndExecute(source, 'damage:deal', { target, damage: n });
     this.broadcastEvent({ type: 'damage', seat: target.seat, amount: n });
     this.sync();
     await this.delay(this.stepDelay);
@@ -391,6 +469,7 @@ class Game {
     player.hp -= n;
     this.log(`${player.name} 失去了 ${n} 点体力`);
     this.broadcastEvent({ type: 'damage', seat: player.seat, amount: n });
+    await this.customExecutor.checkAndExecute(player, 'loseHp', { damage: n });
     this.sync();
     if (player.hp <= 0) await this.dying(player, null);
   }
@@ -406,11 +485,13 @@ class Game {
     player.hp = Math.min(player.maxHp, player.hp + n);
     this.log(`${player.name} 回复了 ${n} 点体力（${player.hp}/${player.maxHp}）`);
     this.broadcastEvent({ type: 'recover', seat: player.seat });
+    await this.customExecutor.checkAndExecute(player, 'recover', { source, heal: n });
     this.sync();
   }
 
   async dying(target, source) {
     this.log(`${target.name} 濒死，请求【桃】！`);
+    this.broadcastEvent({ type: 'dying', seat: target.seat });
     let p = target;
     const order = [];
     const alive = this.alivePlayers();
@@ -428,16 +509,25 @@ class Game {
         this.toDiscard(card.cards);
         this.log(`${saver.name} 对 ${target.name} 使用【桃】`);
         await this.recover(target, 1, saver, { byTao: true });
+        if (this.__brain && this.__brain.tracker) this.__brain.tracker.recordHeal(saver.seat, target.seat);
       }
     }
     if (target.hp <= 0) await this.death(target, source);
   }
 
   async death(target, killer) {
+    // 自定义技能：死亡时（濒死角色）
+    await this.customExecutor.checkAndExecute(target, 'die', { killer });
     target.alive = false;
     target.dead = { identity: target.identity };
     this.log(`💀 ${target.name} 死亡，身份是【${IDENTITIES[target.identity]}】`);
-    this.broadcastEvent({ type: 'death', seat: target.seat, identity: target.identity });
+    this.broadcastEvent({ type: 'death', seat: target.seat, identity: target.identity, generalId: target.generalId });
+    // 自定义技能：杀死角色后
+    if (killer && killer.alive) await this.customExecutor.checkAndExecute(killer, 'kill', { target });
+    // 自定义技能：任意角色死亡
+    for (const p of this.alivePlayers()) {
+      await this.customExecutor.checkAndExecute(p, 'die:any', { dead: target });
+    }
     // 弃置所有牌
     const all = [...target.hand, ...Object.values(target.equips).filter(Boolean), ...target.judgeZone];
     target.hand = [];
@@ -449,6 +539,9 @@ class Game {
       if (target.identity === 'fan') {
         this.log(`${killer.name} 杀死反贼，摸三张牌`);
         await this.drawCards(killer, 3);
+        if (this.__brain && this.__brain.tracker) this.__brain.tracker.recordKill(killer.seat);
+        killer.totalKills = (killer.totalKills || 0) + 1;
+        killer.lastKill = target.seat;
       }
       if (killer.identity === 'zhu' && target.identity === 'zhong') {
         this.log(`主公杀死忠臣，弃置所有牌`);
@@ -464,20 +557,27 @@ class Game {
 
   async checkWin() {
     const alive = this.alivePlayers();
-    const zhu = this.players.find(p => p.identity === 'zhu');
-    if (!zhu.alive) {
-      if (alive.length === 1 && alive[0].identity === 'nei') {
-        this.winner = 'nei';
-      } else {
-        this.winner = 'fan';
+    // 先检查自定义胜利条件
+    if (this.opts.winCondition && this.opts.winCondition !== 'default') {
+      const { WinConditionEvaluator } = require('./game-modes');
+      const evaluator = new WinConditionEvaluator(this, this.opts.winCondition, this.opts.winParams || {});
+      const customWinner = evaluator.evaluate(alive);
+      if (customWinner != null) {
+        this.winner = customWinner;
+        this.finished = true;
+        this.log(`🏆 游戏结束：自定义胜利条件达成！`);
+        this.sync();
+        if (this.hooks.onEnd) this.hooks.onEnd(this.winner);
+        return;
       }
-    } else if (!alive.some(p => p.identity === 'fan' || p.identity === 'nei')) {
-      this.winner = 'zhu';
     }
-    if (this.winner) {
+    // 使用游戏模式的默认胜利条件
+    const winner = this.gameMode.checkWin(alive);
+    if (winner) {
+      this.winner = winner;
       this.finished = true;
-      const names = { zhu: '主公/忠臣 阵营', fan: '反贼 阵营', nei: '内奸' };
-      this.log(`🏆 游戏结束：${names[this.winner]}获胜！`);
+      const names = { zhu: '主公/忠臣 阵营', fan: '反贼 阵营', nei: '内奸', cold: '冷色阵营', warm: '暖色阵营', landlord: '地主', farmer: '农民' };
+      this.log(`🏆 游戏结束：${names[winner] || winner}获胜！`);
       this.sync();
       if (this.hooks.onEnd) this.hooks.onEnd(this.winner);
     }
@@ -625,7 +725,8 @@ class Game {
     const color = this.shaColorOf(cards);
     this.resolving.push({ key: 'sha', cards, user });
     this.log(`${user.name} 对 ${target.name} 使用【杀】`);
-    this.broadcastEvent({ type: 'sha', from: user.seat, to: target.seat });
+    const cardInfo = cards && cards[0] ? { suit: cards[0].suit, rank: cards[0].rank, name: cards[0].name } : { name: '杀' };
+    this.broadcastEvent({ type: 'sha', from: user.seat, to: target.seat, card: cardInfo });
     this.sync();
     await this.delay(this.stepDelay);
 
@@ -701,6 +802,7 @@ class Game {
             this.toDiscard(res.cards);
           }
           this.log(`${target.name} 打出【闪】`);
+          this.broadcastEvent({ type: 'dodge', seat: target.seat });
           dodged++;
           this.sync();
         } else break;
@@ -709,6 +811,7 @@ class Game {
 
     const hit = dodged < needShan;
     if (hit) {
+      this.broadcastEvent({ type: 'hit', seat: target.seat, from: user.seat });
       // 寒冰剑
       if (user.equips.weapon && user.equips.weapon.key === 'hanbing' && this.cardCountOf(target) > 0) {
         const yes = await this.confirm(user, 'hanbing', `是否发动【寒冰剑】（防止伤害，改为弃置 ${target.name} 至多两张牌）？`);
@@ -824,9 +927,13 @@ class Game {
     if (cards.length === 1) {
       const c = cards[0];
       if (asKey === 'sha' && c.key !== 'sha') {
-        if (cardColor(c) === 'red' && this.hasSkill(user, 'wusheng')) virtual = true;
-        else if (c.key === 'shan' && this.hasSkill(user, 'longdan')) virtual = true;
-        else return this.err(user, '不能这样转化【杀】');
+        if (cardColor(c) === 'red' && this.hasSkill(user, 'wusheng')) {
+          virtual = true;
+          this.broadcastEvent({ type: 'skillAnim', skillId: 'wusheng', from: user.seat });
+        } else if (c.key === 'shan' && this.hasSkill(user, 'longdan')) {
+          virtual = true;
+          this.broadcastEvent({ type: 'skillAnim', skillId: 'longdan', from: user.seat });
+        } else return this.err(user, '不能这样转化【杀】');
       } else if (asKey === 'guohe' && c.key !== 'guohe') {
         if (cardColor(c) === 'black' && this.hasSkill(user, 'qixi')) virtual = true;
         else return this.err(user, '不能这样转化');
@@ -871,6 +978,7 @@ class Game {
       case 'wuxie':
         return { ok: false, msg: '此牌不能在出牌阶段主动使用' };
       case 'juedou':
+        if (this.opts.allowJuedou === false) return { ok: false, msg: '本房间禁用【决斗】' };
         if (!t || t === user) return { ok: false, msg: '【决斗】需要一名其他角色为目标' };
         if (this.hasSkill(t, 'kongcheng') && !t.hand.length) return { ok: false, msg: '【空城】不能成为决斗目标' };
         return { ok: true };
@@ -899,7 +1007,10 @@ class Game {
         if (this.hasSkill(victim, 'kongcheng') && !victim.hand.length) return { ok: false, msg: '【空城】不能成为杀的目标' };
         return { ok: true };
       }
-      case 'wuzhong': case 'taoyuan': case 'nanman': case 'wanjian': case 'wugu':
+      case 'wuzhong': case 'taoyuan': case 'wugu':
+        return { ok: true };
+      case 'nanman': case 'wanjian':
+        if (this.opts.allowAoe === false) return { ok: false, msg: '本房间禁用AOE锦囊' };
         return { ok: true };
       default:
         if (cards[0] && cards[0].type === 'equip') return { ok: true };
@@ -921,6 +1032,8 @@ class Game {
       }
       user.equips[slot] = card;
       this.log(`${user.name} 装备了【${card.name}】`);
+      if (this.__brain && this.__brain.tracker) this.__brain.tracker.recordEquip(user.seat);
+      this.broadcastEvent({ type: 'equip', seat: user.seat, equipName: card.name });
       this.sync();
       await this.passiveSweep();
       return;
@@ -941,6 +1054,7 @@ class Game {
         case 'tao':
           this.toDiscard(cards);
           await this.recover(user, 1, user, { byTao: true });
+          if (this.__brain && this.__brain.tracker) this.__brain.tracker.recordHeal(user.seat, user.seat);
           this.log(`${user.name} 使用【桃】`);
           break;
         case 'wuzhong':
@@ -1006,8 +1120,9 @@ class Game {
         case 'nanman': case 'wanjian': {
           const need = key === 'nanman' ? 'sha' : 'shan';
           const cname = key === 'nanman' ? '南蛮入侵' : '万箭齐发';
-          this.log(`${user.name} 使用【${cname}】`);
-          for (const p of this.aliveOthers(user)) {
+           this.log(`${user.name} 使用【${cname}】`);
+           this.broadcastEvent({ type: 'aoe', aoeType: key, from: user.seat });
+           for (const p of this.aliveOthers(user)) {
             if (!p.alive) continue;
             if (await this.askWuxie(cname, p)) continue;
             const res = await this.askRespondCard(p, need, { title: `【${cname}】：请打出【${need === 'sha' ? '杀' : '闪'}】，否则受到1点伤害`, attacker: user });
@@ -1116,17 +1231,18 @@ class Game {
     const sk = ans.skill;
     const def = SKILLS[sk];
     if (!def || !user.skills.includes(sk)) return this.err(user, '没有此技能');
-    if (sk === 'jijiang') {
-      // 激将出杀
-      if (!this.canPlaySha(user)) return this.err(user, '无法使用【杀】');
-      const targets = (ans.targets || []).map(s => this.players[s]).filter(p => p && p.alive);
-      if (!targets.length || !this.canTargetSha(user, targets[0])) return this.err(user, '请选择合法目标');
-      const got = await this.askJijiang(user);
-      if (got) {
-        await this.useSha(user, targets[0], [], { jijiang: true });
+      if (sk === 'jijiang') {
+        // 激将出杀
+        if (!this.canPlaySha(user)) return this.err(user, '无法使用【杀】');
+        const targets = (ans.targets || []).map(s => this.players[s]).filter(p => p && p.alive);
+        if (!targets.length || !this.canTargetSha(user, targets[0])) return this.err(user, '请选择合法目标');
+        this.broadcastEvent({ type: 'skillVoice', seat: user.seat, generalId: user.generalId, skillId: 'jijiang' });
+        const got = await this.askJijiang(user);
+        if (got) {
+          await this.useSha(user, targets[0], [], { jijiang: true });
+        }
+        return true;
       }
-      return true;
-    }
     if (def.type !== 'active') return this.err(user, '该技能不能主动发动');
     const cards = (ans.cardIds || []).map(uid => user.hand.find(c => c.uid === uid)).filter(Boolean);
     const targets = (ans.targets || []).map(s => this.players[s]).filter(p => p && p.alive);
@@ -1147,10 +1263,14 @@ class Game {
   async runTurn(player) {
     if (!player.alive) return;
     player.turnFlags = {};
+    this.customExecutor.resetTurn(player.seat);
     this.phase = 'prepare';
     this.log(`—— ${player.name} 的回合 ——`);
     this.sync();
     await this.delay(this.stepDelay);
+
+    // 自定义技能：回合开始
+    await this.customExecutor.checkAndExecute(player, 'phase:start');
 
     // 回合开始阶段：观星/洛神
     for (const sk of player.skills) {
@@ -1213,6 +1333,7 @@ class Game {
     // 摸牌阶段
     this.phase = 'draw';
     this.sync();
+    await this.customExecutor.checkAndExecute(player, 'phase:draw');
     let drawCount = 2;
     for (const sk of player.skills) {
       const def = SKILLS[sk];
@@ -1226,6 +1347,7 @@ class Game {
     // 出牌阶段
     this.phase = 'play';
     this.sync();
+    await this.customExecutor.checkAndExecute(player, 'phase:play');
     if (!skipPlay && player.alive) {
       while (player.alive && !this.finished) {
         const ans = await this.ask(player, {
@@ -1245,14 +1367,17 @@ class Game {
     // 弃牌阶段
     this.phase = 'discard';
     this.sync();
+    await this.customExecutor.checkAndExecute(player, 'phase:discard');
     if (player.alive) {
       const kejiSkip = this.hasSkill(player, 'keji') && !(player.turnFlags.shaUsed > 0);
       if (kejiSkip) {
         this.log(`${player.name} 发动【克己】，跳过弃牌阶段`);
       }
-      while (!kejiSkip && player.hand.length > player.hp && player.alive) {
-        const need = player.hand.length - player.hp;
-        const cards = await this.chooseOwnCards(player, `弃牌阶段：弃置 ${need} 张牌（手牌 ${player.hand.length}/体力 ${player.hp}）`, need, need, () => true);
+      const maxHand = this.opts.handLimit > 0 ? this.opts.handLimit : player.hp;
+      const discardEnabled = this.opts.discardLimit !== false;
+      while (!kejiSkip && discardEnabled && player.hand.length > maxHand && player.alive) {
+        const need = player.hand.length - maxHand;
+        const cards = await this.chooseOwnCards(player, `弃牌阶段：弃置 ${need} 张牌（手牌 ${player.hand.length}/${this.opts.handLimit > 0 ? '上限' + this.opts.handLimit : '体力' + player.hp}）`, need, need, () => true);
         if (!cards || !cards.length) break;
         await this.discard(player, cards);
       }
@@ -1261,6 +1386,7 @@ class Game {
     // 结束阶段
     this.phase = 'end';
     this.sync();
+    await this.customExecutor.checkAndExecute(player, 'phase:end');
     for (const sk of player.skills) {
       const def = SKILLS[sk];
       if (def && def.onTurnEnd && player.alive) await def.onTurnEnd(this, player);
@@ -1277,11 +1403,14 @@ class Game {
     await this.pickGenerals();
     // 3. 体力 & 发牌
     for (const p of this.players) {
-      if (p.identity === 'zhu') p.maxHp += 1;
+      if (p.identity === 'zhu' && this.opts.lordExtraHp !== false) p.maxHp += 1;
+      p.maxHp += (this.opts.hpBonus || 0);
+      p.maxHp = Math.max(1, p.maxHp);
       p.hp = p.maxHp;
     }
     this.phase = 'dealing';
-    for (const p of this.players) await this.drawCards(p, 4);
+    const startCards = this.opts.startCards || 4;
+    for (const p of this.players) await this.drawCards(p, startCards);
     this.log('游戏开始！主公先行动。');
     // 4. 回合循环
     const zhuSeat = this.players.find(p => p.identity === 'zhu').seat;
@@ -1292,8 +1421,29 @@ class Game {
       if (p.alive) await this.runTurn(p);
       if (this.finished) break;
       idx = (idx + 1) % this.players.length;
-      if (idx === zhuSeat) this.round++;
-      if (this.round > 200) { this.winner = 'zhu'; this.finished = true; } // 兜底
+      if (idx === zhuSeat) {
+        this.round++;
+        const limit = this.opts.roundLimit;
+        if (limit > 0 && this.round > limit) {
+          this.winner = 'zhu';
+          this.finished = true;
+          this.log(`达到回合上限 ${limit}，游戏结束`);
+          if (this.hooks.onEnd) this.hooks.onEnd(this.winner);
+        }
+        // 每回合结束时检查自定义胜利条件
+        if (!this.finished && this.opts.winCondition && this.opts.winCondition !== 'default') {
+          const { WinConditionEvaluator } = require('./game-modes');
+          const evaluator = new WinConditionEvaluator(this, this.opts.winCondition, this.opts.winParams || {});
+          const customWinner = evaluator.evaluate(this.alivePlayers());
+          if (customWinner != null) {
+            this.winner = customWinner;
+            this.finished = true;
+            this.log(`🏆 游戏结束：自定义胜利条件达成！`);
+            if (this.hooks.onEnd) this.hooks.onEnd(this.winner);
+          }
+        }
+      }
+      if (this.round > 500) { this.winner = 'zhu'; this.finished = true; } // 兜底
     }
     this.phase = 'over';
     this.sync();
@@ -1301,7 +1451,9 @@ class Game {
 
   assignIdentities() {
     const n = this.players.length;
-    const dist = IDENTITY_DIST[n] || IDENTITY_DIST[8];
+    // 使用游戏模式的身份分配
+    const dist = this.gameMode.getIdentityDistribution(n);
+    if (dist.length === 0) return; // 国战等特殊模式自行处理
     let pool = dist.slice();
     const prefsAllowed = this.opts.allowIdentityPick;
     // 先满足点了身份的真人（按座位顺序），冲突先到先得
@@ -1330,7 +1482,11 @@ class Game {
 
   async pickGenerals() {
     this.phase = 'picking';
-    const pool = (this.opts.generalIds || GENERALS.map(g => g.id)).slice();
+    let pool = (this.opts.generalIds || GENERALS.map(g => g.id)).slice();
+    // 应用禁将列表
+    if (this.opts.bannedGenerals && this.opts.bannedGenerals.length) {
+      pool = pool.filter(id => !this.opts.bannedGenerals.includes(id));
+    }
     const pickMode = this.opts.pickMode || 'random';
     const pickCount = this.opts.pickCount || 4;
     // 测试钩子：强制指定座位武将（这些座位跳过选将）
@@ -1404,6 +1560,7 @@ class Game {
     p.skills = (g.skills || []).slice();
     p.custom = !!g.custom;
     this.log(`${p.name} 选择了武将【${g.name}】`);
+    this.broadcastEvent({ type: 'selectGeneral', seat: p.seat, generalId: g.id, name: g.name });
     this.sync();
   }
 
@@ -1419,6 +1576,7 @@ class Game {
       discardCount: this.discardPile.length,
       winner: this.winner,
       finished: this.finished,
+      gameMode: this.gameMode.id,
       logs: this.logs.slice(-80),
       mySeat: me ? me.seat : -1,
       myIdentity: me ? me.identity : null,

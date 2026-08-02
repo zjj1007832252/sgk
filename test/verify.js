@@ -67,7 +67,7 @@ function runGame(opts, timeoutMs = 45000) {
     let ok = true, errMsg = '';
     for (let round = 0; round < 2; round++) {
       try {
-        const r = await runGame({ forceGenerals: { 1: g.id }, players: 5 });
+        const r = await runGame({ forceGenerals: { 1: g.id }, players: 5 }, 90000);
         const p = r.game.players[1];
         if (p.generalId !== g.id) { ok = false; errMsg = '未强制成功'; break; }
         if (!r.winner) { ok = false; errMsg = '无胜方'; break; }

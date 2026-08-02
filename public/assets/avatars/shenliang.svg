@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="300" viewBox="0 0 240 300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a4a52"/>
+      <stop offset="1" stop-color="#12100d"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#c9b97f" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#c9b97f" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .name { font-family: 'STKaiti','KaiTi','STSong',serif; fill: #f3e6c8; text-anchor: middle; font-weight: bold; }
+      .sub { font-family: 'STKaiti','KaiTi','STSong',serif; fill: #d8c9a3; text-anchor: middle; }
+    </style>
+  </defs>
+  <rect width="240" height="300" rx="10" fill="url(#bg)"/>
+  <rect width="240" height="300" rx="10" fill="url(#glow)"/>
+  <circle cx="120" cy="122" r="86" fill="none" stroke="#c9b97f" stroke-opacity="0.45" stroke-width="2"/>
+  <circle cx="120" cy="122" r="78" fill="none" stroke="#c9b97f" stroke-opacity="0.2" stroke-width="1"/>
+  <rect x="10" y="10" width="36" height="36" rx="7" fill="#4a4a52" stroke="#c9b97f" stroke-width="1.5"/>
+  <text x="28" y="36" font-size="24" class="sub" fill="#fff" text-anchor="middle" style="fill:#f3e6c8">群</text>
+  <text x="228" y="34" font-size="15" class="sub" text-anchor="end">❤❤❤</text>
+  <text x="120" y="37.919999999999995" class="name" font-size="56">神</text>
+  <text x="120" y="101.91999999999999" class="name" font-size="56">诸</text>
+  <text x="120" y="165.92" class="name" font-size="56">葛</text>
+  <text x="120" y="229.92" class="name" font-size="56">亮</text>
+  <text x="120" y="272" font-size="17" class="sub">赤壁的妖术师</text>
+  <rect x="1.5" y="1.5" width="237" height="297" rx="10" fill="none" stroke="#c9b97f" stroke-opacity="0.6" stroke-width="2"/>
+</svg>

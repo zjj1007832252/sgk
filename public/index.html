@@ -22,6 +22,9 @@
           <button id="btn-create" class="btn btn-primary">创建房间</button>
           <button id="btn-refresh" class="btn">刷新列表</button>
           <button id="btn-diy" class="btn">DIY 武将</button>
+          <button id="btn-skilleditor-tab" class="btn">技能编辑器</button>
+          <button id="btn-cardeditor-tab" class="btn">卡牌编辑器</button>
+          <button id="btn-stats" class="btn">战绩统计</button>
         </div>
       </div>
       <div class="room-list-panel">
@@ -88,6 +91,43 @@
     </div>
   </div>
 
+  <!-- 卡牌计数器面板 -->
+  <div id="card-counter-panel" class="card-counter-panel hidden">
+    <div class="ccp-title">卡牌计数 <span id="ccp-toggle" class="ccp-toggle">▼</span></div>
+    <div id="ccp-content" class="ccp-content">
+      <div class="ccp-section">
+        <div class="ccp-section-title">关键牌剩余</div>
+        <div id="ccp-keycards" class="ccp-keycards"></div>
+      </div>
+      <div class="ccp-section">
+        <div class="ccp-section-title">已出牌</div>
+        <div id="ccp-played" class="ccp-played"></div>
+      </div>
+      <div class="ccp-section">
+        <div class="ccp-section-title">牌堆信息</div>
+        <div id="ccp-deck" class="ccp-deck"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 皮肤选择面板 -->
+  <div id="skin-panel" class="skin-panel hidden">
+    <div class="sp-inner">
+      <div class="sp-title">皮肤选择 <span id="sp-close" class="sp-close">✕</span></div>
+      <div class="sp-section">
+        <div class="sp-section-title">武将皮肤</div>
+        <div id="sp-skins" class="sp-skins"></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">头像框</div>
+        <div id="sp-frames" class="sp-frames"></div>
+      </div>
+      <div class="sp-section">
+        <label><input type="checkbox" id="sp-effects"> 启用皮肤特效</label>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ DIY 武将 ============ -->
   <div id="view-diy" class="view">
     <div class="diy-wrap">
@@ -135,7 +175,184 @@
     <div id="modal" class="modal"></div>
   </div>
   <div id="toast" class="toast hidden"></div>
+
+  <!-- 自定义技能编辑器 -->
+  <div id="view-skilleditor" class="view">
+    <div class="skilleditor-wrap">
+      <div class="lobby-header">
+        <span class="lobby-title">自定义技能编辑器</span>
+        <button id="btn-skilleditor-back" class="btn">返回</button>
+      </div>
+      <div class="skilleditor-main">
+        <div class="se-left">
+          <div class="panel-title">基本信息</div>
+          <div class="se-form">
+            <label>技能名称 <input id="se-name" maxlength="6" placeholder="如：制衡"></label>
+            <label>技能类型
+              <select id="se-type">
+                <option value="trigger">触发技</option>
+                <option value="active">主动技</option>
+                <option value="passive">锁定技</option>
+              </select>
+            </label>
+            <div class="panel-title" style="margin-top:12px">触发时机</div>
+            <div id="se-triggers" class="se-options"></div>
+            <div class="panel-title" style="margin-top:12px">触发条件</div>
+            <div id="se-condition-type" class="se-options"></div>
+            <div id="se-condition-params" class="se-params"></div>
+          </div>
+        </div>
+        <div class="se-mid">
+          <div class="panel-title">效果列表 <button id="btn-add-effect" class="btn btn-small">+ 添加效果</button></div>
+          <div id="se-effects" class="se-effects"></div>
+          <div class="panel-title" style="margin-top:12px">发动限制</div>
+          <div id="se-limitations" class="se-options"></div>
+          <div class="panel-title" style="margin-top:12px">消耗</div>
+          <div id="se-costs" class="se-options"></div>
+        </div>
+        <div class="se-right">
+          <div class="panel-title">技能预览</div>
+          <div id="se-preview" class="se-preview"></div>
+          <div class="panel-title" style="margin-top:12px">JSON 输出</div>
+          <pre id="se-json" class="se-json"></pre>
+          <div class="se-actions">
+            <button id="btn-se-save" class="btn btn-primary">保存技能</button>
+            <button id="btn-se-test" class="btn">测试</button>
+            <button id="btn-se-clear" class="btn">清空</button>
+          </div>
+          <div id="se-msg" class="se-msg"></div>
+          <div class="panel-title" style="margin-top:12px">已创建的技能</div>
+          <div id="se-list" class="se-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自定义卡牌编辑器 -->
+  <div id="view-cardeditor" class="view">
+    <div class="cardeditor-wrap">
+      <div class="lobby-header">
+        <span class="lobby-title">自定义卡牌编辑器</span>
+        <button id="btn-cardeditor-back" class="btn">返回</button>
+      </div>
+      <div class="cardeditor-main">
+        <div class="ce-left">
+          <div class="panel-title">卡牌信息</div>
+          <div class="ce-form">
+            <label>名称 <input id="ce-name" maxlength="8" placeholder="如：火杀"></label>
+            <label>类型 <select id="ce-type"></select></label>
+            <label>子类型 <select id="ce-subtype"></select></label>
+            <label>花色 <select id="ce-suit"></select></label>
+            <label>点数 <input id="ce-rank" type="number" min="1" max="13" value="7"></label>
+            <label>每回合限一次 <input type="checkbox" id="ce-once"></label>
+            <label>需要目标 <input type="checkbox" id="ce-need-target" checked></label>
+          </div>
+          <div class="panel-title" style="margin-top:12px">卡牌图片（可选）</div>
+          <div class="ce-form">
+            <input id="ce-image" type="file" accept="image/*">
+            <div id="ce-image-preview" class="ce-img-preview"></div>
+          </div>
+        </div>
+        <div class="ce-mid">
+          <div class="panel-title">效果列表 <button id="btn-add-card-effect" class="btn btn-small">+ 添加效果</button></div>
+          <div id="ce-effects" class="ce-effects"></div>
+        </div>
+        <div class="ce-right">
+          <div class="panel-title">卡牌预览</div>
+          <div id="ce-card-preview" class="ce-card-preview"></div>
+          <div class="panel-title" style="margin-top:12px">描述</div>
+          <div id="ce-preview" class="se-preview"></div>
+          <div class="panel-title" style="margin-top:12px">JSON</div>
+          <pre id="ce-json" class="se-json"></pre>
+          <div class="se-actions">
+            <button id="btn-ce-save" class="btn btn-primary">保存卡牌</button>
+            <button id="btn-ce-test" class="btn">测试</button>
+            <button id="btn-ce-clear" class="btn">清空</button>
+          </div>
+          <div id="ce-msg" class="se-msg"></div>
+          <div class="panel-title" style="margin-top:12px">已创建的卡牌</div>
+          <div id="ce-list" class="ce-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 战绩统计 -->
+  <div id="view-stats" class="view">
+    <div class="stats-wrap">
+      <div class="lobby-header">
+        <span class="lobby-title">战绩统计</span>
+        <button id="btn-stats-back" class="btn">返回</button>
+      </div>
+      <div class="stats-main">
+        <div class="stats-overview" id="stats-overview"></div>
+        <div class="panel-title">武将排行</div>
+        <div id="stats-generals" class="stats-list"></div>
+        <div class="panel-title">身份统计</div>
+        <div id="stats-identities" class="stats-list"></div>
+        <div class="panel-title">最近对局</div>
+        <div id="stats-history" class="stats-history"></div>
+        <div class="panel-title" style="margin-top:14px">服务器回放</div>
+        <div id="stats-replays" class="stats-history"></div>
+        <button id="btn-clear-stats" class="btn btn-danger" style="margin-top:10px">清除所有数据</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 快捷键帮助 -->
+  <div id="shortcuts-help" class="shortcuts-help hidden">
+    <div class="shortcuts-inner">
+      <div class="shortcuts-title">快 捷 键</div>
+      <div id="shortcuts-list" class="shortcuts-list"></div>
+      <div class="shortcuts-close">按 H 或 Esc 关闭</div>
+    </div>
+  </div>
+
+  <!-- 音量控制 -->
+  <div id="audio-control" class="audio-control" title="点击静音/开启">
+    <span id="audio-icon">🔊</span>
+    <input id="audio-volume" type="range" min="0" max="100" value="70" title="音量">
+  </div>
+
+  <!-- 音效设置面板 -->
+  <div id="sound-settings" class="sound-settings hidden">
+    <div class="ss-inner">
+      <div class="ss-title">音效设置</div>
+      <div class="ss-row"><label>音效包</label><select id="ss-pack"></select></div>
+      <div class="ss-row"><label>背景音乐</label><input type="checkbox" id="ss-bgm"></div>
+      <div class="ss-row"><label>音效</label><input type="checkbox" id="ss-sfx"></div>
+      <div class="ss-row"><label>音乐音量</label><input type="range" id="ss-bgm-vol" min="0" max="100"></div>
+      <div class="ss-row"><label>音效音量</label><input type="range" id="ss-sfx-vol" min="0" max="100"></div>
+      <button id="ss-close" class="btn btn-small">关闭</button>
+    </div>
+  </div>
+
+  <!-- 回放查看器 -->
+  <div id="replay-viewer" class="replay-viewer hidden">
+    <div class="rv-inner">
+      <div class="rv-title">回放 <span id="rv-close" class="rv-close">✕</span></div>
+      <div id="rv-content" class="rv-content"></div>
+      <div class="rv-actions">
+        <button id="rv-export-text" class="btn btn-sm导出文本</button>
+        <button id="rv-export-json" class="btn btn-small">导出 JSON</button>
+        <button id="rv-share" class="btn btn-small">分享链接</button>
+      </div>
+    </div>
+  </div>
+  </div>
 </div>
+<script src="/js/audio.js"></script>
+<script src="/js/fx.js"></script>
+<script src="/js/shortcuts.js"></script>
+<script src="/js/skill-editor.js"></script>
+<script src="/js/card-editor.js"></script>
+<script src="/js/custom-skills.js"></script>
+<script src="/js/data.js"></script>
+<script src="/js/perf.js"></script>
+<script src="/js/card-counter.js"></script>
+<script src="/js/skin-system.js"></script>
+<script src="/js/sound.js"></script>
+<script src="/js/game-rules.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

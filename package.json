@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node server/index.js",
     "gen-avatars": "node scripts/gen_avatars.js",
-    "simulate": "node test/simulate.js"
+    "gen-voices": "node scripts/gen_voices.js",
+    "simulate": "node test/simulate.js",
+    "ai-test": "node test/ai-test.js"
   },
   "dependencies": {
     "express": "^4.19.2",

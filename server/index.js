@@ -7,10 +7,16 @@ const http = require('http');
 const { WebSocketServer } = require('ws');
 const multer = require('multer');
 
+const { MODES } = require('./engine/game-modes');
 const { RoomManager } = require('./rooms');
 const customs = require('./customs');
+const customSkills = require('./custom-skills');
+const customCards = require('./custom-cards');
+const replays = require('./replays');
 const { GENERALS } = require('./engine/generals');
 const { DIY_SKILLS } = require('./engine/skills');
+
+const { NetworkOptimizer } = require('./netopt');
 
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -20,9 +26,11 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const rooms = new RoomManager();
+const netopt = new NetworkOptimizer();
 
 // pid -> ws
 const clients = new Map();
+netopt.setWsMap(clients);
 let pidCounter = 1;
 
 // ---------- HTTP API ----------
@@ -40,6 +48,86 @@ app.post('/api/customs', (req, res) => {
 });
 app.delete('/api/customs/:id', (req, res) => {
   res.json({ ok: customs.remove(req.params.id) });
+});
+
+// 游戏模式 API
+app.get('/api/modes', (req, res) => {
+  const modes = Object.entries(MODES).map(([id, Cls]) => {
+    const inst = new Cls(null);
+    return { id, name: inst.name, minPlayers: inst.minPlayers, maxPlayers: inst.maxPlayers, desc: inst.description };
+  });
+  res.json({ modes });
+});
+app.get('/api/custom-cards', (req, res) => {
+  res.json({ cards: customCards.load() });
+});
+app.post('/api/custom-cards', (req, res) => {
+  const r = customCards.create(req.body || {});
+  if (!r.ok) return res.status(400).json({ error: r.msg });
+  res.json({ ok: true, card: r.value });
+});
+app.delete('/api/custom-cards/:id', (req, res) => {
+  res.json({ ok: customCards.remove(req.params.id) });
+});
+
+// 卡牌图片上传
+const cardUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = customCards.IMAGE_DIR;
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+      const id = (req.params.id || 'card').replace(/[^\w-]/g, '');
+      cb(null, id + path.extname(file.originalname || '.png'));
+    },
+  }),
+  limits: { fileSize: 3 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
+});
+app.post('/api/card-image/:id', cardUpload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: '需要图片文件' });
+  res.json({ ok: true, url: '/assets/cards/' + req.file.filename });
+});
+
+// 自定义技能 API
+app.get('/api/custom-skills', (req, res) => {
+  res.json({ skills: customSkills.load() });
+});
+app.post('/api/custom-skills', (req, res) => {
+  const r = customSkills.create(req.body || {});
+  if (!r.ok) return res.status(400).json({ error: r.msg });
+  res.json({ ok: true, skill: r.value });
+});
+app.delete('/api/custom-skills/:id', (req, res) => {
+  res.json({ ok: customSkills.remove(req.params.id) });
+});
+
+// 回放 API
+app.get('/api/replays', (req, res) => {
+  res.json({ replays: replays.listReplays(20) });
+});
+app.get('/api/replays/:id', (req, res) => {
+  const replay = replays.getReplay(req.params.id);
+  if (!replay) return res.status(404).json({ error: '回放不存在' });
+  res.json({ replay, analysis: replays.analyzeReplay(replay) });
+});
+app.get('/api/replays/:id/export', (req, res) => {
+  const replay = replays.getReplay(req.params.id);
+  if (!replay) return res.status(404).json({ error: '回放不存在' });
+  const format = req.query.format || 'text';
+  if (format === 'text') {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="replay_${req.params.id}.txt"`);
+    return res.send(replays.exportAsText(replay));
+  }
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="replay_${req.params.id}.json"`);
+  res.send(replays.exportAsJSON(replay));
+});
+app.delete('/api/replays/:id', (req, res) => {
+  res.json({ ok: replays.deleteReplay(req.params.id) });
 });
 
 // 头像上传（DIY 或覆盖官方头像）
@@ -89,10 +177,24 @@ function gameBroadcastAll(room) {
     if (s.isAI) continue;
     const ws = clients.get(s.pid);
     if (ws && ws.readyState === 1) {
-      ws.send(JSON.stringify({ type: 'game', state: game.getState(s.pid) }));
+      const fullState = game.getState(s.pid);
+      const delta = netopt.getDeltaState(s.pid, fullState);
+      netopt.sendImmediate(ws, delta);
     }
   }
 }
+
+// 心跳定时器
+const heartbeatTimer = setInterval(() => {
+  for (const [pid, ws] of clients) {
+    if (ws.readyState === 1) {
+      netopt.sendHeartbeat(ws);
+    }
+  }
+}, netopt.heartbeatInterval);
+heartbeatTimer.unref(); // 不阻止进程退出
+
+server.on('close', () => clearInterval(heartbeatTimer));
 function getRoomOf(pid) {
   for (const room of rooms.rooms.values()) if (room.hasPid(pid)) return room;
   return null;
@@ -115,12 +217,36 @@ function makeHooks(room) {
     broadcastAll: () => gameBroadcastAll(room),
     broadcastEvent: (ev) => {
       for (const s of room.seatedPlayers()) {
-        if (!s.isAI) sendPid(s.pid, { type: 'event', event: ev });
+        if (!s.isAI) netopt.batch(s.pid, { type: 'event', event: ev });
       }
     },
     delay: (ms) => new Promise(r => setTimeout(r, ms)),
     onEnd: () => {
       room.state = 'ended';
+      // 保存回放
+      try {
+        const game = room.game;
+        if (game) {
+          const record = {
+            players: game.players.map(p => ({
+              seat: p.seat, name: p.name, generalId: p.generalId, generalName: p.generalName,
+              identity: p.identity, kingdom: p.kingdom, hp: p.hp, maxHp: p.maxHp,
+              isAI: p.isAI, alive: p.alive, totalKills: p.totalKills || 0,
+            })),
+            events: game.replayEvents || [],
+            logs: game.logs || [],
+            winner: game.winner,
+            winnerIdentity: game.players.find(p => p.seat === game.winner)?.identity || game.winner,
+            rounds: game.round,
+            duration: Date.now() - game.startTime,
+            gameMode: game.opts?.gameMode || 'identity',
+            winCondition: game.opts?.winCondition || 'default',
+            roomName: room.name,
+          };
+          const replay = replays.createReplay(record);
+          room.lastReplayId = replay.id;
+        }
+      } catch (e) { console.error('保存回放失败', e); }
       roomBroadcast(room);
       broadcastRooms();
       gameBroadcastAll(room);
@@ -286,6 +412,7 @@ wss.on('connection', (ws) => {
   });
   ws.on('close', () => {
     if (!ctx.pid) return;
+    netopt.cleanup(ctx.pid);
     clients.delete(ctx.pid);
     for (const room of rooms.rooms.values()) {
       if (room.hasPid(ctx.pid)) {

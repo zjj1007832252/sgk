@@ -1,6 +1,7 @@
 // 房间管理：大厅 / 座位 / 点身份 / 开局
 const { Game, IDENTITIES, IDENTITY_DIST } = require('./engine/game');
 const { GENERALS } = require('./engine/generals');
+const { MODES, createGameMode } = require('./engine/game-modes');
 
 let roomCounter = 1;
 let aiCounter = 1;
@@ -18,6 +19,31 @@ class Room {
       allowIdentityPick: true, // 点身份
       includeCustoms: true,    // 启用 DIY 武将
       aiDelay: 800,
+      aiDifficulty: 'normal', // easy/normal/hard
+      gameSpeed: 'normal',    // fast/normal/slow
+      turnTimer: 0,           // 0=无限, >0=出牌倒计时秒数
+      gameMode: 'identity',
+      winCondition: 'default',
+      winParams: {}, // identity/1v1/3v3/guozhan/doudizhu
+      // ---- 自定义规则 ----
+      roundLimit: 0,           // 0=无限，>0=最大回合数
+      startCards: 4,           // 初始手牌
+      hpBonus: 0,              // 体力加成（主公额外+1由引擎处理）
+      handLimit: 0,            // 0=默认（体力值）
+      allowAoe: true,          // 允许AOE锦囊
+      allowJuedou: true,       // 允许决斗
+      allowLianhuan: true,     // 允许铁索连环
+      firstDraw: 2,            // 首回合摸牌数
+      discardLimit: true,      // 弃牌限制（手牌≤体力）
+      lordExtraHp: true,       // 主公额外体力+1
+      neiWinAlone: true,       // 内奸需单杀主公
+      revealOnDeath: true,     // 死亡揭示身份
+      customRules: {},         // 扩展规则
+      // 禁将/禁牌
+      bannedGenerals: [],       // 禁用武将 ID 列表
+      bannedCards: [],          // 禁用卡牌 key 列表
+      banPreset: 'none',        // 预设方案
+      allowVoteBan: false,      // 允许投票禁将
     };
     this.identityPrefs = {};   // pid -> identity
     this.state = 'lobby';      // lobby | playing | ended
@@ -88,6 +114,28 @@ class Room {
     if (patch.allowIdentityPick != null) o.allowIdentityPick = !!patch.allowIdentityPick;
     if (patch.includeCustoms != null) o.includeCustoms = !!patch.includeCustoms;
     if (patch.aiDelay != null) o.aiDelay = Math.max(0, Math.min(3000, patch.aiDelay | 0));
+    if (patch.aiDifficulty && ['easy', 'normal', 'hard'].includes(patch.aiDifficulty)) o.aiDifficulty = patch.aiDifficulty;
+    if (patch.gameSpeed && ['fast', 'normal', 'slow'].includes(patch.gameSpeed)) o.gameSpeed = patch.gameSpeed;
+    if (patch.turnTimer != null) o.turnTimer = Math.max(0, Math.min(120, patch.turnTimer | 0));
+    if (patch.gameMode && MODES[patch.gameMode]) o.gameMode = patch.gameMode;
+    if (patch.winCondition) o.winCondition = patch.winCondition;
+    if (patch.winParams) o.winParams = { ...o.winParams, ...patch.winParams };
+    // 自定义规则
+    if (patch.roundLimit != null) o.roundLimit = Math.max(0, Math.min(100, patch.roundLimit | 0));
+    if (patch.startCards != null) o.startCards = Math.max(2, Math.min(8, patch.startCards | 0));
+    if (patch.hpBonus != null) o.hpBonus = Math.max(-2, Math.min(3, patch.hpBonus | 0));
+    if (patch.handLimit != null) o.handLimit = Math.max(0, Math.min(20, patch.handLimit | 0));
+    if (patch.allowAoe != null) o.allowAoe = !!patch.allowAoe;
+    if (patch.allowJuedou != null) o.allowJuedou = !!patch.allowJuedou;
+    if (patch.firstDraw != null) o.firstDraw = Math.max(0, Math.min(4, patch.firstDraw | 0));
+    if (patch.discardLimit != null) o.discardLimit = !!patch.discardLimit;
+    if (patch.lordExtraHp != null) o.lordExtraHp = !!patch.lordExtraHp;
+    if (patch.revealOnDeath != null) o.revealOnDeath = !!patch.revealOnDeath;
+    // 禁将/禁牌
+    if (patch.bannedGenerals) o.bannedGenerals = patch.bannedGenerals.filter(Boolean);
+    if (patch.bannedCards) o.bannedCards = patch.bannedCards.filter(Boolean);
+    if (patch.banPreset) o.banPreset = patch.banPreset;
+    if (patch.allowVoteBan != null) o.allowVoteBan = !!patch.allowVoteBan;
     return { ok: true };
   }
 

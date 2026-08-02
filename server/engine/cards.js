@@ -102,17 +102,20 @@ const DECK_LIST = [
 
 let uidCounter = 1;
 
-function buildDeck() {
-  const deck = DECK_LIST.map(([key, suit, rank]) => ({
-    uid: 'c' + (uidCounter++),
-    key,
-    suit,
-    rank,
-    name: CARD_DEFS[key].name,
-    type: CARD_DEFS[key].type,
-    subtype: CARD_DEFS[key].subtype || null,
-    range: CARD_DEFS[key].range || null,
-  }));
+function buildDeck(bannedCards = []) {
+  const banned = new Set(bannedCards);
+  const deck = DECK_LIST
+    .filter(([key]) => !banned.has(key))
+    .map(([key, suit, rank]) => ({
+      uid: 'c' + (uidCounter++),
+      key,
+      suit,
+      rank,
+      name: CARD_DEFS[key].name,
+      type: CARD_DEFS[key].type,
+      subtype: CARD_DEFS[key].subtype || null,
+      range: CARD_DEFS[key].range || null,
+    }));
   shuffle(deck);
   return deck;
 }

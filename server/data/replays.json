@@ -1,0 +1,5991 @@
+{
+  "rms7nnjxki8": {
+    "id": "rms7nnjxki8",
+    "createdAt": 1785424508840,
+    "players": [
+      {
+        "seat": 0,
+        "name": "测试员",
+        "generalId": "chenqun",
+        "generalName": "陈群",
+        "identity": "zhong",
+        "kingdom": "wei",
+        "hp": 0,
+        "maxHp": 3,
+        "isAI": false,
+        "alive": false,
+        "totalKills": 0
+      },
+      {
+        "seat": 1,
+        "name": "电脑1",
+        "generalId": "caocao",
+        "generalName": "曹操",
+        "identity": "zhu",
+        "kingdom": "wei",
+        "hp": 0,
+        "maxHp": 5,
+        "isAI": true,
+        "alive": false,
+        "totalKills": 0
+      },
+      {
+        "seat": 2,
+        "name": "电脑2",
+        "generalId": "huangyueying",
+        "generalName": "黄月英",
+        "identity": "fan",
+        "kingdom": "shu",
+        "hp": 3,
+        "maxHp": 3,
+        "isAI": true,
+        "alive": true,
+        "totalKills": 0
+      },
+      {
+        "seat": 3,
+        "name": "电脑3",
+        "generalId": "dianwei",
+        "generalName": "典韦",
+        "identity": "fan",
+        "kingdom": "wei",
+        "hp": 3,
+        "maxHp": 4,
+        "isAI": true,
+        "alive": true,
+        "totalKills": 0
+      },
+      {
+        "seat": 4,
+        "name": "电脑4",
+        "generalId": "guanyu",
+        "generalName": "关羽",
+        "identity": "nei",
+        "kingdom": "shu",
+        "hp": 3,
+        "maxHp": 4,
+        "isAI": true,
+        "alive": true,
+        "totalKills": 0
+      }
+    ],
+    "events": [
+      {
+        "type": "selectGeneral",
+        "seat": 0,
+        "generalId": "chenqun",
+        "name": "陈群",
+        "round": 1,
+        "phase": "picking",
+        "t": 1
+      },
+      {
+        "type": "selectGeneral",
+        "seat": 1,
+        "generalId": "caocao",
+        "name": "曹操",
+        "round": 1,
+        "phase": "picking",
+        "t": 2
+      },
+      {
+        "type": "selectGeneral",
+        "seat": 2,
+        "generalId": "huangyueying",
+        "name": "黄月英",
+        "round": 1,
+        "phase": "picking",
+        "t": 2
+      },
+      {
+        "type": "selectGeneral",
+        "seat": 3,
+        "generalId": "dianwei",
+        "name": "典韦",
+        "round": 1,
+        "phase": "picking",
+        "t": 2
+      },
+      {
+        "type": "selectGeneral",
+        "seat": 4,
+        "generalId": "guanyu",
+        "name": "关羽",
+        "round": 1,
+        "phase": "picking",
+        "t": 2
+      },
+      {
+        "type": "draw",
+        "seat": 0,
+        "count": 4,
+        "round": 1,
+        "phase": "dealing",
+        "t": 2
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "dealing",
+        "t": 2
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 4,
+        "round": 1,
+        "phase": "dealing",
+        "t": 3
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "dealing",
+        "t": 3
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 4,
+        "round": 1,
+        "phase": "dealing",
+        "t": 3
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "dealing",
+        "t": 3
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 4,
+        "round": 1,
+        "phase": "dealing",
+        "t": 3
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "dealing",
+        "t": 3
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 4,
+        "round": 1,
+        "phase": "dealing",
+        "t": 3
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "dealing",
+        "t": 3
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 1,
+        "phase": "draw",
+        "t": 205
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "draw",
+        "t": 205
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "八卦阵",
+        "round": 1,
+        "phase": "play",
+        "t": 208
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 1,
+        "phase": "draw",
+        "t": 411
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "draw",
+        "t": 411
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "绝影",
+        "round": 1,
+        "phase": "play",
+        "t": 413
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "紫骍",
+        "round": 1,
+        "phase": "play",
+        "t": 415
+      },
+      {
+        "type": "aoe",
+        "aoeType": "wanjian",
+        "from": 2,
+        "round": 1,
+        "phase": "play",
+        "t": 416
+      },
+      {
+        "type": "damage",
+        "seat": 0,
+        "amount": 1,
+        "round": 1,
+        "phase": "play",
+        "t": 419
+      },
+      {
+        "type": "damage",
+        "seat": 1,
+        "amount": 1,
+        "round": 1,
+        "phase": "play",
+        "t": 623
+      },
+      {
+        "type": "damage",
+        "seat": 3,
+        "amount": 1,
+        "round": 1,
+        "phase": "play",
+        "t": 829
+      },
+      {
+        "type": "damage",
+        "seat": 4,
+        "amount": 1,
+        "round": 1,
+        "phase": "play",
+        "t": 1034
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 1,
+        "phase": "play",
+        "t": 1236
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "play",
+        "t": 1236
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 1,
+        "phase": "draw",
+        "t": 1442
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "draw",
+        "t": 1442
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "贯石斧",
+        "round": 1,
+        "phase": "play",
+        "t": 1444
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 1,
+        "phase": "draw",
+        "t": 1648
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "draw",
+        "t": 1648
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "贯石斧",
+        "round": 1,
+        "phase": "play",
+        "t": 1656
+      },
+      {
+        "type": "draw",
+        "seat": 0,
+        "count": 2,
+        "round": 1,
+        "phase": "draw",
+        "t": 1861
+      },
+      {
+        "type": "fxstep",
+        "round": 1,
+        "phase": "draw",
+        "t": 1861
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 2,
+        "phase": "draw",
+        "t": 2065
+      },
+      {
+        "type": "fxstep",
+        "round": 2,
+        "phase": "draw",
+        "t": 2065
+      },
+      {
+        "type": "aoe",
+        "aoeType": "wanjian",
+        "from": 1,
+        "round": 2,
+        "phase": "play",
+        "t": 2066
+      },
+      {
+        "type": "damage",
+        "seat": 0,
+        "amount": 1,
+        "round": 2,
+        "phase": "play",
+        "t": 2070
+      },
+      {
+        "type": "damage",
+        "seat": 2,
+        "amount": 1,
+        "round": 2,
+        "phase": "play",
+        "t": 2273
+      },
+      {
+        "type": "damage",
+        "seat": 3,
+        "amount": 1,
+        "round": 2,
+        "phase": "play",
+        "t": 2479
+      },
+      {
+        "type": "damage",
+        "seat": 4,
+        "amount": 1,
+        "round": 2,
+        "phase": "play",
+        "t": 2683
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 2,
+        "phase": "draw",
+        "t": 3090
+      },
+      {
+        "type": "fxstep",
+        "round": 2,
+        "phase": "draw",
+        "t": 3090
+      },
+      {
+        "type": "recover",
+        "seat": 2,
+        "round": 2,
+        "phase": "play",
+        "t": 3092
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 2,
+        "phase": "play",
+        "t": 3096
+      },
+      {
+        "type": "fxstep",
+        "round": 2,
+        "phase": "play",
+        "t": 3096
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 2,
+        "phase": "play",
+        "t": 3096
+      },
+      {
+        "type": "fxstep",
+        "round": 2,
+        "phase": "play",
+        "t": 3096
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 2,
+        "phase": "draw",
+        "t": 3304
+      },
+      {
+        "type": "fxstep",
+        "round": 2,
+        "phase": "draw",
+        "t": 3304
+      },
+      {
+        "type": "recover",
+        "seat": 3,
+        "round": 2,
+        "phase": "play",
+        "t": 3305
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 2,
+        "phase": "play",
+        "t": 3308
+      },
+      {
+        "type": "fxstep",
+        "round": 2,
+        "phase": "play",
+        "t": 3308
+      },
+      {
+        "type": "sha",
+        "from": 3,
+        "to": 0,
+        "round": 2,
+        "phase": "play",
+        "t": 3310
+      },
+      {
+        "type": "damage",
+        "seat": 0,
+        "amount": 1,
+        "round": 2,
+        "phase": "play",
+        "t": 3310
+      },
+      {
+        "type": "dying",
+        "seat": 0,
+        "round": 2,
+        "phase": "play",
+        "t": 3512
+      },
+      {
+        "type": "death",
+        "seat": 0,
+        "identity": "zhong",
+        "generalId": "chenqun",
+        "round": 2,
+        "phase": "play",
+        "t": 3512
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 2,
+        "phase": "draw",
+        "t": 3717
+      },
+      {
+        "type": "fxstep",
+        "round": 2,
+        "phase": "draw",
+        "t": 3717
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "spade",
+          "rank": 10,
+          "name": "杀",
+          "rankLabel": "10"
+        },
+        "round": 3,
+        "phase": "judge",
+        "t": 3923
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 3,
+        "phase": "draw",
+        "t": 4125
+      },
+      {
+        "type": "fxstep",
+        "round": 3,
+        "phase": "draw",
+        "t": 4125
+      },
+      {
+        "type": "judge",
+        "seat": 2,
+        "card": {
+          "suit": "diamond",
+          "rank": 12,
+          "name": "无懈可击",
+          "rankLabel": "Q"
+        },
+        "round": 3,
+        "phase": "judge",
+        "t": 4329
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 3,
+        "phase": "draw",
+        "t": 4530
+      },
+      {
+        "type": "fxstep",
+        "round": 3,
+        "phase": "draw",
+        "t": 4530
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 3,
+        "phase": "play",
+        "t": 4533
+      },
+      {
+        "type": "fxstep",
+        "round": 3,
+        "phase": "play",
+        "t": 4533
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "贯石斧",
+        "round": 3,
+        "phase": "play",
+        "t": 4535
+      },
+      {
+        "type": "judge",
+        "seat": 3,
+        "card": {
+          "suit": "diamond",
+          "rank": 1,
+          "name": "诸葛连弩",
+          "rankLabel": "A"
+        },
+        "round": 3,
+        "phase": "judge",
+        "t": 4740
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 3,
+        "phase": "draw",
+        "t": 4941
+      },
+      {
+        "type": "fxstep",
+        "round": 3,
+        "phase": "draw",
+        "t": 4941
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "赤兔",
+        "round": 3,
+        "phase": "play",
+        "t": 4943
+      },
+      {
+        "type": "judge",
+        "seat": 4,
+        "card": {
+          "suit": "diamond",
+          "rank": 4,
+          "name": "顺手牵羊",
+          "rankLabel": "4"
+        },
+        "round": 3,
+        "phase": "judge",
+        "t": 5147
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 3,
+        "phase": "draw",
+        "t": 5350
+      },
+      {
+        "type": "fxstep",
+        "round": 3,
+        "phase": "draw",
+        "t": 5350
+      },
+      {
+        "type": "recover",
+        "seat": 4,
+        "round": 3,
+        "phase": "play",
+        "t": 5352
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "spade",
+          "rank": 9,
+          "name": "杀",
+          "rankLabel": "9"
+        },
+        "round": 4,
+        "phase": "judge",
+        "t": 5555
+      },
+      {
+        "type": "damage",
+        "seat": 1,
+        "amount": 3,
+        "round": 4,
+        "phase": "judge",
+        "t": 5757
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 4,
+        "phase": "draw",
+        "t": 5959
+      },
+      {
+        "type": "fxstep",
+        "round": 4,
+        "phase": "draw",
+        "t": 5959
+      },
+      {
+        "type": "recover",
+        "seat": 1,
+        "round": 4,
+        "phase": "play",
+        "t": 5960
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 4,
+        "phase": "play",
+        "t": 5965
+      },
+      {
+        "type": "fxstep",
+        "round": 4,
+        "phase": "play",
+        "t": 5965
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 4,
+        "phase": "draw",
+        "t": 6170
+      },
+      {
+        "type": "fxstep",
+        "round": 4,
+        "phase": "draw",
+        "t": 6170
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "方天画戟",
+        "round": 4,
+        "phase": "play",
+        "t": 6172
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 4,
+        "phase": "draw",
+        "t": 6376
+      },
+      {
+        "type": "fxstep",
+        "round": 4,
+        "phase": "draw",
+        "t": 6376
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 4,
+        "phase": "draw",
+        "t": 6582
+      },
+      {
+        "type": "fxstep",
+        "round": 4,
+        "phase": "draw",
+        "t": 6582
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "爪黄飞电",
+        "round": 4,
+        "phase": "play",
+        "t": 6584
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 5,
+        "phase": "draw",
+        "t": 6788
+      },
+      {
+        "type": "fxstep",
+        "round": 5,
+        "phase": "draw",
+        "t": 6788
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "青釭剑",
+        "round": 5,
+        "phase": "play",
+        "t": 6790
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 5,
+        "phase": "play",
+        "t": 6791
+      },
+      {
+        "type": "fxstep",
+        "round": 5,
+        "phase": "play",
+        "t": 6791
+      },
+      {
+        "type": "aoe",
+        "aoeType": "nanman",
+        "from": 1,
+        "round": 5,
+        "phase": "play",
+        "t": 6792
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 5,
+        "phase": "draw",
+        "t": 7006
+      },
+      {
+        "type": "fxstep",
+        "round": 5,
+        "phase": "draw",
+        "t": 7006
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 5,
+        "phase": "draw",
+        "t": 7210
+      },
+      {
+        "type": "fxstep",
+        "round": 5,
+        "phase": "draw",
+        "t": 7210
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 5,
+        "phase": "draw",
+        "t": 7419
+      },
+      {
+        "type": "fxstep",
+        "round": 5,
+        "phase": "draw",
+        "t": 7419
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 6,
+        "phase": "draw",
+        "t": 7623
+      },
+      {
+        "type": "fxstep",
+        "round": 6,
+        "phase": "draw",
+        "t": 7623
+      },
+      {
+        "type": "recover",
+        "seat": 1,
+        "round": 6,
+        "phase": "play",
+        "t": 7624
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 6,
+        "phase": "draw",
+        "t": 7830
+      },
+      {
+        "type": "fxstep",
+        "round": 6,
+        "phase": "draw",
+        "t": 7830
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 6,
+        "phase": "draw",
+        "t": 8036
+      },
+      {
+        "type": "fxstep",
+        "round": 6,
+        "phase": "draw",
+        "t": 8036
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "麒麟弓",
+        "round": 6,
+        "phase": "play",
+        "t": 8037
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 6,
+        "phase": "draw",
+        "t": 8242
+      },
+      {
+        "type": "fxstep",
+        "round": 6,
+        "phase": "draw",
+        "t": 8242
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "丈八蛇矛",
+        "round": 6,
+        "phase": "play",
+        "t": 8243
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 7,
+        "phase": "draw",
+        "t": 8450
+      },
+      {
+        "type": "fxstep",
+        "round": 7,
+        "phase": "draw",
+        "t": 8450
+      },
+      {
+        "type": "aoe",
+        "aoeType": "nanman",
+        "from": 1,
+        "round": 7,
+        "phase": "play",
+        "t": 8452
+      },
+      {
+        "type": "damage",
+        "seat": 3,
+        "amount": 1,
+        "round": 7,
+        "phase": "play",
+        "t": 8453
+      },
+      {
+        "type": "aoe",
+        "aoeType": "nanman",
+        "from": 1,
+        "round": 7,
+        "phase": "play",
+        "t": 8657
+      },
+      {
+        "type": "damage",
+        "seat": 2,
+        "amount": 1,
+        "round": 7,
+        "phase": "play",
+        "t": 8657
+      },
+      {
+        "type": "damage",
+        "seat": 3,
+        "amount": 1,
+        "round": 7,
+        "phase": "play",
+        "t": 8858
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 7,
+        "phase": "draw",
+        "t": 9265
+      },
+      {
+        "type": "fxstep",
+        "round": 7,
+        "phase": "draw",
+        "t": 9265
+      },
+      {
+        "type": "recover",
+        "seat": 2,
+        "round": 7,
+        "phase": "play",
+        "t": 9266
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 7,
+        "phase": "draw",
+        "t": 9469
+      },
+      {
+        "type": "fxstep",
+        "round": 7,
+        "phase": "draw",
+        "t": 9469
+      },
+      {
+        "type": "recover",
+        "seat": 3,
+        "round": 7,
+        "phase": "play",
+        "t": 9471
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 7,
+        "phase": "draw",
+        "t": 9674
+      },
+      {
+        "type": "fxstep",
+        "round": 7,
+        "phase": "draw",
+        "t": 9674
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 8,
+        "phase": "draw",
+        "t": 9877
+      },
+      {
+        "type": "fxstep",
+        "round": 8,
+        "phase": "draw",
+        "t": 9877
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "青龙偃月刀",
+        "round": 8,
+        "phase": "play",
+        "t": 9879
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 8,
+        "phase": "draw",
+        "t": 10082
+      },
+      {
+        "type": "fxstep",
+        "round": 8,
+        "phase": "draw",
+        "t": 10082
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 8,
+        "phase": "play",
+        "t": 10085
+      },
+      {
+        "type": "fxstep",
+        "round": 8,
+        "phase": "play",
+        "t": 10085
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "青龙偃月刀",
+        "round": 8,
+        "phase": "play",
+        "t": 10087
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 8,
+        "phase": "draw",
+        "t": 10292
+      },
+      {
+        "type": "fxstep",
+        "round": 8,
+        "phase": "draw",
+        "t": 10292
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 8,
+        "phase": "draw",
+        "t": 10498
+      },
+      {
+        "type": "fxstep",
+        "round": 8,
+        "phase": "draw",
+        "t": 10498
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "club",
+          "rank": 13,
+          "name": "借刀杀人",
+          "rankLabel": "K"
+        },
+        "round": 9,
+        "phase": "judge",
+        "t": 10703
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 9,
+        "phase": "draw",
+        "t": 10904
+      },
+      {
+        "type": "fxstep",
+        "round": 9,
+        "phase": "draw",
+        "t": 10904
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 9,
+        "phase": "draw",
+        "t": 11108
+      },
+      {
+        "type": "fxstep",
+        "round": 9,
+        "phase": "draw",
+        "t": 11108
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 9,
+        "phase": "draw",
+        "t": 11313
+      },
+      {
+        "type": "fxstep",
+        "round": 9,
+        "phase": "draw",
+        "t": 11313
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 9,
+        "phase": "draw",
+        "t": 11516
+      },
+      {
+        "type": "fxstep",
+        "round": 9,
+        "phase": "draw",
+        "t": 11516
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 10,
+        "phase": "draw",
+        "t": 11722
+      },
+      {
+        "type": "fxstep",
+        "round": 10,
+        "phase": "draw",
+        "t": 11722
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 10,
+        "phase": "draw",
+        "t": 11926
+      },
+      {
+        "type": "fxstep",
+        "round": 10,
+        "phase": "draw",
+        "t": 11926
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 10,
+        "phase": "draw",
+        "t": 12132
+      },
+      {
+        "type": "fxstep",
+        "round": 10,
+        "phase": "draw",
+        "t": 12132
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "仁王盾",
+        "round": 10,
+        "phase": "play",
+        "t": 12134
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 10,
+        "phase": "draw",
+        "t": 12339
+      },
+      {
+        "type": "fxstep",
+        "round": 10,
+        "phase": "draw",
+        "t": 12339
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 11,
+        "phase": "draw",
+        "t": 12544
+      },
+      {
+        "type": "fxstep",
+        "round": 11,
+        "phase": "draw",
+        "t": 12544
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "贯石斧",
+        "round": 11,
+        "phase": "play",
+        "t": 12546
+      },
+      {
+        "type": "judge",
+        "seat": 2,
+        "card": {
+          "suit": "spade",
+          "rank": 10,
+          "name": "杀",
+          "rankLabel": "10"
+        },
+        "round": 11,
+        "phase": "judge",
+        "t": 12749
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 11,
+        "phase": "draw",
+        "t": 12951
+      },
+      {
+        "type": "fxstep",
+        "round": 11,
+        "phase": "draw",
+        "t": 12951
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 11,
+        "phase": "draw",
+        "t": 13154
+      },
+      {
+        "type": "fxstep",
+        "round": 11,
+        "phase": "draw",
+        "t": 13154
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 11,
+        "phase": "play",
+        "t": 13155
+      },
+      {
+        "type": "fxstep",
+        "round": 11,
+        "phase": "play",
+        "t": 13155
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 11,
+        "phase": "play",
+        "t": 13159
+      },
+      {
+        "type": "fxstep",
+        "round": 11,
+        "phase": "play",
+        "t": 13159
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 11,
+        "phase": "draw",
+        "t": 13368
+      },
+      {
+        "type": "fxstep",
+        "round": 11,
+        "phase": "draw",
+        "t": 13368
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "仁王盾",
+        "round": 11,
+        "phase": "play",
+        "t": 13372
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "spade",
+          "rank": 8,
+          "name": "杀",
+          "rankLabel": "8"
+        },
+        "round": 12,
+        "phase": "judge",
+        "t": 13576
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 12,
+        "phase": "draw",
+        "t": 13777
+      },
+      {
+        "type": "fxstep",
+        "round": 12,
+        "phase": "draw",
+        "t": 13777
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 12,
+        "phase": "draw",
+        "t": 13980
+      },
+      {
+        "type": "fxstep",
+        "round": 12,
+        "phase": "draw",
+        "t": 13980
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 12,
+        "phase": "draw",
+        "t": 14184
+      },
+      {
+        "type": "fxstep",
+        "round": 12,
+        "phase": "draw",
+        "t": 14184
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 12,
+        "phase": "draw",
+        "t": 14389
+      },
+      {
+        "type": "fxstep",
+        "round": 12,
+        "phase": "draw",
+        "t": 14389
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 13,
+        "phase": "draw",
+        "t": 14596
+      },
+      {
+        "type": "fxstep",
+        "round": 13,
+        "phase": "draw",
+        "t": 14596
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 13,
+        "phase": "draw",
+        "t": 14801
+      },
+      {
+        "type": "fxstep",
+        "round": 13,
+        "phase": "draw",
+        "t": 14801
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 13,
+        "phase": "draw",
+        "t": 15005
+      },
+      {
+        "type": "fxstep",
+        "round": 13,
+        "phase": "draw",
+        "t": 15005
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 13,
+        "phase": "draw",
+        "t": 15210
+      },
+      {
+        "type": "fxstep",
+        "round": 13,
+        "phase": "draw",
+        "t": 15210
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 14,
+        "phase": "draw",
+        "t": 15414
+      },
+      {
+        "type": "fxstep",
+        "round": 14,
+        "phase": "draw",
+        "t": 15414
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 14,
+        "phase": "draw",
+        "t": 15619
+      },
+      {
+        "type": "fxstep",
+        "round": 14,
+        "phase": "draw",
+        "t": 15619
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 14,
+        "phase": "draw",
+        "t": 15824
+      },
+      {
+        "type": "fxstep",
+        "round": 14,
+        "phase": "draw",
+        "t": 15824
+      },
+      {
+        "type": "recover",
+        "seat": 3,
+        "round": 14,
+        "phase": "play",
+        "t": 15825
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 14,
+        "phase": "draw",
+        "t": 16028
+      },
+      {
+        "type": "fxstep",
+        "round": 14,
+        "phase": "draw",
+        "t": 16028
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 15,
+        "phase": "draw",
+        "t": 16233
+      },
+      {
+        "type": "fxstep",
+        "round": 15,
+        "phase": "draw",
+        "t": 16233
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "诸葛连弩",
+        "round": 15,
+        "phase": "play",
+        "t": 16235
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 15,
+        "phase": "play",
+        "t": 16238
+      },
+      {
+        "type": "fxstep",
+        "round": 15,
+        "phase": "play",
+        "t": 16238
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 15,
+        "phase": "draw",
+        "t": 16442
+      },
+      {
+        "type": "fxstep",
+        "round": 15,
+        "phase": "draw",
+        "t": 16442
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 15,
+        "phase": "play",
+        "t": 16448
+      },
+      {
+        "type": "fxstep",
+        "round": 15,
+        "phase": "play",
+        "t": 16448
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "诸葛连弩",
+        "round": 15,
+        "phase": "play",
+        "t": 16449
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "八卦阵",
+        "round": 15,
+        "phase": "play",
+        "t": 16450
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 15,
+        "phase": "draw",
+        "t": 16655
+      },
+      {
+        "type": "fxstep",
+        "round": 15,
+        "phase": "draw",
+        "t": 16655
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 15,
+        "phase": "draw",
+        "t": 16864
+      },
+      {
+        "type": "fxstep",
+        "round": 15,
+        "phase": "draw",
+        "t": 16864
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 16,
+        "phase": "draw",
+        "t": 17069
+      },
+      {
+        "type": "fxstep",
+        "round": 16,
+        "phase": "draw",
+        "t": 17069
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 16,
+        "phase": "play",
+        "t": 17081
+      },
+      {
+        "type": "fxstep",
+        "round": 16,
+        "phase": "play",
+        "t": 17081
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 16,
+        "phase": "draw",
+        "t": 17286
+      },
+      {
+        "type": "fxstep",
+        "round": 16,
+        "phase": "draw",
+        "t": 17286
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 16,
+        "phase": "draw",
+        "t": 17490
+      },
+      {
+        "type": "fxstep",
+        "round": 16,
+        "phase": "draw",
+        "t": 17490
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 16,
+        "phase": "draw",
+        "t": 17694
+      },
+      {
+        "type": "fxstep",
+        "round": 16,
+        "phase": "draw",
+        "t": 17694
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 17,
+        "phase": "draw",
+        "t": 17898
+      },
+      {
+        "type": "fxstep",
+        "round": 17,
+        "phase": "draw",
+        "t": 17898
+      },
+      {
+        "type": "judge",
+        "seat": 2,
+        "card": {
+          "suit": "diamond",
+          "rank": 7,
+          "name": "闪",
+          "rankLabel": "7"
+        },
+        "round": 17,
+        "phase": "judge",
+        "t": 18111
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 17,
+        "phase": "draw",
+        "t": 18313
+      },
+      {
+        "type": "fxstep",
+        "round": 17,
+        "phase": "draw",
+        "t": 18313
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 17,
+        "phase": "draw",
+        "t": 18516
+      },
+      {
+        "type": "fxstep",
+        "round": 17,
+        "phase": "draw",
+        "t": 18517
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "青釭剑",
+        "round": 17,
+        "phase": "play",
+        "t": 18518
+      },
+      {
+        "type": "aoe",
+        "aoeType": "nanman",
+        "from": 3,
+        "round": 17,
+        "phase": "play",
+        "t": 18520
+      },
+      {
+        "type": "damage",
+        "seat": 1,
+        "amount": 1,
+        "round": 17,
+        "phase": "play",
+        "t": 18521
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 17,
+        "phase": "draw",
+        "t": 18933
+      },
+      {
+        "type": "fxstep",
+        "round": 17,
+        "phase": "draw",
+        "t": 18933
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 18,
+        "phase": "draw",
+        "t": 19136
+      },
+      {
+        "type": "fxstep",
+        "round": 18,
+        "phase": "draw",
+        "t": 19136
+      },
+      {
+        "type": "recover",
+        "seat": 1,
+        "round": 18,
+        "phase": "play",
+        "t": 19138
+      },
+      {
+        "type": "aoe",
+        "aoeType": "nanman",
+        "from": 1,
+        "round": 18,
+        "phase": "play",
+        "t": 19140
+      },
+      {
+        "type": "damage",
+        "seat": 2,
+        "amount": 1,
+        "round": 18,
+        "phase": "play",
+        "t": 19141
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 18,
+        "phase": "draw",
+        "t": 19551
+      },
+      {
+        "type": "fxstep",
+        "round": 18,
+        "phase": "draw",
+        "t": 19551
+      },
+      {
+        "type": "recover",
+        "seat": 2,
+        "round": 18,
+        "phase": "play",
+        "t": 19553
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "诸葛连弩",
+        "round": 18,
+        "phase": "play",
+        "t": 19555
+      },
+      {
+        "type": "aoe",
+        "aoeType": "nanman",
+        "from": 2,
+        "round": 18,
+        "phase": "play",
+        "t": 19556
+      },
+      {
+        "type": "damage",
+        "seat": 1,
+        "amount": 1,
+        "round": 18,
+        "phase": "play",
+        "t": 19557
+      },
+      {
+        "type": "damage",
+        "seat": 3,
+        "amount": 1,
+        "round": 18,
+        "phase": "play",
+        "t": 19761
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 18,
+        "phase": "play",
+        "t": 19966
+      },
+      {
+        "type": "fxstep",
+        "round": 18,
+        "phase": "play",
+        "t": 19966
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 18,
+        "phase": "draw",
+        "t": 20168
+      },
+      {
+        "type": "fxstep",
+        "round": 18,
+        "phase": "draw",
+        "t": 20168
+      },
+      {
+        "type": "recover",
+        "seat": 3,
+        "round": 18,
+        "phase": "play",
+        "t": 20170
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 18,
+        "phase": "draw",
+        "t": 20372
+      },
+      {
+        "type": "fxstep",
+        "round": 18,
+        "phase": "draw",
+        "t": 20372
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "青釭剑",
+        "round": 18,
+        "phase": "play",
+        "t": 20380
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 19,
+        "phase": "draw",
+        "t": 20583
+      },
+      {
+        "type": "fxstep",
+        "round": 19,
+        "phase": "draw",
+        "t": 20583
+      },
+      {
+        "type": "recover",
+        "seat": 1,
+        "round": 19,
+        "phase": "play",
+        "t": 20584
+      },
+      {
+        "type": "aoe",
+        "aoeType": "nanman",
+        "from": 1,
+        "round": 19,
+        "phase": "play",
+        "t": 20586
+      },
+      {
+        "type": "damage",
+        "seat": 3,
+        "amount": 1,
+        "round": 19,
+        "phase": "play",
+        "t": 20592
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 19,
+        "phase": "draw",
+        "t": 21001
+      },
+      {
+        "type": "fxstep",
+        "round": 19,
+        "phase": "draw",
+        "t": 21002
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 19,
+        "phase": "draw",
+        "t": 21204
+      },
+      {
+        "type": "fxstep",
+        "round": 19,
+        "phase": "draw",
+        "t": 21204
+      },
+      {
+        "type": "recover",
+        "seat": 3,
+        "round": 19,
+        "phase": "play",
+        "t": 21206
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 19,
+        "phase": "draw",
+        "t": 21408
+      },
+      {
+        "type": "fxstep",
+        "round": 19,
+        "phase": "draw",
+        "t": 21409
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 20,
+        "phase": "draw",
+        "t": 21617
+      },
+      {
+        "type": "fxstep",
+        "round": 20,
+        "phase": "draw",
+        "t": 21617
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "麒麟弓",
+        "round": 20,
+        "phase": "play",
+        "t": 21619
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 20,
+        "phase": "draw",
+        "t": 21824
+      },
+      {
+        "type": "fxstep",
+        "round": 20,
+        "phase": "draw",
+        "t": 21824
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 20,
+        "phase": "draw",
+        "t": 22027
+      },
+      {
+        "type": "fxstep",
+        "round": 20,
+        "phase": "draw",
+        "t": 22027
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 20,
+        "phase": "draw",
+        "t": 22232
+      },
+      {
+        "type": "fxstep",
+        "round": 20,
+        "phase": "draw",
+        "t": 22232
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 21,
+        "phase": "draw",
+        "t": 22436
+      },
+      {
+        "type": "fxstep",
+        "round": 21,
+        "phase": "draw",
+        "t": 22436
+      },
+      {
+        "type": "judge",
+        "seat": 2,
+        "card": {
+          "suit": "spade",
+          "rank": 2,
+          "name": "八卦阵",
+          "rankLabel": "2"
+        },
+        "round": 21,
+        "phase": "judge",
+        "t": 22648
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 21,
+        "phase": "draw",
+        "t": 22849
+      },
+      {
+        "type": "fxstep",
+        "round": 21,
+        "phase": "draw",
+        "t": 22849
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 21,
+        "phase": "draw",
+        "t": 23051
+      },
+      {
+        "type": "fxstep",
+        "round": 21,
+        "phase": "draw",
+        "t": 23051
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 21,
+        "phase": "draw",
+        "t": 23257
+      },
+      {
+        "type": "fxstep",
+        "round": 21,
+        "phase": "draw",
+        "t": 23257
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "麒麟弓",
+        "round": 21,
+        "phase": "play",
+        "t": 23262
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 22,
+        "phase": "draw",
+        "t": 23466
+      },
+      {
+        "type": "fxstep",
+        "round": 22,
+        "phase": "draw",
+        "t": 23466
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 22,
+        "phase": "draw",
+        "t": 23671
+      },
+      {
+        "type": "fxstep",
+        "round": 22,
+        "phase": "draw",
+        "t": 23671
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 22,
+        "phase": "draw",
+        "t": 23875
+      },
+      {
+        "type": "fxstep",
+        "round": 22,
+        "phase": "draw",
+        "t": 23875
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "贯石斧",
+        "round": 22,
+        "phase": "play",
+        "t": 23877
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 22,
+        "phase": "draw",
+        "t": 24081
+      },
+      {
+        "type": "fxstep",
+        "round": 22,
+        "phase": "draw",
+        "t": 24081
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 22,
+        "phase": "play",
+        "t": 24083
+      },
+      {
+        "type": "fxstep",
+        "round": 22,
+        "phase": "play",
+        "t": 24083
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 23,
+        "phase": "draw",
+        "t": 24290
+      },
+      {
+        "type": "fxstep",
+        "round": 23,
+        "phase": "draw",
+        "t": 24290
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 23,
+        "phase": "draw",
+        "t": 24494
+      },
+      {
+        "type": "fxstep",
+        "round": 23,
+        "phase": "draw",
+        "t": 24494
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 23,
+        "phase": "draw",
+        "t": 24698
+      },
+      {
+        "type": "fxstep",
+        "round": 23,
+        "phase": "draw",
+        "t": 24698
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "的卢",
+        "round": 23,
+        "phase": "play",
+        "t": 24700
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 23,
+        "phase": "draw",
+        "t": 24904
+      },
+      {
+        "type": "fxstep",
+        "round": 23,
+        "phase": "draw",
+        "t": 24904
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 24,
+        "phase": "draw",
+        "t": 25109
+      },
+      {
+        "type": "fxstep",
+        "round": 24,
+        "phase": "draw",
+        "t": 25109
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 24,
+        "phase": "draw",
+        "t": 25312
+      },
+      {
+        "type": "fxstep",
+        "round": 24,
+        "phase": "draw",
+        "t": 25312
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 24,
+        "phase": "draw",
+        "t": 25518
+      },
+      {
+        "type": "fxstep",
+        "round": 24,
+        "phase": "draw",
+        "t": 25518
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "诸葛连弩",
+        "round": 24,
+        "phase": "play",
+        "t": 25519
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 24,
+        "phase": "draw",
+        "t": 25724
+      },
+      {
+        "type": "fxstep",
+        "round": 24,
+        "phase": "draw",
+        "t": 25724
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 25,
+        "phase": "draw",
+        "t": 25927
+      },
+      {
+        "type": "fxstep",
+        "round": 25,
+        "phase": "draw",
+        "t": 25927
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 25,
+        "phase": "draw",
+        "t": 26132
+      },
+      {
+        "type": "fxstep",
+        "round": 25,
+        "phase": "draw",
+        "t": 26132
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "方天画戟",
+        "round": 25,
+        "phase": "play",
+        "t": 26133
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 25,
+        "phase": "draw",
+        "t": 26338
+      },
+      {
+        "type": "fxstep",
+        "round": 25,
+        "phase": "draw",
+        "t": 26338
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 25,
+        "phase": "draw",
+        "t": 26542
+      },
+      {
+        "type": "fxstep",
+        "round": 25,
+        "phase": "draw",
+        "t": 26542
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 26,
+        "phase": "draw",
+        "t": 26750
+      },
+      {
+        "type": "fxstep",
+        "round": 26,
+        "phase": "draw",
+        "t": 26750
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 26,
+        "phase": "draw",
+        "t": 26954
+      },
+      {
+        "type": "fxstep",
+        "round": 26,
+        "phase": "draw",
+        "t": 26954
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 26,
+        "phase": "draw",
+        "t": 27158
+      },
+      {
+        "type": "fxstep",
+        "round": 26,
+        "phase": "draw",
+        "t": 27158
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "麒麟弓",
+        "round": 26,
+        "phase": "play",
+        "t": 27162
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 26,
+        "phase": "draw",
+        "t": 27366
+      },
+      {
+        "type": "fxstep",
+        "round": 26,
+        "phase": "draw",
+        "t": 27366
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "寒冰剑",
+        "round": 26,
+        "phase": "play",
+        "t": 27368
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 27,
+        "phase": "draw",
+        "t": 27574
+      },
+      {
+        "type": "fxstep",
+        "round": 27,
+        "phase": "draw",
+        "t": 27574
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 27,
+        "phase": "draw",
+        "t": 27779
+      },
+      {
+        "type": "fxstep",
+        "round": 27,
+        "phase": "draw",
+        "t": 27779
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 27,
+        "phase": "draw",
+        "t": 27984
+      },
+      {
+        "type": "fxstep",
+        "round": 27,
+        "phase": "draw",
+        "t": 27984
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "寒冰剑",
+        "round": 27,
+        "phase": "play",
+        "t": 27989
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 27,
+        "phase": "draw",
+        "t": 28194
+      },
+      {
+        "type": "fxstep",
+        "round": 27,
+        "phase": "draw",
+        "t": 28194
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 28,
+        "phase": "draw",
+        "t": 28399
+      },
+      {
+        "type": "fxstep",
+        "round": 28,
+        "phase": "draw",
+        "t": 28399
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 28,
+        "phase": "judge",
+        "t": 28604
+      },
+      {
+        "type": "fxstep",
+        "round": 28,
+        "phase": "judge",
+        "t": 28604
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 28,
+        "phase": "draw",
+        "t": 28604
+      },
+      {
+        "type": "fxstep",
+        "round": 28,
+        "phase": "draw",
+        "t": 28604
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "青龙偃月刀",
+        "round": 28,
+        "phase": "play",
+        "t": 28605
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 28,
+        "phase": "draw",
+        "t": 28809
+      },
+      {
+        "type": "fxstep",
+        "round": 28,
+        "phase": "draw",
+        "t": 28809
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 28,
+        "phase": "draw",
+        "t": 29015
+      },
+      {
+        "type": "fxstep",
+        "round": 28,
+        "phase": "draw",
+        "t": 29015
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "club",
+          "rank": 11,
+          "name": "杀",
+          "rankLabel": "J"
+        },
+        "round": 29,
+        "phase": "judge",
+        "t": 29221
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 29,
+        "phase": "draw",
+        "t": 29422
+      },
+      {
+        "type": "fxstep",
+        "round": 29,
+        "phase": "draw",
+        "t": 29422
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 29,
+        "phase": "draw",
+        "t": 29626
+      },
+      {
+        "type": "fxstep",
+        "round": 29,
+        "phase": "draw",
+        "t": 29626
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 29,
+        "phase": "draw",
+        "t": 29830
+      },
+      {
+        "type": "fxstep",
+        "round": 29,
+        "phase": "draw",
+        "t": 29830
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 29,
+        "phase": "draw",
+        "t": 30035
+      },
+      {
+        "type": "fxstep",
+        "round": 29,
+        "phase": "draw",
+        "t": 30035
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "雌雄双股剑",
+        "round": 29,
+        "phase": "play",
+        "t": 30037
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 29,
+        "phase": "play",
+        "t": 30038
+      },
+      {
+        "type": "fxstep",
+        "round": 29,
+        "phase": "play",
+        "t": 30038
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "丈八蛇矛",
+        "round": 29,
+        "phase": "play",
+        "t": 30039
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 30,
+        "phase": "draw",
+        "t": 30244
+      },
+      {
+        "type": "fxstep",
+        "round": 30,
+        "phase": "draw",
+        "t": 30244
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 30,
+        "phase": "draw",
+        "t": 30448
+      },
+      {
+        "type": "fxstep",
+        "round": 30,
+        "phase": "draw",
+        "t": 30448
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 30,
+        "phase": "draw",
+        "t": 30654
+      },
+      {
+        "type": "fxstep",
+        "round": 30,
+        "phase": "draw",
+        "t": 30654
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 30,
+        "phase": "draw",
+        "t": 30859
+      },
+      {
+        "type": "fxstep",
+        "round": 30,
+        "phase": "draw",
+        "t": 30859
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 31,
+        "phase": "draw",
+        "t": 31063
+      },
+      {
+        "type": "fxstep",
+        "round": 31,
+        "phase": "draw",
+        "t": 31063
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "八卦阵",
+        "round": 31,
+        "phase": "play",
+        "t": 31064
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 31,
+        "phase": "draw",
+        "t": 31269
+      },
+      {
+        "type": "fxstep",
+        "round": 31,
+        "phase": "draw",
+        "t": 31269
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 31,
+        "phase": "draw",
+        "t": 31473
+      },
+      {
+        "type": "fxstep",
+        "round": 31,
+        "phase": "draw",
+        "t": 31473
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 31,
+        "phase": "draw",
+        "t": 31678
+      },
+      {
+        "type": "fxstep",
+        "round": 31,
+        "phase": "draw",
+        "t": 31678
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 32,
+        "phase": "draw",
+        "t": 31882
+      },
+      {
+        "type": "fxstep",
+        "round": 32,
+        "phase": "draw",
+        "t": 31882
+      },
+      {
+        "type": "judge",
+        "seat": 2,
+        "card": {
+          "suit": "heart",
+          "rank": 12,
+          "name": "桃",
+          "rankLabel": "Q"
+        },
+        "round": 32,
+        "phase": "judge",
+        "t": 32088
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 32,
+        "phase": "draw",
+        "t": 32290
+      },
+      {
+        "type": "fxstep",
+        "round": 32,
+        "phase": "draw",
+        "t": 32290
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 32,
+        "phase": "draw",
+        "t": 32494
+      },
+      {
+        "type": "fxstep",
+        "round": 32,
+        "phase": "draw",
+        "t": 32494
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 32,
+        "phase": "draw",
+        "t": 32698
+      },
+      {
+        "type": "fxstep",
+        "round": 32,
+        "phase": "draw",
+        "t": 32698
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 33,
+        "phase": "draw",
+        "t": 32903
+      },
+      {
+        "type": "fxstep",
+        "round": 33,
+        "phase": "draw",
+        "t": 32903
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 33,
+        "phase": "draw",
+        "t": 33112
+      },
+      {
+        "type": "fxstep",
+        "round": 33,
+        "phase": "draw",
+        "t": 33112
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 33,
+        "phase": "draw",
+        "t": 33318
+      },
+      {
+        "type": "fxstep",
+        "round": 33,
+        "phase": "draw",
+        "t": 33318
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 33,
+        "phase": "draw",
+        "t": 33523
+      },
+      {
+        "type": "fxstep",
+        "round": 33,
+        "phase": "draw",
+        "t": 33523
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 34,
+        "phase": "draw",
+        "t": 33727
+      },
+      {
+        "type": "fxstep",
+        "round": 34,
+        "phase": "draw",
+        "t": 33727
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "诸葛连弩",
+        "round": 34,
+        "phase": "play",
+        "t": 33729
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 34,
+        "phase": "draw",
+        "t": 33933
+      },
+      {
+        "type": "fxstep",
+        "round": 34,
+        "phase": "draw",
+        "t": 33933
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 34,
+        "phase": "draw",
+        "t": 34139
+      },
+      {
+        "type": "fxstep",
+        "round": 34,
+        "phase": "draw",
+        "t": 34139
+      },
+      {
+        "type": "aoe",
+        "aoeType": "nanman",
+        "from": 3,
+        "round": 34,
+        "phase": "play",
+        "t": 34140
+      },
+      {
+        "type": "damage",
+        "seat": 1,
+        "amount": 1,
+        "round": 34,
+        "phase": "play",
+        "t": 34141
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 34,
+        "phase": "play",
+        "t": 34351
+      },
+      {
+        "type": "fxstep",
+        "round": 34,
+        "phase": "play",
+        "t": 34351
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "八卦阵",
+        "round": 34,
+        "phase": "play",
+        "t": 34356
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 34,
+        "phase": "draw",
+        "t": 34560
+      },
+      {
+        "type": "fxstep",
+        "round": 34,
+        "phase": "draw",
+        "t": 34560
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 35,
+        "phase": "draw",
+        "t": 34766
+      },
+      {
+        "type": "fxstep",
+        "round": 35,
+        "phase": "draw",
+        "t": 34766
+      },
+      {
+        "type": "recover",
+        "seat": 1,
+        "round": 35,
+        "phase": "play",
+        "t": 34767
+      },
+      {
+        "type": "aoe",
+        "aoeType": "nanman",
+        "from": 1,
+        "round": 35,
+        "phase": "play",
+        "t": 34769
+      },
+      {
+        "type": "damage",
+        "seat": 2,
+        "amount": 1,
+        "round": 35,
+        "phase": "play",
+        "t": 34770
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 35,
+        "phase": "draw",
+        "t": 35180
+      },
+      {
+        "type": "fxstep",
+        "round": 35,
+        "phase": "draw",
+        "t": 35180
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 35,
+        "phase": "play",
+        "t": 35183
+      },
+      {
+        "type": "fxstep",
+        "round": 35,
+        "phase": "play",
+        "t": 35183
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 35,
+        "phase": "play",
+        "t": 35183
+      },
+      {
+        "type": "fxstep",
+        "round": 35,
+        "phase": "play",
+        "t": 35183
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "青釭剑",
+        "round": 35,
+        "phase": "play",
+        "t": 35185
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 35,
+        "phase": "play",
+        "t": 35189
+      },
+      {
+        "type": "fxstep",
+        "round": 35,
+        "phase": "play",
+        "t": 35189
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 35,
+        "phase": "play",
+        "t": 35193
+      },
+      {
+        "type": "fxstep",
+        "round": 35,
+        "phase": "play",
+        "t": 35193
+      },
+      {
+        "type": "recover",
+        "seat": 2,
+        "round": 35,
+        "phase": "play",
+        "t": 35194
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 35,
+        "phase": "draw",
+        "t": 35398
+      },
+      {
+        "type": "fxstep",
+        "round": 35,
+        "phase": "draw",
+        "t": 35398
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 35,
+        "phase": "draw",
+        "t": 35602
+      },
+      {
+        "type": "fxstep",
+        "round": 35,
+        "phase": "draw",
+        "t": 35602
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "heart",
+          "rank": 9,
+          "name": "无中生有",
+          "rankLabel": "9"
+        },
+        "round": 36,
+        "phase": "judge",
+        "t": 35811
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 36,
+        "phase": "draw",
+        "t": 36013
+      },
+      {
+        "type": "fxstep",
+        "round": 36,
+        "phase": "draw",
+        "t": 36013
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "仁王盾",
+        "round": 36,
+        "phase": "play",
+        "t": 36014
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 36,
+        "phase": "draw",
+        "t": 36222
+      },
+      {
+        "type": "fxstep",
+        "round": 36,
+        "phase": "draw",
+        "t": 36222
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 36,
+        "phase": "draw",
+        "t": 36426
+      },
+      {
+        "type": "fxstep",
+        "round": 36,
+        "phase": "draw",
+        "t": 36426
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 36,
+        "phase": "draw",
+        "t": 36630
+      },
+      {
+        "type": "fxstep",
+        "round": 36,
+        "phase": "draw",
+        "t": 36630
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 37,
+        "phase": "draw",
+        "t": 36835
+      },
+      {
+        "type": "fxstep",
+        "round": 37,
+        "phase": "draw",
+        "t": 36835
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 37,
+        "phase": "draw",
+        "t": 37040
+      },
+      {
+        "type": "fxstep",
+        "round": 37,
+        "phase": "draw",
+        "t": 37040
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 37,
+        "phase": "draw",
+        "t": 37247
+      },
+      {
+        "type": "fxstep",
+        "round": 37,
+        "phase": "draw",
+        "t": 37247
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 37,
+        "phase": "draw",
+        "t": 37451
+      },
+      {
+        "type": "fxstep",
+        "round": 37,
+        "phase": "draw",
+        "t": 37451
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "club",
+          "rank": 1,
+          "name": "诸葛连弩",
+          "rankLabel": "A"
+        },
+        "round": 38,
+        "phase": "judge",
+        "t": 37657
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 38,
+        "phase": "draw",
+        "t": 37859
+      },
+      {
+        "type": "fxstep",
+        "round": 38,
+        "phase": "draw",
+        "t": 37859
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 38,
+        "phase": "draw",
+        "t": 38063
+      },
+      {
+        "type": "fxstep",
+        "round": 38,
+        "phase": "draw",
+        "t": 38063
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 38,
+        "phase": "draw",
+        "t": 38267
+      },
+      {
+        "type": "fxstep",
+        "round": 38,
+        "phase": "draw",
+        "t": 38267
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 38,
+        "phase": "draw",
+        "t": 38471
+      },
+      {
+        "type": "fxstep",
+        "round": 38,
+        "phase": "draw",
+        "t": 38471
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 39,
+        "phase": "draw",
+        "t": 38675
+      },
+      {
+        "type": "fxstep",
+        "round": 39,
+        "phase": "draw",
+        "t": 38676
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 39,
+        "phase": "draw",
+        "t": 38880
+      },
+      {
+        "type": "fxstep",
+        "round": 39,
+        "phase": "draw",
+        "t": 38880
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 39,
+        "phase": "draw",
+        "t": 39085
+      },
+      {
+        "type": "fxstep",
+        "round": 39,
+        "phase": "draw",
+        "t": 39085
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 39,
+        "phase": "draw",
+        "t": 39289
+      },
+      {
+        "type": "fxstep",
+        "round": 39,
+        "phase": "draw",
+        "t": 39289
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "diamond",
+          "rank": 13,
+          "name": "杀",
+          "rankLabel": "K"
+        },
+        "round": 40,
+        "phase": "judge",
+        "t": 39495
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 40,
+        "phase": "draw",
+        "t": 39697
+      },
+      {
+        "type": "fxstep",
+        "round": 40,
+        "phase": "draw",
+        "t": 39697
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 40,
+        "phase": "draw",
+        "t": 39900
+      },
+      {
+        "type": "fxstep",
+        "round": 40,
+        "phase": "draw",
+        "t": 39900
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "雌雄双股剑",
+        "round": 40,
+        "phase": "play",
+        "t": 39902
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 40,
+        "phase": "draw",
+        "t": 40106
+      },
+      {
+        "type": "fxstep",
+        "round": 40,
+        "phase": "draw",
+        "t": 40106
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 40,
+        "phase": "draw",
+        "t": 40309
+      },
+      {
+        "type": "fxstep",
+        "round": 40,
+        "phase": "draw",
+        "t": 40309
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "八卦阵",
+        "round": 40,
+        "phase": "play",
+        "t": 40310
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 41,
+        "phase": "draw",
+        "t": 40514
+      },
+      {
+        "type": "fxstep",
+        "round": 41,
+        "phase": "draw",
+        "t": 40515
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "方天画戟",
+        "round": 41,
+        "phase": "play",
+        "t": 40516
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 41,
+        "phase": "play",
+        "t": 40517
+      },
+      {
+        "type": "fxstep",
+        "round": 41,
+        "phase": "play",
+        "t": 40517
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 41,
+        "phase": "draw",
+        "t": 40721
+      },
+      {
+        "type": "fxstep",
+        "round": 41,
+        "phase": "draw",
+        "t": 40721
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "麒麟弓",
+        "round": 41,
+        "phase": "play",
+        "t": 40723
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 41,
+        "phase": "play",
+        "t": 40725
+      },
+      {
+        "type": "fxstep",
+        "round": 41,
+        "phase": "play",
+        "t": 40725
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "仁王盾",
+        "round": 41,
+        "phase": "play",
+        "t": 40727
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 41,
+        "phase": "draw",
+        "t": 40931
+      },
+      {
+        "type": "fxstep",
+        "round": 41,
+        "phase": "draw",
+        "t": 40931
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 41,
+        "phase": "draw",
+        "t": 41135
+      },
+      {
+        "type": "fxstep",
+        "round": 41,
+        "phase": "draw",
+        "t": 41135
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "雌雄双股剑",
+        "round": 41,
+        "phase": "play",
+        "t": 41136
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 42,
+        "phase": "draw",
+        "t": 41340
+      },
+      {
+        "type": "fxstep",
+        "round": 42,
+        "phase": "draw",
+        "t": 41340
+      },
+      {
+        "type": "judge",
+        "seat": 2,
+        "card": {
+          "suit": "spade",
+          "rank": 3,
+          "name": "顺手牵羊",
+          "rankLabel": "3"
+        },
+        "round": 42,
+        "phase": "judge",
+        "t": 41546
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 42,
+        "phase": "draw",
+        "t": 41747
+      },
+      {
+        "type": "fxstep",
+        "round": 42,
+        "phase": "draw",
+        "t": 41747
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 42,
+        "phase": "draw",
+        "t": 41951
+      },
+      {
+        "type": "fxstep",
+        "round": 42,
+        "phase": "draw",
+        "t": 41951
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "青龙偃月刀",
+        "round": 42,
+        "phase": "play",
+        "t": 41952
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 42,
+        "phase": "draw",
+        "t": 42156
+      },
+      {
+        "type": "fxstep",
+        "round": 42,
+        "phase": "draw",
+        "t": 42156
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 43,
+        "phase": "draw",
+        "t": 42359
+      },
+      {
+        "type": "fxstep",
+        "round": 43,
+        "phase": "draw",
+        "t": 42360
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 43,
+        "phase": "draw",
+        "t": 42564
+      },
+      {
+        "type": "fxstep",
+        "round": 43,
+        "phase": "draw",
+        "t": 42564
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 43,
+        "phase": "play",
+        "t": 42568
+      },
+      {
+        "type": "fxstep",
+        "round": 43,
+        "phase": "play",
+        "t": 42568
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 43,
+        "phase": "play",
+        "t": 42569
+      },
+      {
+        "type": "fxstep",
+        "round": 43,
+        "phase": "play",
+        "t": 42569
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 43,
+        "phase": "draw",
+        "t": 42774
+      },
+      {
+        "type": "fxstep",
+        "round": 43,
+        "phase": "draw",
+        "t": 42774
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 43,
+        "phase": "draw",
+        "t": 42978
+      },
+      {
+        "type": "fxstep",
+        "round": 43,
+        "phase": "draw",
+        "t": 42978
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 44,
+        "phase": "draw",
+        "t": 43182
+      },
+      {
+        "type": "fxstep",
+        "round": 44,
+        "phase": "draw",
+        "t": 43182
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 44,
+        "phase": "draw",
+        "t": 43386
+      },
+      {
+        "type": "fxstep",
+        "round": 44,
+        "phase": "draw",
+        "t": 43386
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 44,
+        "phase": "draw",
+        "t": 43591
+      },
+      {
+        "type": "fxstep",
+        "round": 44,
+        "phase": "draw",
+        "t": 43591
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 44,
+        "phase": "draw",
+        "t": 43797
+      },
+      {
+        "type": "fxstep",
+        "round": 44,
+        "phase": "draw",
+        "t": 43797
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 45,
+        "phase": "draw",
+        "t": 44001
+      },
+      {
+        "type": "fxstep",
+        "round": 45,
+        "phase": "draw",
+        "t": 44001
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "诸葛连弩",
+        "round": 45,
+        "phase": "play",
+        "t": 44002
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 45,
+        "phase": "draw",
+        "t": 44207
+      },
+      {
+        "type": "fxstep",
+        "round": 45,
+        "phase": "draw",
+        "t": 44207
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 45,
+        "phase": "play",
+        "t": 44210
+      },
+      {
+        "type": "fxstep",
+        "round": 45,
+        "phase": "play",
+        "t": 44210
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 45,
+        "phase": "draw",
+        "t": 44414
+      },
+      {
+        "type": "fxstep",
+        "round": 45,
+        "phase": "draw",
+        "t": 44414
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 45,
+        "phase": "draw",
+        "t": 44618
+      },
+      {
+        "type": "fxstep",
+        "round": 45,
+        "phase": "draw",
+        "t": 44618
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 46,
+        "phase": "draw",
+        "t": 44823
+      },
+      {
+        "type": "fxstep",
+        "round": 46,
+        "phase": "draw",
+        "t": 44823
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "大宛",
+        "round": 46,
+        "phase": "play",
+        "t": 44825
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 46,
+        "phase": "play",
+        "t": 44827
+      },
+      {
+        "type": "fxstep",
+        "round": 46,
+        "phase": "play",
+        "t": 44827
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 46,
+        "phase": "draw",
+        "t": 45031
+      },
+      {
+        "type": "fxstep",
+        "round": 46,
+        "phase": "draw",
+        "t": 45031
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 46,
+        "phase": "draw",
+        "t": 45236
+      },
+      {
+        "type": "fxstep",
+        "round": 46,
+        "phase": "draw",
+        "t": 45236
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 46,
+        "phase": "draw",
+        "t": 45440
+      },
+      {
+        "type": "fxstep",
+        "round": 46,
+        "phase": "draw",
+        "t": 45440
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 47,
+        "phase": "draw",
+        "t": 45645
+      },
+      {
+        "type": "fxstep",
+        "round": 47,
+        "phase": "draw",
+        "t": 45645
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 47,
+        "phase": "draw",
+        "t": 45854
+      },
+      {
+        "type": "fxstep",
+        "round": 47,
+        "phase": "draw",
+        "t": 45854
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "方天画戟",
+        "round": 47,
+        "phase": "play",
+        "t": 45856
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 47,
+        "phase": "play",
+        "t": 45859
+      },
+      {
+        "type": "fxstep",
+        "round": 47,
+        "phase": "play",
+        "t": 45859
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 47,
+        "phase": "draw",
+        "t": 46064
+      },
+      {
+        "type": "fxstep",
+        "round": 47,
+        "phase": "draw",
+        "t": 46064
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 47,
+        "phase": "draw",
+        "t": 46268
+      },
+      {
+        "type": "fxstep",
+        "round": 47,
+        "phase": "draw",
+        "t": 46268
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 48,
+        "phase": "draw",
+        "t": 46474
+      },
+      {
+        "type": "fxstep",
+        "round": 48,
+        "phase": "draw",
+        "t": 46474
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 48,
+        "phase": "draw",
+        "t": 46678
+      },
+      {
+        "type": "fxstep",
+        "round": 48,
+        "phase": "draw",
+        "t": 46678
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 48,
+        "phase": "draw",
+        "t": 46884
+      },
+      {
+        "type": "fxstep",
+        "round": 48,
+        "phase": "draw",
+        "t": 46884
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 48,
+        "phase": "draw",
+        "t": 47088
+      },
+      {
+        "type": "fxstep",
+        "round": 48,
+        "phase": "draw",
+        "t": 47088
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "club",
+          "rank": 11,
+          "name": "杀",
+          "rankLabel": "J"
+        },
+        "round": 49,
+        "phase": "judge",
+        "t": 47292
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 49,
+        "phase": "draw",
+        "t": 47494
+      },
+      {
+        "type": "fxstep",
+        "round": 49,
+        "phase": "draw",
+        "t": 47494
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 49,
+        "phase": "draw",
+        "t": 47697
+      },
+      {
+        "type": "fxstep",
+        "round": 49,
+        "phase": "draw",
+        "t": 47697
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 49,
+        "phase": "draw",
+        "t": 47901
+      },
+      {
+        "type": "fxstep",
+        "round": 49,
+        "phase": "draw",
+        "t": 47901
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "方天画戟",
+        "round": 49,
+        "phase": "play",
+        "t": 47905
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 49,
+        "phase": "play",
+        "t": 47906
+      },
+      {
+        "type": "fxstep",
+        "round": 49,
+        "phase": "play",
+        "t": 47906
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 49,
+        "phase": "draw",
+        "t": 48110
+      },
+      {
+        "type": "fxstep",
+        "round": 49,
+        "phase": "draw",
+        "t": 48110
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 50,
+        "phase": "draw",
+        "t": 48314
+      },
+      {
+        "type": "fxstep",
+        "round": 50,
+        "phase": "draw",
+        "t": 48314
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 50,
+        "phase": "draw",
+        "t": 48518
+      },
+      {
+        "type": "fxstep",
+        "round": 50,
+        "phase": "draw",
+        "t": 48518
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "诸葛连弩",
+        "round": 50,
+        "phase": "play",
+        "t": 48520
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 50,
+        "phase": "draw",
+        "t": 48724
+      },
+      {
+        "type": "fxstep",
+        "round": 50,
+        "phase": "draw",
+        "t": 48724
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 50,
+        "phase": "draw",
+        "t": 48931
+      },
+      {
+        "type": "fxstep",
+        "round": 50,
+        "phase": "draw",
+        "t": 48931
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "club",
+          "rank": 7,
+          "name": "杀",
+          "rankLabel": "7"
+        },
+        "round": 51,
+        "phase": "judge",
+        "t": 49137
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 51,
+        "phase": "draw",
+        "t": 49337
+      },
+      {
+        "type": "fxstep",
+        "round": 51,
+        "phase": "draw",
+        "t": 49337
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "贯石斧",
+        "round": 51,
+        "phase": "play",
+        "t": 49339
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 51,
+        "phase": "judge",
+        "t": 49547
+      },
+      {
+        "type": "fxstep",
+        "round": 51,
+        "phase": "judge",
+        "t": 49547
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 51,
+        "phase": "draw",
+        "t": 49548
+      },
+      {
+        "type": "fxstep",
+        "round": 51,
+        "phase": "draw",
+        "t": 49548
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "丈八蛇矛",
+        "round": 51,
+        "phase": "play",
+        "t": 49549
+      },
+      {
+        "type": "judge",
+        "seat": 3,
+        "card": {
+          "suit": "heart",
+          "rank": 3,
+          "name": "桃",
+          "rankLabel": "3"
+        },
+        "round": 51,
+        "phase": "judge",
+        "t": 49752
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 51,
+        "phase": "draw",
+        "t": 49954
+      },
+      {
+        "type": "fxstep",
+        "round": 51,
+        "phase": "draw",
+        "t": 49954
+      },
+      {
+        "type": "judge",
+        "seat": 4,
+        "card": {
+          "suit": "club",
+          "rank": 8,
+          "name": "杀",
+          "rankLabel": "8"
+        },
+        "round": 51,
+        "phase": "judge",
+        "t": 50159
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 51,
+        "phase": "draw",
+        "t": 50360
+      },
+      {
+        "type": "fxstep",
+        "round": 51,
+        "phase": "draw",
+        "t": 50360
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "spade",
+          "rank": 1,
+          "name": "决斗",
+          "rankLabel": "A"
+        },
+        "round": 52,
+        "phase": "judge",
+        "t": 50564
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 52,
+        "phase": "draw",
+        "t": 50765
+      },
+      {
+        "type": "fxstep",
+        "round": 52,
+        "phase": "draw",
+        "t": 50765
+      },
+      {
+        "type": "judge",
+        "seat": 2,
+        "card": {
+          "suit": "diamond",
+          "rank": 6,
+          "name": "杀",
+          "rankLabel": "6"
+        },
+        "round": 52,
+        "phase": "judge",
+        "t": 50970
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 52,
+        "phase": "draw",
+        "t": 51172
+      },
+      {
+        "type": "fxstep",
+        "round": 52,
+        "phase": "draw",
+        "t": 51172
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 52,
+        "phase": "judge",
+        "t": 51378
+      },
+      {
+        "type": "fxstep",
+        "round": 52,
+        "phase": "judge",
+        "t": 51378
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 52,
+        "phase": "draw",
+        "t": 51378
+      },
+      {
+        "type": "fxstep",
+        "round": 52,
+        "phase": "draw",
+        "t": 51378
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 52,
+        "phase": "draw",
+        "t": 51583
+      },
+      {
+        "type": "fxstep",
+        "round": 52,
+        "phase": "draw",
+        "t": 51583
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 53,
+        "phase": "draw",
+        "t": 51787
+      },
+      {
+        "type": "fxstep",
+        "round": 53,
+        "phase": "draw",
+        "t": 51787
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 53,
+        "phase": "draw",
+        "t": 51992
+      },
+      {
+        "type": "fxstep",
+        "round": 53,
+        "phase": "draw",
+        "t": 51992
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 53,
+        "phase": "draw",
+        "t": 52198
+      },
+      {
+        "type": "fxstep",
+        "round": 53,
+        "phase": "draw",
+        "t": 52198
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "八卦阵",
+        "round": 53,
+        "phase": "play",
+        "t": 52200
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 53,
+        "phase": "play",
+        "t": 52201
+      },
+      {
+        "type": "fxstep",
+        "round": 53,
+        "phase": "play",
+        "t": 52201
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 53,
+        "phase": "draw",
+        "t": 52408
+      },
+      {
+        "type": "fxstep",
+        "round": 53,
+        "phase": "draw",
+        "t": 52408
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "diamond",
+          "rank": 1,
+          "name": "诸葛连弩",
+          "rankLabel": "A"
+        },
+        "round": 54,
+        "phase": "judge",
+        "t": 52614
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 54,
+        "phase": "draw",
+        "t": 52816
+      },
+      {
+        "type": "fxstep",
+        "round": 54,
+        "phase": "draw",
+        "t": 52816
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 54,
+        "phase": "draw",
+        "t": 53019
+      },
+      {
+        "type": "fxstep",
+        "round": 54,
+        "phase": "draw",
+        "t": 53019
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 54,
+        "phase": "play",
+        "t": 53022
+      },
+      {
+        "type": "fxstep",
+        "round": 54,
+        "phase": "play",
+        "t": 53022
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "八卦阵",
+        "round": 54,
+        "phase": "play",
+        "t": 53023
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 54,
+        "phase": "draw",
+        "t": 53227
+      },
+      {
+        "type": "fxstep",
+        "round": 54,
+        "phase": "draw",
+        "t": 53227
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 54,
+        "phase": "draw",
+        "t": 53431
+      },
+      {
+        "type": "fxstep",
+        "round": 54,
+        "phase": "draw",
+        "t": 53431
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 55,
+        "phase": "draw",
+        "t": 53634
+      },
+      {
+        "type": "fxstep",
+        "round": 55,
+        "phase": "draw",
+        "t": 53634
+      },
+      {
+        "type": "equip",
+        "seat": 1,
+        "equipName": "八卦阵",
+        "round": 55,
+        "phase": "play",
+        "t": 53639
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 55,
+        "phase": "draw",
+        "t": 53843
+      },
+      {
+        "type": "fxstep",
+        "round": 55,
+        "phase": "draw",
+        "t": 53843
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 55,
+        "phase": "draw",
+        "t": 54047
+      },
+      {
+        "type": "fxstep",
+        "round": 55,
+        "phase": "draw",
+        "t": 54047
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "麒麟弓",
+        "round": 55,
+        "phase": "play",
+        "t": 54049
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 55,
+        "phase": "play",
+        "t": 54051
+      },
+      {
+        "type": "fxstep",
+        "round": 55,
+        "phase": "play",
+        "t": 54051
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 55,
+        "phase": "draw",
+        "t": 54255
+      },
+      {
+        "type": "fxstep",
+        "round": 55,
+        "phase": "draw",
+        "t": 54255
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 55,
+        "phase": "play",
+        "t": 54259
+      },
+      {
+        "type": "fxstep",
+        "round": 55,
+        "phase": "play",
+        "t": 54259
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "club",
+          "rank": 8,
+          "name": "杀",
+          "rankLabel": "8"
+        },
+        "round": 56,
+        "phase": "judge",
+        "t": 54466
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 56,
+        "phase": "draw",
+        "t": 54668
+      },
+      {
+        "type": "fxstep",
+        "round": 56,
+        "phase": "draw",
+        "t": 54668
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 56,
+        "phase": "draw",
+        "t": 54871
+      },
+      {
+        "type": "fxstep",
+        "round": 56,
+        "phase": "draw",
+        "t": 54871
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "青龙偃月刀",
+        "round": 56,
+        "phase": "play",
+        "t": 54873
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 56,
+        "phase": "draw",
+        "t": 55077
+      },
+      {
+        "type": "fxstep",
+        "round": 56,
+        "phase": "draw",
+        "t": 55077
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 56,
+        "phase": "draw",
+        "t": 55282
+      },
+      {
+        "type": "fxstep",
+        "round": 56,
+        "phase": "draw",
+        "t": 55282
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 57,
+        "phase": "draw",
+        "t": 55486
+      },
+      {
+        "type": "fxstep",
+        "round": 57,
+        "phase": "draw",
+        "t": 55486
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 57,
+        "phase": "draw",
+        "t": 55691
+      },
+      {
+        "type": "fxstep",
+        "round": 57,
+        "phase": "draw",
+        "t": 55691
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 57,
+        "phase": "draw",
+        "t": 55896
+      },
+      {
+        "type": "fxstep",
+        "round": 57,
+        "phase": "draw",
+        "t": 55896
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 57,
+        "phase": "play",
+        "t": 55903
+      },
+      {
+        "type": "fxstep",
+        "round": 57,
+        "phase": "play",
+        "t": 55903
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 57,
+        "phase": "draw",
+        "t": 56107
+      },
+      {
+        "type": "fxstep",
+        "round": 57,
+        "phase": "draw",
+        "t": 56107
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 58,
+        "phase": "draw",
+        "t": 56311
+      },
+      {
+        "type": "fxstep",
+        "round": 58,
+        "phase": "draw",
+        "t": 56311
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 58,
+        "phase": "draw",
+        "t": 56520
+      },
+      {
+        "type": "fxstep",
+        "round": 58,
+        "phase": "draw",
+        "t": 56520
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "青釭剑",
+        "round": 58,
+        "phase": "play",
+        "t": 56521
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 1,
+        "round": 58,
+        "phase": "play",
+        "t": 56525
+      },
+      {
+        "type": "fxstep",
+        "round": 58,
+        "phase": "play",
+        "t": 56525
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 58,
+        "phase": "draw",
+        "t": 56730
+      },
+      {
+        "type": "fxstep",
+        "round": 58,
+        "phase": "draw",
+        "t": 56730
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "诸葛连弩",
+        "round": 58,
+        "phase": "play",
+        "t": 56730
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 58,
+        "phase": "draw",
+        "t": 56935
+      },
+      {
+        "type": "fxstep",
+        "round": 58,
+        "phase": "draw",
+        "t": 56935
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 59,
+        "phase": "draw",
+        "t": 57140
+      },
+      {
+        "type": "fxstep",
+        "round": 59,
+        "phase": "draw",
+        "t": 57140
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 59,
+        "phase": "draw",
+        "t": 57345
+      },
+      {
+        "type": "fxstep",
+        "round": 59,
+        "phase": "draw",
+        "t": 57345
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 59,
+        "phase": "draw",
+        "t": 57550
+      },
+      {
+        "type": "fxstep",
+        "round": 59,
+        "phase": "draw",
+        "t": 57550
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 59,
+        "phase": "draw",
+        "t": 57753
+      },
+      {
+        "type": "fxstep",
+        "round": 59,
+        "phase": "draw",
+        "t": 57753
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 60,
+        "phase": "draw",
+        "t": 57957
+      },
+      {
+        "type": "fxstep",
+        "round": 60,
+        "phase": "draw",
+        "t": 57957
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 60,
+        "phase": "draw",
+        "t": 58165
+      },
+      {
+        "type": "fxstep",
+        "round": 60,
+        "phase": "draw",
+        "t": 58165
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "寒冰剑",
+        "round": 60,
+        "phase": "play",
+        "t": 58167
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 60,
+        "phase": "draw",
+        "t": 58371
+      },
+      {
+        "type": "fxstep",
+        "round": 60,
+        "phase": "draw",
+        "t": 58371
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 60,
+        "phase": "draw",
+        "t": 58577
+      },
+      {
+        "type": "fxstep",
+        "round": 60,
+        "phase": "draw",
+        "t": 58577
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 61,
+        "phase": "draw",
+        "t": 58781
+      },
+      {
+        "type": "fxstep",
+        "round": 61,
+        "phase": "draw",
+        "t": 58781
+      },
+      {
+        "type": "judge",
+        "seat": 2,
+        "card": {
+          "suit": "diamond",
+          "rank": 6,
+          "name": "闪",
+          "rankLabel": "6"
+        },
+        "round": 61,
+        "phase": "judge",
+        "t": 58991
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 61,
+        "phase": "draw",
+        "t": 59192
+      },
+      {
+        "type": "fxstep",
+        "round": 61,
+        "phase": "draw",
+        "t": 59192
+      },
+      {
+        "type": "judge",
+        "seat": 3,
+        "card": {
+          "suit": "diamond",
+          "rank": 1,
+          "name": "诸葛连弩",
+          "rankLabel": "A"
+        },
+        "round": 61,
+        "phase": "judge",
+        "t": 59394
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 61,
+        "phase": "draw",
+        "t": 59595
+      },
+      {
+        "type": "fxstep",
+        "round": 61,
+        "phase": "draw",
+        "t": 59595
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 61,
+        "phase": "draw",
+        "t": 59798
+      },
+      {
+        "type": "fxstep",
+        "round": 61,
+        "phase": "draw",
+        "t": 59798
+      },
+      {
+        "type": "equip",
+        "seat": 4,
+        "equipName": "贯石斧",
+        "round": 61,
+        "phase": "play",
+        "t": 59800
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 62,
+        "phase": "draw",
+        "t": 60003
+      },
+      {
+        "type": "fxstep",
+        "round": 62,
+        "phase": "draw",
+        "t": 60003
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 62,
+        "phase": "draw",
+        "t": 60207
+      },
+      {
+        "type": "fxstep",
+        "round": 62,
+        "phase": "draw",
+        "t": 60207
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 62,
+        "phase": "draw",
+        "t": 60412
+      },
+      {
+        "type": "fxstep",
+        "round": 62,
+        "phase": "draw",
+        "t": 60412
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 62,
+        "phase": "draw",
+        "t": 60619
+      },
+      {
+        "type": "fxstep",
+        "round": 62,
+        "phase": "draw",
+        "t": 60619
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 63,
+        "phase": "draw",
+        "t": 60826
+      },
+      {
+        "type": "fxstep",
+        "round": 63,
+        "phase": "draw",
+        "t": 60826
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 63,
+        "phase": "draw",
+        "t": 61031
+      },
+      {
+        "type": "fxstep",
+        "round": 63,
+        "phase": "draw",
+        "t": 61031
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "青釭剑",
+        "round": 63,
+        "phase": "play",
+        "t": 61033
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 63,
+        "phase": "draw",
+        "t": 61237
+      },
+      {
+        "type": "fxstep",
+        "round": 63,
+        "phase": "draw",
+        "t": 61237
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 63,
+        "phase": "draw",
+        "t": 61440
+      },
+      {
+        "type": "fxstep",
+        "round": 63,
+        "phase": "draw",
+        "t": 61441
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 64,
+        "phase": "draw",
+        "t": 61648
+      },
+      {
+        "type": "fxstep",
+        "round": 64,
+        "phase": "draw",
+        "t": 61648
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 64,
+        "phase": "draw",
+        "t": 61852
+      },
+      {
+        "type": "fxstep",
+        "round": 64,
+        "phase": "draw",
+        "t": 61852
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 64,
+        "phase": "draw",
+        "t": 62056
+      },
+      {
+        "type": "fxstep",
+        "round": 64,
+        "phase": "draw",
+        "t": 62056
+      },
+      {
+        "type": "equip",
+        "seat": 3,
+        "equipName": "贯石斧",
+        "round": 64,
+        "phase": "play",
+        "t": 62060
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 64,
+        "phase": "draw",
+        "t": 62265
+      },
+      {
+        "type": "fxstep",
+        "round": 64,
+        "phase": "draw",
+        "t": 62265
+      },
+      {
+        "type": "draw",
+        "seat": 1,
+        "count": 2,
+        "round": 65,
+        "phase": "draw",
+        "t": 62470
+      },
+      {
+        "type": "fxstep",
+        "round": 65,
+        "phase": "draw",
+        "t": 62470
+      },
+      {
+        "type": "draw",
+        "seat": 2,
+        "count": 2,
+        "round": 65,
+        "phase": "draw",
+        "t": 62675
+      },
+      {
+        "type": "fxstep",
+        "round": 65,
+        "phase": "draw",
+        "t": 62675
+      },
+      {
+        "type": "equip",
+        "seat": 2,
+        "equipName": "麒麟弓",
+        "round": 65,
+        "phase": "play",
+        "t": 62676
+      },
+      {
+        "type": "judge",
+        "seat": 3,
+        "card": {
+          "suit": "heart",
+          "rank": 4,
+          "name": "桃",
+          "rankLabel": "4"
+        },
+        "round": 65,
+        "phase": "judge",
+        "t": 62881
+      },
+      {
+        "type": "draw",
+        "seat": 3,
+        "count": 2,
+        "round": 65,
+        "phase": "draw",
+        "t": 63081
+      },
+      {
+        "type": "fxstep",
+        "round": 65,
+        "phase": "draw",
+        "t": 63081
+      },
+      {
+        "type": "judge",
+        "seat": 4,
+        "card": {
+          "suit": "spade",
+          "rank": 11,
+          "name": "无懈可击",
+          "rankLabel": "J"
+        },
+        "round": 65,
+        "phase": "judge",
+        "t": 63286
+      },
+      {
+        "type": "draw",
+        "seat": 4,
+        "count": 2,
+        "round": 65,
+        "phase": "draw",
+        "t": 63488
+      },
+      {
+        "type": "fxstep",
+        "round": 65,
+        "phase": "draw",
+        "t": 63488
+      },
+      {
+        "type": "judge",
+        "seat": 1,
+        "card": {
+          "suit": "spade",
+          "rank": 2,
+          "name": "八卦阵",
+          "rankLabel": "2"
+        },
+        "round": 66,
+        "phase": "judge",
+        "t": 63693
+      },
+      {
+        "type": "damage",
+        "seat": 1,
+        "amount": 3,
+        "round": 66,
+        "phase": "judge",
+        "t": 63894
+      },
+      {
+        "type": "dying",
+        "seat": 1,
+        "round": 66,
+        "phase": "judge",
+        "t": 64096
+      },
+      {
+        "type": "death",
+        "seat": 1,
+        "identity": "zhu",
+        "generalId": "caocao",
+        "round": 66,
+        "phase": "judge",
+        "t": 64100
+      }
+    ],
+    "logs": [
+      "【闪电】未命中，移至下家",
+      "电脑1 摸了 2 张牌",
+      "电脑1 装备了【贯石斧】",
+      "电脑1 对 电脑2 使用【过河拆桥】",
+      "电脑2 失去了装备【诸葛连弩】",
+      "电脑2 的【诸葛连弩】被弃置",
+      "—— 电脑2 的回合 ——",
+      "判定【闪电】（电脑2）",
+      "电脑2 使用【无懈可击】，【闪电】被抵消",
+      "电脑2 发动【集智】",
+      "电脑2 摸了 1 张牌",
+      "电脑2 摸了 2 张牌",
+      "电脑2 装备了【丈八蛇矛】",
+      "电脑2 弃置了 1 张牌",
+      "—— 电脑3 的回合 ——",
+      "判定【闪电】（电脑3）",
+      "电脑3 的判定牌：【桃】♥3",
+      "【闪电】未命中，移至下家",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "判定【闪电】（电脑4）",
+      "电脑4 的判定牌：【杀】♣8",
+      "【闪电】未命中，移至下家",
+      "牌堆已重洗",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 2 张牌",
+      "—— 电脑1 的回合 ——",
+      "判定【闪电】（电脑1）",
+      "电脑1 的判定牌：【决斗】♠A",
+      "【闪电】未命中，移至下家",
+      "电脑1 摸了 2 张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "判定【闪电】（电脑2）",
+      "电脑2 的判定牌：【杀】♦6",
+      "【闪电】未命中，移至下家",
+      "电脑2 摸了 2 张牌",
+      "电脑2 弃置了 2 张牌",
+      "—— 电脑3 的回合 ——",
+      "判定【闪电】（电脑3）",
+      "电脑2 使用【无懈可击】，【闪电】被抵消",
+      "电脑2 发动【集智】",
+      "电脑2 摸了 1 张牌",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 2 张牌",
+      "—— 电脑1 的回合 ——",
+      "电脑1 摸了 2 张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 对 电脑1 使用【乐不思蜀】",
+      "电脑2 弃置了 1 张牌",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 装备了【八卦阵】",
+      "电脑3 使用【无中生有】",
+      "电脑3 摸了 2 张牌",
+      "电脑3 对 电脑1 使用【顺手牵羊】",
+      "电脑1 失去了装备【贯石斧】",
+      "电脑3 获得了 电脑1 的一张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 2 张牌",
+      "—— 电脑1 的回合 ——",
+      "判定【乐不思蜀】（电脑1）",
+      "电脑1 的判定牌：【诸葛连弩】♦A",
+      "【乐不思蜀】生效，电脑1 跳过出牌阶段",
+      "电脑1 摸了 2 张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 对 电脑3 使用【顺手牵羊】",
+      "电脑3 失去了装备【八卦阵】",
+      "电脑2 获得了 电脑3 的一张牌",
+      "电脑2 发动【集智】",
+      "电脑2 摸了 1 张牌",
+      "电脑2 装备了【八卦阵】",
+      "电脑2 弃置了 2 张牌",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 2 张牌",
+      "—— 电脑1 的回合 ——",
+      "电脑1 摸了 2 张牌",
+      "电脑1 对 电脑2 使用【顺手牵羊】",
+      "电脑2 失去了装备【八卦阵】",
+      "电脑1 获得了 电脑2 的一张牌",
+      "电脑1 装备了【八卦阵】",
+      "电脑1 弃置了 1 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 弃置了 2 张牌",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 失去了装备【方天画戟】",
+      "电脑3 装备了【麒麟弓】",
+      "电脑3 使用【无中生有】",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 对 电脑1 使用【乐不思蜀】",
+      "电脑4 使用【无中生有】",
+      "电脑4 摸了 2 张牌",
+      "电脑4 对 电脑2 使用【过河拆桥】",
+      "电脑2 失去了装备【丈八蛇矛】",
+      "电脑2 的【丈八蛇矛】被弃置",
+      "电脑4 弃置了 1 张牌",
+      "—— 电脑1 的回合 ——",
+      "判定【乐不思蜀】（电脑1）",
+      "电脑1 的判定牌：【杀】♣8",
+      "【乐不思蜀】生效，电脑1 跳过出牌阶段",
+      "电脑1 摸了 2 张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 装备了【青龙偃月刀】",
+      "电脑2 弃置了 1 张牌",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 2 张牌",
+      "—— 电脑1 的回合 ——",
+      "电脑1 摸了 2 张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 弃置了 2 张牌",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 对 电脑2 使用【过河拆桥】",
+      "电脑2 失去了装备【青龙偃月刀】",
+      "电脑2 的【青龙偃月刀】被弃置",
+      "电脑3 使用【无中生有】",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 2 张牌",
+      "—— 电脑1 的回合 ——",
+      "电脑1 摸了 2 张牌",
+      "电脑1 对 电脑4 使用【顺手牵羊】",
+      "电脑4 失去了装备【八卦阵】",
+      "电脑1 获得了 电脑4 的一张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 装备了【青釭剑】",
+      "电脑2 对 电脑3 使用【过河拆桥】",
+      "电脑3 失去了装备【麒麟弓】",
+      "电脑3 的【麒麟弓】被弃置",
+      "电脑2 发动【集智】",
+      "电脑2 摸了 1 张牌",
+      "电脑2 对 电脑1 使用【乐不思蜀】",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 装备了【诸葛连弩】",
+      "电脑3 弃置了 1 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 2 张牌",
+      "—— 电脑1 的回合 ——",
+      "判定【乐不思蜀】（电脑1）",
+      "电脑4 使用【无懈可击】，【乐不思蜀】被抵消",
+      "电脑1 摸了 2 张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 弃置了 2 张牌",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 1 张牌",
+      "—— 电脑1 的回合 ——",
+      "电脑1 摸了 2 张牌",
+      "电脑1 对 电脑2 使用【过河拆桥】",
+      "电脑2 失去了装备【青釭剑】",
+      "电脑2 的【青釭剑】被弃置",
+      "电脑1 弃置了 1 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 装备了【寒冰剑】",
+      "电脑2 弃置了 1 张牌",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 2 张牌",
+      "—— 电脑1 的回合 ——",
+      "牌堆已重洗",
+      "电脑1 摸了 2 张牌",
+      "电脑1 对 电脑2 使用【乐不思蜀】",
+      "电脑1 对 电脑3 使用【乐不思蜀】",
+      "—— 电脑2 的回合 ——",
+      "判定【乐不思蜀】（电脑2）",
+      "电脑3 使用【无懈可击】，【乐不思蜀】被抵消",
+      "电脑4 使用【无懈可击】，【乐不思蜀】恢复生效",
+      "电脑2 的判定牌：【闪】♦6",
+      "【乐不思蜀】生效，电脑2 跳过出牌阶段",
+      "电脑2 摸了 2 张牌",
+      "电脑2 弃置了 2 张牌",
+      "—— 电脑3 的回合 ——",
+      "判定【乐不思蜀】（电脑3）",
+      "电脑3 的判定牌：【诸葛连弩】♦A",
+      "【乐不思蜀】生效，电脑3 跳过出牌阶段",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 1 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 失去了装备【雌雄双股剑】",
+      "电脑4 装备了【贯石斧】",
+      "—— 电脑1 的回合 ——",
+      "电脑1 摸了 2 张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 弃置了 1 张牌",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 对 电脑2 使用【过河拆桥】",
+      "电脑2 失去了装备【寒冰剑】",
+      "电脑2 的【寒冰剑】被弃置",
+      "电脑3 弃置了 1 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 对 电脑3 使用【过河拆桥】",
+      "电脑3 失去了装备【诸葛连弩】",
+      "电脑3 的【诸葛连弩】被弃置",
+      "电脑4 弃置了 1 张牌",
+      "—— 电脑1 的回合 ——",
+      "电脑1 摸了 2 张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 装备了【青釭剑】",
+      "电脑2 弃置了 1 张牌",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 对 电脑2 使用【过河拆桥】",
+      "电脑2 失去了装备【青釭剑】",
+      "电脑2 的【青釭剑】被弃置",
+      "电脑4 弃置了 1 张牌",
+      "—— 电脑1 的回合 ——",
+      "电脑1 摸了 2 张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 弃置了 2 张牌",
+      "—— 电脑3 的回合 ——",
+      "电脑3 摸了 2 张牌",
+      "电脑3 对 电脑4 使用【顺手牵羊】",
+      "电脑4 失去了装备【贯石斧】",
+      "电脑3 获得了 电脑4 的一张牌",
+      "电脑3 装备了【贯石斧】",
+      "电脑3 使用【闪电】",
+      "—— 电脑4 的回合 ——",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 2 张牌",
+      "—— 电脑1 的回合 ——",
+      "电脑1 摸了 2 张牌",
+      "电脑1 弃置了 2 张牌",
+      "—— 电脑2 的回合 ——",
+      "电脑2 摸了 2 张牌",
+      "电脑2 装备了【麒麟弓】",
+      "电脑2 弃置了 1 张牌",
+      "—— 电脑3 的回合 ——",
+      "判定【闪电】（电脑3）",
+      "电脑3 的判定牌：【桃】♥4",
+      "【闪电】未命中，移至下家",
+      "电脑3 摸了 2 张牌",
+      "电脑3 弃置了 2 张牌",
+      "—— 电脑4 的回合 ——",
+      "判定【闪电】（电脑4）",
+      "电脑4 的判定牌：【无懈可击】♠J",
+      "【闪电】未命中，移至下家",
+      "电脑4 摸了 2 张牌",
+      "电脑4 弃置了 2 张牌",
+      "—— 电脑1 的回合 ——",
+      "判定【闪电】（电脑1）",
+      "电脑1 的判定牌：【八卦阵】♠2",
+      "⚡【闪电】命中！电脑1 受到3点雷电伤害",
+      "电脑1 受到 3 点伤害，进入濒死！",
+      "电脑1 濒死，请求【桃】！",
+      "💀 电脑1 死亡，身份是【主公】",
+      "🏆 游戏结束：反贼 阵营获胜！"
+    ],
+    "winner": "fan",
+    "winnerIdentity": "fan",
+    "rounds": 66,
+    "duration": 64101,
+    "gameMode": "identity",
+    "winCondition": "default",
+    "roomName": "测试员的房间"
+  }
+}

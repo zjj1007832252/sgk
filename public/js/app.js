@@ -23,9 +23,318 @@ function promptKey(pr) {
 const $ = id => document.getElementById(id);
 const SUIT = { spade: '♠', heart: '♥', club: '♣', diamond: '♦' };
 const RANK = r => ({ 1: 'A', 11: 'J', 12: 'Q', 13: 'K' }[r] || r);
-const KINGDOM_NAME = { wei: '魏', shu: '蜀', wu: '吴', qun: '群' };
-const IDENTITY_NAME = { zhu: '主公', zhong: '忠臣', fan: '反贼', nei: '内奸' };
+const KINGDOM_NAME = { wei: '魏', shu: '蜀', wu: '吴', qun: '群', god: '神' };
+const IDENTITY_NAME = { zhu: '主公', zhong: '忠臣', fan: '反贼', nei: '内奸', landlord: '地主', farmer: '农民', cold: '冷色', warm: '暖色' };
 const isRed = c => c.suit === 'heart' || c.suit === 'diamond';
+
+// ============ 自定义技能编辑器 ============
+let skillEditor = null;
+let customSkills = [];
+try { customSkills = JSON.parse(localStorage.getItem('sgk_custom_skills') || '[]'); } catch {}
+
+function initSkillEditor() {
+  if (typeof SkillEditor === 'undefined') return;
+  skillEditor = new SkillEditor();
+  skillEditor.onChange = updateSkillEditorPreview;
+  renderTriggerOptions();
+  renderConditionOptions();
+  renderLimitationOptions();
+  renderCostOptions();
+  renderCustomSkillList();
+  updateSkillEditorPreview();
+}
+
+function renderTriggerOptions() {
+  const box = $('se-triggers');
+  if (!box) return;
+  box.innerHTML = '';
+  window.SKILL_DSL.TRIGGERS.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'se-opt' + (skillEditor.skill.trigger === t.id ? ' selected' : '');
+    div.innerHTML = `<div>${t.label}</div><div class="optdesc">${t.desc}</div>`;
+    div.addEventListener('click', () => {
+      skillEditor.skill.trigger = t.id;
+      skillEditor.notify();
+      renderTriggerOptions();
+    });
+    box.appendChild(div);
+  });
+}
+
+function renderConditionOptions() {
+  const box = $('se-condition-type');
+  if (!box) return;
+  box.innerHTML = '';
+  window.SKILL_DSL.CONDITIONS.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'se-opt' + (skillEditor.skill.condition.type === c.id ? ' selected' : '');
+    div.innerHTML = `<div>${c.label}</div><div class="optdesc">${c.desc}</div>`;
+    div.addEventListener('click', () => {
+      skillEditor.skill.condition.type = c.id;
+      skillEditor.skill.condition.params = {};
+      skillEditor.notify();
+      renderConditionOptions();
+      renderConditionParams();
+    });
+    box.appendChild(div);
+  });
+  renderConditionParams();
+}
+
+function renderConditionParams() {
+  const box = $('se-condition-params');
+  if (!box) return;
+  box.innerHTML = '';
+  const condDef = window.SKILL_DSL.CONDITIONS.find(c => c.id === skillEditor.skill.condition.type);
+  if (!condDef || !condDef.params.length) return;
+  condDef.params.forEach(p => {
+    const val = skillEditor.skill.condition.params[p.key] ?? p.default;
+    if (p.type === 'select') {
+      const label = document.createElement('label');
+      label.textContent = p.label;
+      const sel = document.createElement('select');
+      p.options.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.v; opt.textContent = o.l;
+        if (o.v == val) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', () => {
+        skillEditor.skill.condition.params[p.key] = sel.value;
+        skillEditor.notify();
+      });
+      label.appendChild(sel);
+      box.appendChild(label);
+    } else {
+      const label = document.createElement('label');
+      label.textContent = p.label;
+      const inp = document.createElement('input');
+      inp.type = p.type === 'number' ? 'number' : 'text';
+      inp.value = val;
+      if (p.min != null) inp.min = p.min;
+      if (p.max != null) inp.max = p.max;
+      inp.addEventListener('input', () => {
+        const v = p.type === 'number' ? (+inp.value || p.default) : inp.value;
+        skillEditor.skill.condition.params[p.key] = v;
+        skillEditor.notify();
+      });
+      label.appendChild(inp);
+      box.appendChild(label);
+    }
+  });
+}
+
+function renderLimitationOptions() {
+  const box = $('se-limitations');
+  if (!box) return;
+  box.innerHTML = '';
+  window.SKILL_DSL.LIMITATIONS.forEach(l => {
+    const div = document.createElement('div');
+    div.className = 'se-opt' + (skillEditor.skill.limitation === l.id ? ' selected' : '');
+    div.innerHTML = `<div>${l.label}</div><div class="optdesc">${l.desc}</div>`;
+    div.addEventListener('click', () => {
+      skillEditor.skill.limitation = l.id;
+      skillEditor.notify();
+      renderLimitationOptions();
+    });
+    box.appendChild(div);
+  });
+}
+
+function renderCostOptions() {
+  const box = $('se-costs');
+  if (!box) return;
+  box.innerHTML = '';
+  const costs = [{ id: null, label: '无消耗', desc: '发动时不付出代价' }, ...window.SKILL_DSL.LIMITATIONS.filter(l => l.cost)];
+  costs.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'se-opt' + (skillEditor.skill.cost === c.id ? ' selected' : '');
+    div.innerHTML = `<div>${c.label}</div><div class="optdesc">${c.desc}</div>`;
+    div.addEventListener('click', () => {
+      skillEditor.skill.cost = c.cost || null;
+      skillEditor.notify();
+      renderCostOptions();
+    });
+    box.appendChild(div);
+  });
+}
+
+function renderEffectCard(index) {
+  const box = $('se-effects');
+  if (!box) return;
+  const effects = skillEditor.skill.effects;
+  if (index >= effects.length) return;
+  const e = effects[index];
+  const def = window.SKILL_DSL.EFFECTS.find(x => x.id === e.type);
+  const card = document.createElement('div');
+  card.className = 'se-effect-card';
+  card.dataset.idx = index;
+
+  let paramsHtml = '';
+  if (def && def.params) {
+    paramsHtml = def.params.map(p => {
+      const val = e.params[p.key] ?? p.default;
+      if (p.type === 'select') {
+        const opts = p.options.map(o => `<option value="${o.v}" ${o.v == val ? 'selected' : ''}>${o.l}</option>`).join('');
+        return `<label>${p.label} <select data-key="${p.key}">${opts}</select></label>`;
+      }
+      return `<label>${p.label} <input type="${p.type === 'number' ? 'number' : 'text'}" data-key="${p.key}" value="${val}" ${p.min != null ? 'min="' + p.min + '"' : ''} ${p.max != null ? 'max="' + p.max + '"' : ''}></label>`;
+    }).join('');
+  }
+
+  card.innerHTML = `
+    <div class="ef-header">
+      <span class="ef-name">${def ? def.label : e.type}</span>
+      <span class="ef-remove" data-idx="${index}">✕</span>
+    </div>
+    <div class="ef-params">${paramsHtml}</div>`;
+
+  box.appendChild(card);
+}
+
+function renderAllEffects() {
+  const box = $('se-effects');
+  if (!box) return;
+  box.innerHTML = '';
+  skillEditor.skill.effects.forEach((e, i) => {
+    renderEffectCard(i);
+  });
+  box.querySelectorAll('.ef-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = +btn.dataset.idx;
+      skillEditor.skill.effects.splice(idx, 1);
+      skillEditor.notify();
+      renderAllEffects();
+      updateSkillEditorPreview();
+    });
+  });
+  box.querySelectorAll('.ef-params input, .ef-params select').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const card = inp.closest('.se-effect-card');
+      const idx = +card.dataset.idx;
+      const key = inp.dataset.key;
+      const val = inp.type === 'number' ? (+inp.value || 0) : inp.value;
+      if (!skillEditor.skill.effects[idx].params) skillEditor.skill.effects[idx].params = {};
+      skillEditor.skill.effects[idx].params[key] = val;
+      updateSkillEditorPreview();
+    });
+  });
+}
+
+function renderCustomSkillList() {
+  const box = $('se-list');
+  if (!box) return;
+  box.innerHTML = '';
+  if (!customSkills.length) { box.innerHTML = '<div class="hint">还没有自定义技能</div>'; return; }
+  customSkills.forEach((sk, i) => {
+    const div = document.createElement('div');
+    div.className = 'se-list-item';
+    div.innerHTML = `
+      <span class="lname">${sk.name}</span>
+      <span class="lactions">
+        <button class="btn btn-small" data-act="edit" data-idx="${i}">编辑</button>
+        <button class="btn btn-small" data-act="del" data-idx="${i}">删除</button>
+      </span>`;
+    box.appendChild(div);
+  });
+  box.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = +btn.dataset.idx;
+      if (btn.dataset.act === 'edit') {
+        skillEditor.setSkill(JSON.parse(JSON.stringify(customSkills[idx])));
+        syncEditorUI();
+        updateSkillEditorPreview();
+      } else if (btn.dataset.act === 'del') {
+        customSkills.splice(idx, 1);
+        saveCustomSkills();
+        renderCustomSkillList();
+      }
+    });
+  });
+}
+
+function syncEditorUI() {
+  renderTriggerOptions();
+  renderConditionOptions();
+  renderLimitationOptions();
+  renderCostOptions();
+  renderAllEffects();
+  const nameInput = $('se-name');
+  if (nameInput) nameInput.value = skillEditor.skill.name;
+  const typeSelect = $('se-type');
+  if (typeSelect) typeSelect.value = skillEditor.skill.type;
+}
+
+function updateSkillEditorPreview() {
+  if (!skillEditor) return;
+  const preview = $('se-preview');
+  const json = $('se-json');
+  if (preview) preview.textContent = skillEditor.generateDesc();
+  if (json) json.textContent = skillEditor.toJSON();
+}
+
+function saveCustomSkills() {
+  localStorage.setItem('sgk_custom_skills', JSON.stringify(customSkills));
+}
+
+$('btn-skilleditor-back')?.addEventListener('click', () => showView('home'));
+$('btn-add-effect')?.addEventListener('click', () => openEffectPicker());
+$('btn-se-save')?.addEventListener('click', () => {
+  const err = skillEditor.validate();
+  if (err) { const m = $('se-msg'); if (m) m.textContent = '❌ ' + err; return; }
+  const sk = skillEditor.getSkill();
+  const existing = customSkills.findIndex(s => s.id === sk.id);
+  if (existing >= 0) customSkills[existing] = sk; else customSkills.push(sk);
+  saveCustomSkills();
+  renderCustomSkillList();
+  const m = $('se-msg'); if (m) m.textContent = '✅ 已保存：' + sk.name;
+});
+$('btn-se-test')?.addEventListener('click', () => {
+  const m = $('se-msg'); if (m) m.textContent = '💡 在对局中装备此技能即可测试效果';
+});
+$('btn-se-clear')?.addEventListener('click', () => {
+  skillEditor.setSkill(skillEditor.createEmptySkill());
+  syncEditorUI();
+  updateSkillEditorPreview();
+});
+
+function openEffectPicker() {
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.style.zIndex = '350';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.maxWidth = '500px';
+  modal.innerHTML = `<div class="modal-title">选择效果</div><div class="se-options" style="max-height:400px"></div>`;
+  const opts = modal.querySelector('.se-options');
+  window.SKILL_DSL.EFFECTS.forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'se-opt';
+    div.innerHTML = `<div>${e.label}</div><div class="optdesc">${e.desc}</div>`;
+    div.addEventListener('click', () => {
+      skillEditor.skill.effects.push({ type: e.type, params: { ...getDefaultParams(e) }, needTarget: !!e.needTarget });
+      renderAllEffects();
+      updateSkillEditorPreview();
+      mask.remove();
+    });
+    opts.appendChild(div);
+  });
+  mask.appendChild(modal);
+  document.body.appendChild(mask);
+  mask.addEventListener('click', e => { if (e.target === mask) mask.remove(); });
+}
+
+function getDefaultParams(effectDef) {
+  const p = {};
+  (effectDef.params || []).forEach(pp => { p[pp.key] = pp.default; });
+  return p;
+}
+
+// 名称和类型绑定
+const _seName = $('se-name');
+if (_seName) _seName.addEventListener('input', () => { skillEditor.skill.name = _seName.value; updateSkillEditorPreview(); });
+const _seType = $('se-type');
+if (_seType) _seType.addEventListener('change', () => { skillEditor.skill.type = _seType.value; });
 
 // ---------- 连接 ----------
 function connect() {
@@ -69,22 +378,38 @@ function handle(msg) {
       gameState = msg.state;
       if (view !== 'game') showView('game');
       const key = promptKey(gameState.pendingForMe);
-      if (key !== lastPromptKey) { sel = freshSel(); lastPromptKey = key; }
-      renderGame();
+      if (key !== lastPromptKey) { sel = freshSel(); lastPromptKey = key; hideTurnTimer(); }
+      if (window.renderScheduler) {
+        window.renderScheduler.schedule(() => renderGame());
+      } else {
+        renderGame();
+      }
       break;
     }
     case 'prompt': {
-      // 状态里也有 pendingForMe，以 game 消息为准；此处仅触发刷新
       if (gameState) {
         gameState.pendingForMe = msg.prompt;
         const key = promptKey(msg.prompt);
         if (key !== lastPromptKey) { sel = freshSel(); lastPromptKey = key; }
-        renderGame();
+        if (window.renderScheduler) {
+          window.renderScheduler.schedule(() => renderGame());
+        } else {
+          renderGame();
+        }
       }
       break;
     }
     case 'event':
       handleEvent(msg.event);
+      break;
+    case 'batch': {
+      for (const m of msg.messages) handle(m);
+      break;
+    }
+    case 'stateSame':
+      break;
+    case 'timer':
+      showTurnTimer(msg.remaining);
       break;
     case 'toast':
     case 'error':
@@ -112,6 +437,12 @@ function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   $('view-' + v).classList.add('active');
   if (v === 'diy') loadDiy();
+  // 切换背景音乐场景
+  if (sound) {
+    if (v === 'game') sound.setScene('battle');
+    else if (v === 'stats' || v === 'skilleditor') sound.setScene('menu');
+    else sound.setScene('menu');
+  }
 }
 function openModal(html) {
   $('modal').innerHTML = html;
@@ -158,6 +489,11 @@ $('btn-create').addEventListener('click', () => {
 });
 $('btn-refresh').addEventListener('click', () => send({ type: 'hello', name: myName, pid: myPid }));
 $('btn-diy').addEventListener('click', () => showView('diy'));
+$('btn-skilleditor-tab')?.addEventListener('click', () => showView('skilleditor'));
+$('btn-cardeditor-tab')?.addEventListener('click', () => showView('cardeditor'));
+$('btn-stats')?.addEventListener('click', () => { renderStats(); showView('stats'); });
+$('btn-stats-back')?.addEventListener('click', () => showView('home'));
+$('btn-clear-stats')?.addEventListener('click', () => { if (confirm('确定清除所有战绩数据？')) { window.SGKData.clearData(); renderStats(); } });
 
 function renderRoomList(rooms) {
   const box = $('room-list');
@@ -185,6 +521,648 @@ function renderRoomList(rooms) {
   }
 }
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+// ============ 音效与配音 ============
+let audio = null;
+let sound = null;
+async function initAudio() {
+  try {
+    const r = await fetch('/api/meta');
+    window._SGK_META = await r.json();
+  } catch { window._SGK_META = { generals: [], diySkills: [], customs: [] }; }
+  audio = new AudioManager();
+  const enabled = localStorage.getItem('sgk_audio_enabled') !== 'false';
+  const vol = parseFloat(localStorage.getItem('sgk_audio_volume') || '0.7');
+  audio.setEnabled(enabled);
+  audio.setVolume(vol);
+  // 初始化音效管理器
+  if (typeof SoundManager !== 'undefined') {
+    sound = new SoundManager();
+    window._sound = sound;
+  }
+  const icon = $('audio-icon');
+  const slider = $('audio-volume');
+  const ctl = $('audio-control');
+  slider.value = Math.round(vol * 100);
+  const renderIcon = () => { icon.textContent = audio.enabled ? '🔊' : '🔇'; ctl.classList.toggle('muted', !audio.enabled); };
+  renderIcon();
+  ctl.addEventListener('click', e => {
+    if (e.target === slider) return;
+    audio.init();
+    audio.setEnabled(!audio.enabled);
+    renderIcon();
+    // 同时控制音效管理器
+    if (sound) sound.setSfxEnabled(audio.enabled);
+  });
+  slider.addEventListener('input', e => {
+    audio.setVolume(+e.target.value / 100);
+    if (sound) sound.setSfxVolume(+e.target.value / 100);
+  });
+  // 设置按钮
+  const settingsBtn = document.createElement('span');
+  settingsBtn.textContent = '⚙';
+  settingsBtn.style.cssText = 'cursor:pointer;font-size:14px;margin-left:4px;';
+  settingsBtn.addEventListener('click', e => { e.stopPropagation(); toggleSoundSettings(); });
+  ctl.appendChild(settingsBtn);
+  // 任意用户交互后解锁音频上下文（浏览器策略）
+  document.addEventListener('click', () => { if (audio) audio.init(); if (sound) sound.bgm.ensureCtx(); }, { once: true });
+}
+
+// ============ 音效设置面板 ============
+function toggleSoundSettings() {
+  const panel = $('sound-settings');
+  if (!panel) return;
+  const isHidden = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !isHidden);
+  if (isHidden) renderSoundSettings();
+}
+
+function renderSoundSettings() {
+  if (typeof SoundManager === 'undefined' || !sound) return;
+  // 音效包
+  const packSel = $('ss-pack');
+  if (packSel) {
+    packSel.innerHTML = '';
+    for (const [id, info] of Object.entries(SOUND_PACKS)) {
+      const opt = document.createElement('option');
+      opt.value = id; opt.textContent = `${info.name} - ${info.desc}`;
+      if (id === sound.pack) opt.selected = true;
+      packSel.appendChild(opt);
+    }
+    packSel.onchange = () => sound.setPack(packSel.value);
+  }
+  // 开关
+  const bgmCb = $('ss-bgm');
+  const sfxCb = $('ss-sfx');
+  const bgmVol = $('ss-bgm-vol');
+  const sfxVol = $('ss-sfx-vol');
+  if (bgmCb) { bgmCb.checked = sound.bgmEnabled; bgmCb.onchange = () => sound.setBgmEnabled(bgmCb.checked); }
+  if (sfxCb) { sfxCb.checked = sound.sfxEnabled; sfxCb.onchange = () => sound.setSfxEnabled(sfxCb.checked); }
+  if (bgmVol) { bgmVol.value = Math.round(sound.bgmVolume * 100); bgmVol.oninput = () => sound.setBgmVolume(+bgmVol.value / 100); }
+  if (sfxVol) { sfxVol.value = Math.round(sound.sfxVolume * 100); sfxVol.oninput = () => sound.setSfxVolume(+sfxVol.value / 100); }
+  const closeBtn = $('ss-close');
+  if (closeBtn) closeBtn.onclick = () => toggleSoundSettings();
+}
+function sfx(name) { if (audio) audio.playSfx(name); }
+function voice(generalId, kind, skillId) { if (audio) audio.playVoice(generalId, kind, skillId); }
+
+// ============ 卡牌计数器 ============
+let cardCounter = null;
+function initCardCounter() {
+  if (typeof CardCounter === 'undefined') return;
+  if (!cardCounter) cardCounter = new CardCounter();
+  else cardCounter.reset();
+  // 绑定面板开关
+  const panel = $('card-counter-panel');
+  const title = $('ccp-title');
+  const content = $('ccp-content');
+  if (panel && title && content) {
+    // 默认显示
+    if (cardCounter.enabled) panel.classList.remove('hidden');
+    title.addEventListener('click', () => {
+      content.classList.toggle('hidden');
+      $('ccp-toggle').textContent = content.classList.contains('hidden') ? '▶' : '▼';
+    });
+  }
+}
+
+function updateCardCounter() {
+  if (!cardCounter || !gameState || !cardCounter.enabled) return;
+  const panel = $('card-counter-panel');
+  if (panel) panel.classList.remove('hidden');
+
+  // 更新手牌数
+  gameState.players.forEach(p => cardCounter.updatePlayerHand(p.seat, p.handCount));
+
+  // 关键牌
+  const keyCards = cardCounter.getKeyCards();
+  const keyBox = $('ccp-keycards');
+  if (keyBox) {
+    const names = { sha: '杀', shan: '闪', tao: '桃', wuxie: '无懈', juedou: '决斗', nanman: '南蛮', wanjian: '万箭', lebu: '乐不', shandian: '闪电' };
+    keyBox.innerHTML = Object.entries(keyCards).map(([k, v]) =>
+      `<div class="ccp-keycard"><span class="kname">${names[k] || k}</span><span class="kcount ${v === 0 ? 'zero' : ''}">${v}</span></div>`
+    ).join('');
+  }
+
+  // 已出牌
+  const played = cardCounter.getPlayedStats();
+  const playedBox = $('ccp-played');
+  if (playedBox) {
+    const names = { sha: '杀', shan: '闪', tao: '桃', juedou: '决斗', guohe: '过拆', shunshou: '顺手', wuzhong: '无中', nanman: '南蛮', wanjian: '万箭', wugu: '五谷', taoyuan: '桃园', jiedao: '借刀', wuxie: '无懈', lebu: '乐不', shandian: '闪电' };
+    playedBox.innerHTML = Object.entries(played).map(([k, v]) =>
+      `<span class="ccp-played-item">${names[k] || k}×${v}</span>`
+    ).join('');
+  }
+
+  // 牌堆信息
+  const deckBox = $('ccp-deck');
+  if (deckBox) {
+    deckBox.innerHTML = `剩余: <span>${gameState.deckCount}</span> 张 | 总手牌: <span>${cardCounter.getTotalHandCards()}</span> 张`;
+  }
+}
+
+// ============ 皮肤系统 ============
+let skinManager = null;
+function initSkinSystem() {
+  if (typeof SKIN_SYSTEM === 'undefined') return;
+  skinManager = new SKIN_SYSTEM.SkinManager();
+  window._skinManager = skinManager;
+  // 绑定皮肤按钮（在音量控制旁边）
+  const ctl = document.getElementById('audio-control');
+  if (ctl) {
+    const skinBtn = document.createElement('span');
+    skinBtn.textContent = '🎨';
+    skinBtn.style.cssText = 'cursor:pointer;font-size:14px;margin-left:4px;';
+    skinBtn.addEventListener('click', e => { e.stopPropagation(); toggleSkinPanel(); });
+    ctl.appendChild(skinBtn);
+  }
+}
+
+function toggleSkinPanel() {
+  const panel = $('skin-panel');
+  if (!panel) return;
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) renderSkinPanel();
+}
+
+function renderSkinPanel() {
+  if (!skinManager || typeof SKIN_SYSTEM === 'undefined') return;
+  // 皮肤列表
+  const skinsBox = $('sp-skins');
+  if (skinsBox) {
+    skinsBox.innerHTML = '';
+    Object.entries(SKIN_SYSTEM.SKINS).forEach(([id, info]) => {
+      const unlocked = skinManager.isSkinUnlocked(id);
+      const active = skinManager.getSkin() === id;
+      const div = document.createElement('div');
+      div.className = `sp-item ${active ? 'active' : ''} ${!unlocked ? 'locked' : ''}`;
+      div.innerHTML = `<div class="iname">${info.name}</div><div class="idesc">${info.desc}</div>${!unlocked ? `<div class="ilock">🔒 ${info.unlock}</div>` : ''}`;
+      div.addEventListener('click', () => {
+        if (unlocked) { skinManager.setSkin(id); renderSkinPanel(); applySkinToGame(); }
+      });
+      skinsBox.appendChild(div);
+    });
+  }
+  // 头像框列表
+  const framesBox = $('sp-frames');
+  if (framesBox) {
+    framesBox.innerHTML = '';
+    Object.entries(SKIN_SYSTEM.AVATAR_FRAMES).forEach(([id, info]) => {
+      const unlocked = skinManager.isFrameUnlocked(id);
+      const active = skinManager.getFrame() === id;
+      const div = document.createElement('div');
+      div.className = `sp-item ${active ? 'active' : ''} ${!unlocked ? 'locked' : ''}`;
+      div.innerHTML = `<div class="iname">${info.name}</div><div class="idesc">${info.desc}</div>${!unlocked ? `<div class="ilock">🔒</div>` : ''}`;
+      div.addEventListener('click', () => {
+        if (unlocked) { skinManager.setFrame(id); renderSkinPanel(); applySkinToGame(); }
+      });
+      framesBox.appendChild(div);
+    });
+  }
+  // 特效开关
+  const fxCb = $('sp-effects');
+  if (fxCb) {
+    fxCb.checked = skinManager.skinEffects;
+    fxCb.onchange = () => { skinManager.setSkinEffects(fxCb.checked); applySkinToGame(); };
+  }
+  // 关闭按钮
+  const closeBtn = $('sp-close');
+  if (closeBtn) closeBtn.onclick = () => toggleSkinPanel();
+}
+
+function applySkinToGame() {
+  if (!skinManager || !gameState) return;
+  const table = document.getElementById('view-game');
+  if (!table) return;
+  // 移除旧皮肤类
+  Object.keys(SKIN_SYSTEM.SKINS).forEach(s => table.classList.remove(`skin-${s}`));
+  Object.keys(SKIN_SYSTEM.AVATAR_FRAMES).forEach(f => table.classList.remove(`frame-${f}`));
+  // 应用新皮肤
+  table.classList.add(skinManager.getSkinClass());
+  table.classList.add(skinManager.getFrameClass());
+}
+
+// ============ 自定义卡牌编辑器 ============
+let cardEditor = null;
+let customCards = [];
+try { customCards = JSON.parse(localStorage.getItem('sgk_custom_cards') || '[]'); } catch {}
+
+function initCardEditor() {
+  if (typeof CardEditor === 'undefined') return;
+  cardEditor = new CardEditor();
+  cardEditor.onChange = updateCardEditorPreview;
+  renderCardTypeOptions();
+  renderCardSuitOptions();
+  renderCardSubtypeOptions();
+  renderCustomCardList();
+  bindCardEditorEvents();
+  updateCardEditorPreview();
+}
+
+function renderCardTypeOptions() {
+  const sel = $('ce-type');
+  if (!sel) return;
+  sel.innerHTML = '';
+  window.CARD_DSL.CARD_TYPES.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id; opt.textContent = t.label;
+    sel.appendChild(opt);
+  });
+  sel.onchange = () => {
+    cardEditor.card.type = sel.value;
+    renderCardSubtypeOptions();
+    cardEditor.notify();
+  };
+}
+
+function renderCardSubtypeOptions() {
+  const sel = $('ce-subtype');
+  if (!sel) return;
+  sel.innerHTML = '';
+  const type = cardEditor.card.type;
+  const cards = type === 'basic' ? window.CARD_DSL.BASIC_CARDS :
+    type === 'trick' ? window.CARD_DSL.TRICK_CARDS : window.CARD_DSL.EQUIP_CARDS;
+  cards.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.label;
+    sel.appendChild(opt);
+  });
+  sel.onchange = () => { cardEditor.card.subtype = sel.value; cardEditor.notify(); };
+}
+
+function renderCardSuitOptions() {
+  const sel = $('ce-suit');
+  if (!sel) return;
+  sel.innerHTML = '';
+  [{ v: 'spade', l: '♠黑桃' }, { v: 'heart', l: '♥红桃' }, { v: 'club', l: '♣梅花' }, { v: 'diamond', l: '♦方块' }].forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.v; opt.textContent = s.l;
+    sel.appendChild(opt);
+  });
+  sel.onchange = () => { cardEditor.card.suit = sel.value; cardEditor.notify(); };
+}
+
+function renderCardEffectCard(index) {
+  const box = $('ce-effects');
+  if (!box) return;
+  const effects = cardEditor.card.effects;
+  if (index >= effects.length) return;
+  const e = effects[index];
+  const def = window.CARD_DSL.EFFECT_TYPES.find(x => x.id === e.type);
+  const card = document.createElement('div');
+  card.className = 'se-effect-card';
+  card.dataset.idx = index;
+
+  let paramsHtml = '';
+  if (def && def.params) {
+    paramsHtml = def.params.map(p => {
+      const val = e.params[p.key] ?? p.default;
+      if (p.type === 'select') {
+        const opts = p.options.map(o => `<option value="${o.v}" ${o.v == val ? 'selected' : ''}>${o.l}</option>`).join('');
+        return `<label>${p.label} <select data-key="${p.key}">${opts}</select></label>`;
+      }
+      if (p.type === 'checkbox') {
+        return `<label>${p.label} <input type="checkbox" data-key="${p.key}" ${val ? 'checked' : ''}></label>`;
+      }
+      return `<label>${p.label} <input type="${p.type === 'number' ? 'number' : 'text'}" data-key="${p.key}" value="${val}" ${p.min != null ? 'min="' + p.min + '"' : ''} ${p.max != null ? 'max="' + p.max + '"' : ''}></label>`;
+    }).join('');
+  }
+
+  card.innerHTML = `
+    <div class="ef-header">
+      <span class="ef-name">${def ? def.label : e.type}</span>
+      <span class="ef-remove" data-idx="${index}">✕</span>
+    </div>
+    <div class="ef-params">${paramsHtml}</div>`;
+  box.appendChild(card);
+}
+
+function renderAllCardEffects() {
+  const box = $('ce-effects');
+  if (!box) return;
+  box.innerHTML = '';
+  cardEditor.card.effects.forEach((e, i) => renderCardEffectCard(i));
+  box.querySelectorAll('.ef-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = +btn.dataset.idx;
+      cardEditor.card.effects.splice(idx, 1);
+      cardEditor.notify();
+      renderAllCardEffects();
+      updateCardEditorPreview();
+    });
+  });
+  box.querySelectorAll('.ef-params input, .ef-params select').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const card = inp.closest('.se-effect-card');
+      const idx = +card.dataset.idx;
+      const key = inp.dataset.key;
+      let val;
+      if (inp.type === 'checkbox') val = inp.checked;
+      else if (inp.type === 'number') val = +inp.value || 0;
+      else val = inp.value;
+      if (!cardEditor.card.effects[idx].params) cardEditor.card.effects[idx].params = {};
+      cardEditor.card.effects[idx].params[key] = val;
+      updateCardEditorPreview();
+    });
+  });
+}
+
+function renderCustomCardList() {
+  const box = $('ce-list');
+  if (!box) return;
+  box.innerHTML = '';
+  if (!customCards.length) { box.innerHTML = '<div class="hint">还没有自定义卡牌</div>'; return; }
+  customCards.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'ce-list-item';
+    div.innerHTML = `
+      <span class="lname">${c.name} <span class="hint">(${c.description.slice(0, 12)}...)</span></span>
+      <span class="lactions">
+        <button class="btn btn-small" data-act="edit" data-idx="${i}">编辑</button>
+        <button class="btn btn-small" data-act="del" data-idx="${i}">删除</button>
+      </span>`;
+    box.appendChild(div);
+  });
+  box.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = +btn.dataset.idx;
+      if (btn.dataset.act === 'edit') {
+        cardEditor.setCard(JSON.parse(JSON.stringify(customCards[idx])));
+        syncCardEditorUI();
+        updateCardEditorPreview();
+      } else if (btn.dataset.act === 'del') {
+        customCards.splice(idx, 1);
+        saveCustomCards();
+        renderCustomCardList();
+      }
+    });
+  });
+}
+
+function syncCardEditorUI() {
+  renderCardTypeOptions();
+  renderCardSubtypeOptions();
+  renderCardSuitOptions();
+  renderAllCardEffects();
+  const nameInput = $('ce-name');
+  if (nameInput) nameInput.value = cardEditor.card.name;
+  const rankInput = $('ce-rank');
+  if (rankInput) rankInput.value = cardEditor.card.rank;
+  const onceCb = $('ce-once');
+  if (onceCb) onceCb.checked = cardEditor.card.oncePerTurn;
+  const needTarget = $('ce-need-target');
+  if (needTarget) needTarget.checked = cardEditor.card.needsTarget;
+}
+
+function updateCardEditorPreview() {
+  if (!cardEditor) return;
+  const preview = $('ce-preview');
+  const json = $('ce-json');
+  if (preview) preview.textContent = cardEditor.generateDesc();
+  if (json) json.textContent = cardEditor.toJSON();
+  // 卡牌视觉预览
+  const cardPreview = $('ce-card-preview');
+  if (cardPreview) {
+    const c = cardEditor.card;
+    const isRed = c.suit === 'heart' || c.suit === 'diamond';
+    const rankLabel = { 1: 'A', 11: 'J', 12: 'Q', 13: 'K' }[c.rank] || c.rank;
+    cardPreview.innerHTML = `<div class="card ${isRed ? 'red' : 'black'}" style="position:relative;transform:none;margin:0;">
+      <div class="ctype">${c.type === 'basic' ? '基本' : c.type === 'trick' ? '锦囊' : '装备'}</div>
+      <div class="cname">${c.name}</div>
+      <div class="csuit">${{ spade: '♠', heart: '♥', club: '♣', diamond: '♦' }[c.suit]}</div>
+      <div class="crank">${rankLabel}</div>
+    </div>`;
+  }
+}
+
+function saveCustomCards() {
+  localStorage.setItem('sgk_custom_cards', JSON.stringify(customCards));
+}
+
+function bindCardEditorEvents() {
+  $('btn-cardeditor-back')?.addEventListener('click', () => showView('home'));
+  $('btn-add-card-effect')?.addEventListener('click', () => openCardEffectPicker());
+  $('btn-ce-save')?.addEventListener('click', () => {
+    const err = cardEditor.validate();
+    if (err) { const m = $('ce-msg'); if (m) m.textContent = '❌ ' + err; return; }
+    const c = cardEditor.getCard();
+    const existing = customCards.findIndex(x => x.id === c.id);
+    if (existing >= 0) customCards[existing] = c; else customCards.push(c);
+    saveCustomCards();
+    renderCustomCardList();
+    const m = $('ce-msg'); if (m) m.textContent = '✅ 已保存：' + c.name;
+  });
+  $('btn-ce-test')?.addEventListener('click', () => {
+    const m = $('ce-msg'); if (m) m.textContent = '💡 在房间设置中启用自定义卡牌即可测试';
+  });
+  $('btn-ce-clear')?.addEventListener('click', () => {
+    cardEditor.setCard(cardEditor.createEmptyCard());
+    syncCardEditorUI();
+    updateCardEditorPreview();
+  });
+  const nameInput = $('ce-name');
+  if (nameInput) nameInput.addEventListener('input', () => { cardEditor.card.name = nameInput.value; updateCardEditorPreview(); });
+  const rankInput = $('ce-rank');
+  if (rankInput) rankInput.addEventListener('input', () => { cardEditor.card.rank = +rankInput.value || 7; updateCardEditorPreview(); });
+  const onceCb = $('ce-once');
+  if (onceCb) onceCb.addEventListener('change', () => { cardEditor.card.oncePerTurn = onceCb.checked; updateCardEditorPreview(); });
+  const needTarget = $('ce-need-target');
+  if (needTarget) needTarget.addEventListener('change', () => { cardEditor.card.needsTarget = needTarget.checked; });
+}
+
+function openCardEffectPicker() {
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.style.zIndex = '350';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.maxWidth = '500px';
+  modal.innerHTML = `<div class="modal-title">选择效果</div><div class="se-options" style="max-height:400px"></div>`;
+  const opts = modal.querySelector('.se-options');
+  window.CARD_DSL.EFFECT_TYPES.forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'se-opt';
+    div.innerHTML = `<div>${e.label}</div><div class="optdesc">${e.desc}</div>`;
+    div.addEventListener('click', () => {
+      const params = {};
+      (e.params || []).forEach(p => { params[p.key] = p.default; });
+      cardEditor.card.effects.push({ type: e.type, params });
+      renderAllCardEffects();
+      updateCardEditorPreview();
+      mask.remove();
+    });
+    opts.appendChild(div);
+  });
+  mask.appendChild(modal);
+  document.body.appendChild(mask);
+  mask.addEventListener('click', e => { if (e.target === mask) mask.remove(); });
+}
+let fx = null;
+function initFX() {
+  if (typeof FX !== 'undefined') {
+    fx = new FX();
+    window._FX = fx;
+  }
+  // 初始化 Canvas 粒子渲染器
+  if (typeof PerfUtils !== 'undefined') {
+    window.canvasParticles = new PerfUtils.CanvasParticleRenderer();
+    window.renderScheduler = new PerfUtils.RenderScheduler();
+    window.resourcePreloader = new PerfUtils.ResourcePreloader();
+    window.debouncedRender = new PerfUtils.DebouncedRenderer(16);
+  }
+}
+
+// 性能优化的粒子发射函数
+function spawnParticles(x, y, opts) {
+  if (window.canvasParticles) {
+    window.canvasParticles.emit(x, y, opts);
+  }
+}
+
+// 资源预加载
+function preloadGameResources() {
+  if (typeof PerfUtils === 'undefined' || !window.resourcePreloader) return;
+  const { GENERALS } = window._SGK_META || {};
+  if (GENERALS && GENERALS.length) {
+    // 预加载前 20 个武将头像
+    window.resourcePreloader.preloadGenerals(GENERALS.slice(0, 20));
+  }
+}
+
+// ============ 快捷键 ============
+let shortcuts = null;
+function initShortcuts() {
+  if (typeof Shortcuts === 'undefined') return;
+  shortcuts = new Shortcuts();
+  window._shortcuts = shortcuts; // 调试/测试用
+  shortcuts.setHandlers({
+    onAction: handleShortcut,
+    onHelp: toggleShortcutsHelp,
+    onMute: () => { if (audio) audio.setEnabled(!audio.enabled); const icon = $('audio-icon'); const ctl = document.getElementById('audio-control'); if (audio) { icon.textContent = audio.enabled ? '🔊' : '🔇'; ctl.classList.toggle('muted', !audio.enabled); } },
+    onVolume: (dir) => { const s = document.getElementById('audio-volume'); if (s) { const v = Math.max(0, Math.min(100, +s.value + dir * 10)); s.value = v; if (audio) audio.setVolume(v / 100); } },
+  });
+  // 同步选择状态
+  setInterval(() => {
+    if (shortcuts && gameState) {
+      shortcuts.setSelection(sel);
+      const pr = prompt();
+      if (pr && pr.kind === 'play') shortcuts.setContext('play');
+      else if (pr && pr.kind === 'respond') shortcuts.setContext('respond');
+      else shortcuts.setContext('global');
+    }
+  }, 200);
+}
+
+function handleShortcut(action, payload) {
+  const pr = prompt();
+  if (!pr) return;
+  switch (action) {
+    case 'selectCard': {
+      if (pr.kind === 'play') {
+        const cards = gameState.myHand;
+        const c = cards[payload];
+        if (c) { toggleHand(c.uid); sfx('click'); }
+      } else if (pr.kind === 'respond') {
+        const opts = Array.from(document.querySelectorAll('#prompt-bar .prompt-options .btn'));
+        // 1-9 → 选项 0-8，0 → 最后一个（不出）
+        const idx = payload === 9 ? opts.length - 1 : payload;
+        if (opts[idx]) { opts[idx].click(); sfx('click'); }
+      }
+      break;
+    }
+    case 'confirm': {
+      if (pr.kind === 'play' && (sel.hand.length || sel.skill)) { confirmPlay(); }
+      else if (pr.kind === 'respond') { confirmRespond(); }
+      break;
+    }
+    case 'cancel': {
+      if (pr.kind === 'play') { sel = freshSel(); renderHand(); renderActionBar(); renderOpponents(); sfx('click'); }
+      else if (pr.kind === 'respond') { send({ type: 'action', pass: true }); }
+      break;
+    }
+    case 'endTurn': {
+      if (pr.kind === 'play') { send({ type: 'action', action: 'end' }); sel = freshSel(); }
+      break;
+    }
+    case 'cycleMode': {
+      if (pr.kind !== 'play') return;
+      const modes = modesForSelection();
+      if (modes.length <= 1) return;
+      const curIdx = modes.findIndex(m => m.as === sel.mode);
+      const next = curIdx + payload;
+      sel.mode = modes[(next % modes.length + modes.length) % modes.length].as;
+      sel.targets = [];
+      renderActionBar(); renderOpponents();
+      break;
+    }
+    case 'cycleTarget': {
+      const cands = targetCandidates();
+      if (!cands.length) return;
+      // 选中下一个目标
+      const curIdx = sel.targets.length ? cands.indexOf(sel.targets[sel.targets.length - 1]) : -1;
+      const next = (curIdx + payload + cands.length) % cands.length;
+      sel.targets = [cands[next]];
+      renderOpponents(); renderActionBar();
+      break;
+    }
+    case 'skill': {
+      if (pr.kind !== 'play') return;
+      const skills = (pr.skills || []).filter(s => !s.passive && s.usable);
+      if (skills[payload]) {
+        sel.skill = skills[payload].id; sel.mode = null; sel.hand = []; sel.targets = [];
+        const need = skillButtonDef(sel.skill) || {};
+        if (need.needCards === 0 && need.needTargets === 0) {
+          send({ type: 'action', action: 'skill', skill: sel.skill, cardIds: [], targets: [] });
+          sel = freshSel();
+        } else {
+          sel.hand = sel.hand.slice(0, need.needCards === 1 ? 1 : (need.needCards === '1+' ? 0 : need.needCards));
+        }
+        renderHand(); renderActionBar(); renderOpponents();
+      }
+      break;
+    }
+  }
+}
+
+function confirmRespond() {
+  // 找到当前高亮的选项并点击
+  const opts = document.querySelectorAll('#prompt-bar .prompt-options .btn');
+  const highlighted = document.querySelector('#prompt-bar .prompt-options .btn.btn-primary');
+  if (highlighted) highlighted.click();
+  else if (opts.length) opts[0].click();
+}
+
+let shortcutsHelpVisible = false;
+function toggleShortcutsHelp() {
+  // Esc 关闭
+  if (shortcutsHelpVisible) { shortcutsHelpVisible = false; window._sgkHelpVisible = false; $('shortcuts-help').classList.add('hidden'); return; }
+  shortcutsHelpVisible = true; window._sgkHelpVisible = true;
+  $('shortcuts-help').classList.remove('hidden');
+  buildShortcutsHelp();
+}
+// Esc 关闭帮助
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && window._sgkHelpVisible) { toggleShortcutsHelp(); e.stopPropagation(); }
+});
+
+function buildShortcutsHelp() {
+  const list = $('shortcuts-list');
+  if (!list) return;
+  const keys = [
+    ['1-0', '选第 N 张手牌'],
+    ['Enter / Space', '确定 / 打出'],
+    ['Esc / ⌫', '取消选择'],
+    ['Q / E', '切换出牌方式'],
+    ['Tab / ← →', '切换目标'],
+    ['X / End', '结束出牌'],
+    ['F1-F4', '发动技能'],
+    ['M', '静音 / 开启'],
+    ['↑ / ↓', '音量增减'],
+    ['H / ?', '显示/关闭帮助'],
+  ];
+  list.innerHTML = keys.map(([k, d]) =>
+    `<div><span class="kkey">${k}</span><span class="kdesc">${d}</span></div>`).join('');
+}
 
 // ============ 大厅 ============
 function renderLobby() {
@@ -237,14 +1215,47 @@ function renderOpts(isHost) {
   const box = $('lobby-opts');
   const row = (label, inner) => `<div class="opt-row"><label>${label}</label><span>${inner}</span></div>`;
   let html = '';
-  html += row('人数', isHost ? `<select id="opt-max">${[4,5,6,7,8].map(n => `<option ${n === o.maxPlayers ? 'selected' : ''}>${n}</option>`).join('')}</select>` : `${o.maxPlayers} 人`);
+  // 游戏模式选择
+  const modeOptions = { identity: '身份局', '1v1': '1v1 单挑', '3v3': '3v3 对抗', guozhan: '国 战', doudizhu: '斗地主' };
+  html += row('游戏模式', isHost ? `<select id="opt-mode">${Object.entries(modeOptions).map(([v, l]) => `<option value="${v}" ${o.gameMode === v ? 'selected' : ''}>${l}</option>`).join('')}</select>` : modeOptions[o.gameMode] || '身份局');
+  // 根据模式限制人数
+  const modeMinMax = { identity: [4,8], '1v1': [2,2], '3v3': [6,6], guozhan: [2,8], doudizhu: [3,3] };
+  const [minP, maxP] = modeMinMax[o.gameMode] || [4, 8];
+  if (isHost) {
+    // 如果当前人数不在模式范围内，调整
+    if (o.maxPlayers < minP) o.maxPlayers = minP;
+    if (o.maxPlayers > maxP) o.maxPlayers = maxP;
+  }
+  html += row('人数', isHost ? `<select id="opt-max">${Array.from({length: maxP - minP + 1}, (_, i) => minP + i).map(n => `<option ${n === o.maxPlayers ? 'selected' : ''}>${n}</option>`).join('')}</select>` : `${o.maxPlayers} 人`);
   html += row('选将方式', isHost ? `<select id="opt-pickmode"><option value="random" ${o.pickMode === 'random' ? 'selected' : ''}>随机选将</option><option value="free" ${o.pickMode === 'free' ? 'selected' : ''}>自由点将</option></select>` : (o.pickMode === 'random' ? `随机选将（${o.pickCount}选1）` : '自由点将'));
   if (o.pickMode === 'random') {
     html += row('候选武将数', isHost ? `<select id="opt-pickcount">${[2,3,4,5,6,7].map(n => `<option ${n === o.pickCount ? 'selected' : ''}>${n}</option>`).join('')}</select>` : o.pickCount);
   }
-  html += row('点身份', isHost ? `<input type="checkbox" id="opt-idpick" ${o.allowIdentityPick ? 'checked' : ''}>` : (o.allowIdentityPick ? '开' : '关'));
+  // 国战和1v1不显示点身份
+  if (o.gameMode === 'identity' || o.gameMode === '3v3' || o.gameMode === 'doudizhu') {
+    html += row('点身份', isHost ? `<input type="checkbox" id="opt-idpick" ${o.allowIdentityPick ? 'checked' : ''}>` : (o.allowIdentityPick ? '开' : '关'));
+  }
   html += row('启用DIY武将', isHost ? `<input type="checkbox" id="opt-custom" ${o.includeCustoms ? 'checked' : ''}>` : (o.includeCustoms ? '开' : '关'));
-  html += row('身份配置', (roomState.identityDist || []).map(id => IDENTITY_NAME[id]).join(' / '));
+  html += row('身份配置', (roomState.identityDist || []).map(id => IDENTITY_NAME[id] || id).join(' / '));
+  // ---- 自定义规则 ----
+  html += '<div style="width:100%;margin:6px 0;padding-top:6px;border-top:1px dashed #4a3c28"><span class="hint">— 自定义规则 —</span></div>';
+  html += row('回合上限', isHost ? `<input type="number" id="opt-roundlimit" value="${o.roundLimit || 0}" min="0" max="100" style="width:60px"> <span class="hint">0=无限</span>` : `${o.roundLimit || '∞'}`);
+  html += row('初始手牌', isHost ? `<input type="number" id="opt-startcards" value="${o.startCards || 4}" min="2" max="8" style="width:60px">` : (o.startCards || 4));
+  html += row('手牌上限', isHost ? `<input type="number" id="opt-handlimit" value="${o.handLimit || 0}" min="0" max="20" style="width:60px"> <span class="hint">0=体力值</span>` : (o.handLimit || '体力值'));
+  html += row('体力加成', isHost ? `<input type="number" id="opt-hpbonus" value="${o.hpBonus || 0}" min="-2" max="3" style="width:60px">` : (o.hpBonus || 0));
+  html += row('主公加体力', isHost ? `<input type="checkbox" id="opt-lordhp" ${o.lordExtraHp !== false ? 'checked' : ''}>` : (o.lordExtraHp !== false ? '开' : '关'));
+  html += row('弃牌限制', isHost ? `<input type="checkbox" id="opt-discardlimit" ${o.discardLimit !== false ? 'checked' : ''}>` : (o.discardLimit !== false ? '开' : '关'));
+  html += row('允许决斗', isHost ? `<input type="checkbox" id="opt-juedou" ${o.allowJuedou !== false ? 'checked' : ''}>` : (o.allowJuedou !== false ? '开' : '关'));
+  html += row('允许AOE', isHost ? `<input type="checkbox" id="opt-aoe" ${o.allowAoe !== false ? 'checked' : ''}>` : (o.allowAoe !== false ? '开' : '关'));
+  html += row('揭示身份', isHost ? `<input type="checkbox" id="opt-reveal" ${o.revealOnDeath !== false ? 'checked' : ''}>` : (o.revealOnDeath !== false ? '开' : '关'));
+  // AI 难度
+  const diffNames = { easy: '简单', normal: '普通', hard: '困难' };
+  html += row('AI 难度', isHost ? `<select id="opt-aidiff"><option value="easy" ${o.aiDifficulty === 'easy' ? 'selected' : ''}>简单</option><option value="normal" ${o.aiDifficulty === 'normal' || !o.aiDifficulty ? 'selected' : ''}>普通</option><option value="hard" ${o.aiDifficulty === 'hard' ? 'selected' : ''}>困难</option></select>` : (diffNames[o.aiDifficulty] || '普通'));
+  // 游戏速度
+  const speedNames = { fast: '快速', normal: '标准', slow: '慢速' };
+  html += row('游戏速度', isHost ? `<select id="opt-speed"><option value="fast" ${o.gameSpeed === 'fast' ? 'selected' : ''}>快速</option><option value="normal" ${o.gameSpeed === 'normal' || !o.gameSpeed ? 'selected' : ''}>标准</option><option value="slow" ${o.gameSpeed === 'slow' ? 'selected' : ''}>慢速</option></select>` : (speedNames[o.gameSpeed] || '标准'));
+  // 出牌倒计时
+  html += row('出牌倒计时', isHost ? `<select id="opt-timer"><option value="0" ${!o.turnTimer ? 'selected' : ''}>无限</option><option value="30" ${o.turnTimer === 30 ? 'selected' : ''}>30秒</option><option value="60" ${o.turnTimer === 60 ? 'selected' : ''}>60秒</option><option value="90" ${o.turnTimer === 90 ? 'selected' : ''}>90秒</option></select>` : (o.turnTimer ? o.turnTimer + '秒' : '无限'));
   box.innerHTML = html;
   if (isHost) {
     const bind = (id, fn) => { const el = $(id); if (el) el.addEventListener('change', fn); };
@@ -253,6 +1264,317 @@ function renderOpts(isHost) {
     bind('opt-pickcount', e => send({ type: 'setOpts', opts: { pickCount: +e.target.value } }));
     bind('opt-idpick', e => send({ type: 'setOpts', opts: { allowIdentityPick: e.target.checked } }));
     bind('opt-custom', e => send({ type: 'setOpts', opts: { includeCustoms: e.target.checked } }));
+    bind('opt-mode', e => send({ type: 'setOpts', opts: { gameMode: e.target.value } }));
+    // 胜利条件选择
+    if (typeof GameRules !== 'undefined') {
+      const wc = o.winCondition || 'default';
+      html += row('胜利条件', isHost ? `<select id="opt-wincond">${GameRules.WIN_CONDITIONS.map(c => `<option value="${c.id}" ${c.id === wc ? 'selected' : ''}>${c.label}</option>`).join('')}</select>` : (GameRules.WIN_CONDITIONS.find(c => c.id === (o.winCondition || 'default'))?.label || '默认'));
+      // 胜利条件参数
+      const condDef = GameRules.WIN_CONDITIONS.find(c => c.id === wc);
+      if (condDef && condDef.params.length && isHost) {
+        condDef.params.forEach(p => {
+          const val = (o.winParams && o.winParams[p.key]) ?? p.default;
+          if (p.type === 'textarea') {
+            html += `<div style="width:100%;margin-top:4px"><label style="font-size:12px;color:#8a7a5f">${p.label}</label><textarea id="opt-winparam-${p.key}" style="width:100%;height:60px;background:#181310;color:#e8dcc0;border:1px solid #5a4a33;border-radius:4px;padding:4px;font-size:12px">${val}</textarea></div>`;
+          } else {
+            html += row(p.label, `<input type="${p.type === 'number' ? 'number' : 'text'}" id="opt-winparam-${p.key}" value="${val}" ${p.min != null ? 'min="' + p.min + '"' : ''} ${p.max != null ? 'max="' + p.max + '"' : ''} style="width:60px">`);
+          }
+        });
+      }
+    }
+    // 自定义规则绑定
+    const numOpt = (id, key) => bind(id, e => { const v = parseInt(e.target.value, 10); send({ type: 'setOpts', opts: { [key]: isNaN(v) ? 0 : v } }); });
+    const boolOpt = (id, key) => bind(id, e => send({ type: 'setOpts', opts: { [key]: e.target.checked } }));
+    numOpt('opt-roundlimit', 'roundLimit');
+    numOpt('opt-startcards', 'startCards');
+    numOpt('opt-handlimit', 'handLimit');
+    numOpt('opt-hpbonus', 'hpBonus');
+    boolOpt('opt-lordhp', 'lordExtraHp');
+    boolOpt('opt-discardlimit', 'discardLimit');
+    boolOpt('opt-juedou', 'allowJuedou');
+    boolOpt('opt-aoe', 'allowAoe');
+    bind('opt-aidiff', e => send({ type: 'setOpts', opts: { aiDifficulty: e.target.value } }));
+    bind('opt-speed', e => send({ type: 'setOpts', opts: { gameSpeed: e.target.value } }));
+    bind('opt-timer', e => send({ type: 'setOpts', opts: { turnTimer: +e.target.value } }));
+    // 胜利条件绑定
+    if (typeof GameRules !== 'undefined') {
+      bind('opt-wincond', e => send({ type: 'setOpts', opts: { winCondition: e.target.value, winParams: {} } }));
+      const condDef = GameRules.WIN_CONDITIONS.find(c => c.id === (o.winCondition || 'default'));
+      if (condDef && condDef.params.length) {
+        condDef.params.forEach(p => {
+          const el = $('opt-winparam-' + p.key);
+          if (el) {
+            el.addEventListener('change', () => {
+              const params = {};
+              params[p.key] = p.type === 'number' ? (+el.value || 0) : el.value;
+              send({ type: 'setOpts', opts: { winParams: params } });
+            });
+          }
+        });
+      }
+    }
+    // 规则预设按钮
+    html += '<div style="width:100%;margin-top:8px"><button id="btn-rule-presets" class="btn btn-small">📋 规则预设</button> <button id="btn-share-rules" class="btn btn-small">🔗 分享规则</button></div>';
+    // 禁将/禁牌
+    html += '<div style="width:100%;margin-top:6px"><button id="btn-banlist" class="btn btn-small">🚫 禁将/禁牌</button></div>';
+    html += row('投票禁将', isHost ? `<input type="checkbox" id="opt-voteban" ${o.allowVoteBan ? 'checked' : ''}>` : (o.allowVoteBan ? '开' : '关'));
+    boolOpt('opt-reveal', 'revealOnDeath');
+    boolOpt('opt-voteban', 'allowVoteBan');
+    // 绑定预设按钮
+    bind('btn-rule-presets', () => openRulePresets());
+    bind('btn-share-rules', () => openShareRules());
+    bind('btn-banlist', () => openBanList());
+  }
+}
+
+// ==================== 规则预设面板 ====================
+let rulePresetManager = null;
+function getPresetManager() {
+  if (!rulePresetManager && typeof GameRules !== 'undefined') {
+    rulePresetManager = new GameRules.RulePresetManager();
+  }
+  return rulePresetManager;
+}
+
+function openRulePresets() {
+  const mgr = getPresetManager();
+  if (!mgr) return;
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.style.zIndex = '310';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.maxWidth = '500px';
+  modal.innerHTML = `<div class="modal-title">规则预设 <span id="rp-close" style="cursor:pointer;color:#a05050">✕</span></div>
+    <div id="rp-list" style="max-height:300px;overflow-y:auto"></div>
+    <div style="margin-top:12px;padding-top:8px;border-top:1px dashed #4a3c28">
+      <input id="rp-name" placeholder="预设名称" style="width:100%;margin-bottom:6px">
+      <input id="rp-desc" placeholder="描述（可选）" style="width:100%;margin-bottom:6px">
+      <button id="rp-save" class="btn btn-small btn-primary">保存当前设置为预设</button>
+    </div>`;
+  mask.appendChild(modal);
+  document.body.appendChild(mask);
+
+  const render = () => {
+    const list = $('rp-list');
+    if (!list) return;
+    const presets = mgr.list();
+    if (!presets.length) { list.innerHTML = '<div class="hint">暂无预设</div>'; return; }
+    list.innerHTML = '';
+    presets.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'ce-list-item';
+      div.innerHTML = `<span class="lname">${p.name} <span class="hint">(${p.desc})</span></span>
+        <span class="lactions">
+          <button class="btn btn-small" data-act="load" data-id="${p.id}">加载</button>
+          ${p.custom ? `<button class="btn btn-small" data-act="del" data-id="${p.id}">删除</button>` : ''}
+        </span>`;
+      list.appendChild(div);
+    });
+    list.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        if (btn.dataset.act === 'load') {
+          const preset = mgr.load(id);
+          if (preset && preset.opts) {
+            send({ type: 'setOpts', opts: preset.opts });
+            if (typeof renderOpts === 'function' && roomState) renderOpts(roomState.hostPid === myPid);
+            addChatMessage('系统', `已加载预设：${preset.name}`);
+          }
+          mask.remove();
+        } else if (btn.dataset.act === 'del') {
+          mgr.remove(id);
+          render();
+        }
+      });
+    });
+  };
+  render();
+
+  $('rp-close').onclick = () => mask.remove();
+  $('rp-save').onclick = () => {
+    const name = $('rp-name').value.trim();
+    if (!name) return alert('请输入预设名称');
+    if (!roomState) return;
+    const desc = $('rp-desc').value.trim();
+    const opts = { ...roomState.opts };
+    mgr.save(name, desc, opts);
+    render();
+    $('rp-name').value = '';
+    $('rp-desc').value = '';
+  };
+  mask.addEventListener('click', e => { if (e.target === mask) mask.remove(); });
+}
+
+// ==================== 规则分享 ====================
+function openShareRules() {
+  const mgr = getPresetManager();
+  if (!mgr || !roomState) return;
+  const code = mgr.encode(roomState.opts);
+  const url = window.location.origin + '#rules=' + code;
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.style.zIndex = '310';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.maxWidth = '500px';
+  modal.innerHTML = `<div class="modal-title">分享规则 <span id="rs-close" style="cursor:pointer;color:#a05050">✕</span></div>
+    <div style="margin-bottom:8px;font-size:13px;color:#b39b74">分享码：</div>
+    <textarea id="rs-code" readonly style="width:100%;height:80px;background:#0d0a08;color:#7fba7f;border:1px solid #33291d;border-radius:4px;padding:8px;font-size:11px;word-break:break-all">${code}</textarea>
+    <div style="margin-top:8px;margin-bottom:8px;font-size:13px;color:#b39b74">分享链接：</div>
+    <input id="rs-url" readonly value="${url}" style="width:100%;background:#0d0a08;color:#7fba7f;border:1px solid #33291d;border-radius:4px;padding:6px;font-size:12px">
+    <div style="margin-top:10px">
+      <button id="rs-copy" class="btn btn-small btn-primary">复制分享码</button>
+      <button id="rs-import" class="btn btn-small">导入规则</button>
+    </div>
+    <div id="rs-import-area" style="display:none;margin-top:10px">
+      <textarea id="rs-import-code" placeholder="粘贴分享码..." style="width:100%;height:60px;background:#181310;color:#e8dcc0;border:1px solid #5a4a33;border-radius:4px;padding:6px;font-size:12px"></textarea>
+      <button id="rs-import-btn" class="btn btn-small btn-primary" style="margin-top:6px">导入</button>
+    </div>`;
+  mask.appendChild(modal);
+  document.body.appendChild(mask);
+
+  $('rs-close').onclick = () => mask.remove();
+  $('rs-copy').onclick = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      $('rs-copy').textContent = '✅ 已复制';
+      setTimeout(() => { $('rs-copy').textContent = '复制分享码'; }, 2000);
+    });
+  };
+  $('rs-import').onclick = () => {
+    const area = $('rs-import-area');
+    area.style.display = area.style.display === 'none' ? 'block' : 'none';
+  };
+  $('rs-import-btn').onclick = () => {
+    const importCode = $('rs-import-code').value.trim();
+    const opts = mgr.decode(importCode);
+    if (opts) {
+      send({ type: 'setOpts', opts });
+      if (typeof renderOpts === 'function' && roomState) renderOpts(roomState.hostPid === myPid);
+      addChatMessage('系统', '已导入规则');
+      mask.remove();
+    } else {
+      alert('分享码无效');
+    }
+  };
+  mask.addEventListener('click', e => { if (e.target === mask) mask.remove(); });
+}
+
+// 从 URL 导入规则
+function importRulesFromUrl() {
+  if (location.hash.startsWith('#rules=')) {
+    const code = location.hash.slice(7);
+    const mgr = getPresetManager();
+    if (mgr) {
+      const opts = mgr.decode(code);
+      if (opts && roomState) {
+        send({ type: 'setOpts', opts });
+        addChatMessage('系统', '已从链接导入规则');
+      }
+    }
+    history.replaceState(null, '', location.pathname);
+  }
+}
+
+// ==================== 禁将/禁牌面板 ====================
+async function openBanList() {
+  const generals = window._SGK_META?.generals || [];
+  const o = roomState?.opts || {};
+  const bannedG = new Set(o.bannedGenerals || []);
+  const bannedC = new Set(o.bannedCards || []);
+
+  const cardKeys = [
+    ['sha','杀'], ['shan','闪'], ['tao','桃'], ['juedou','决斗'], ['guohe','过河拆桥'],
+    ['shunshou','顺手牵羊'], ['wuzhong','无中生有'], ['nanman','南蛮入侵'], ['wanjian','万箭齐发'],
+    ['taoyuan','桃园结义'], ['wugu','五谷丰登'], ['jiedao','借刀杀人'], ['wuxie','无懈可击'],
+    ['lebu','乐不思蜀'], ['shandian','闪电'],
+  ];
+
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.style.zIndex = '310';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.maxWidth = '600px';
+  modal.innerHTML = `<div class="modal-title">禁将/禁牌 <span style="cursor:pointer;color:#a05050;float:right" id="bl-close">✕</span></div>
+    <div style="max-height:400px;overflow-y:auto">
+      <div class="panel-title" style="margin-top:0">禁将方案</div>
+      <select id="bl-preset" style="width:100%;margin-bottom:8px">
+        <option value="none">无</option>
+        <option value="basic">禁用强力武将</option>
+        <option value="cards">禁用极端卡牌</option>
+        <option value="strict">严格模式</option>
+      </select>
+      <div class="panel-title">禁用武将（${generals.length} 可用）</div>
+      <div id="bl-generals" style="display:flex;flex-wrap:wrap;gap:4px;max-height:150px;overflow-y:auto;padding:4px 0"></div>
+      <div class="panel-title">禁用卡牌</div>
+      <div id="bl-cards" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px"></div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
+      <button id="bl-apply" class="btn btn-primary">应用</button>
+      <button id="bl-cancel" class="btn">取消</button>
+      <button id="bl-clear" class="btn">清空</button>
+    </div>`;
+  mask.appendChild(modal);
+  document.body.appendChild(mask);
+
+  const genBox = modal.querySelector('#bl-generals');
+  const cardBox = modal.querySelector('#bl-cards');
+
+  generals.forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-small' + (bannedG.has(g.id) ? ' btn-primary' : '');
+    btn.textContent = g.name;
+    btn.onclick = () => { btn.classList.toggle('btn-primary'); bannedG.has(g.id) ? bannedG.delete(g.id) : bannedG.add(g.id); };
+    genBox.appendChild(btn);
+  });
+
+  cardKeys.forEach(([key, name]) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-small' + (bannedC.has(key) ? ' btn-primary' : '');
+    btn.textContent = name;
+    btn.onclick = () => { btn.classList.toggle('btn-primary'); bannedC.has(key) ? bannedC.delete(key) : bannedC.add(key); };
+    cardBox.appendChild(btn);
+  });
+
+  modal.querySelector('#bl-preset').onchange = e => {
+    const presets = {
+      none: { g: [], c: [] },
+      basic: { g: ['lvbu','guojia','simayi','zhugeliang'], c: [] },
+      cards: { g: [], c: ['shandian','wuxie'] },
+      strict: { g: ['lvbu','guojia','simayi','zhugeliang','xiahoudun'], c: ['shandian','wuxie','lebu'] },
+    };
+    const p = presets[e.target.value] || presets.none;
+    bannedG.clear(); bannedC.clear();
+    p.g.forEach(id => bannedG.add(id));
+    p.c.forEach(id => bannedC.add(id));
+    // refresh UI
+    genBox.querySelectorAll('button').forEach(b => b.classList.toggle('btn-primary', bannedG.has(b.textContent && generals.find(g=>g.name===b.textContent)?.id)));
+    cardBox.querySelectorAll('button').forEach(b => b.classList.toggle('btn-primary', bannedC.has(cardKeys.find(c=>c[1]===b.textContent)?.[0])));
+  };
+
+  modal.querySelector('#bl-apply').onclick = () => {
+    send({ type: 'setOpts', opts: { bannedGenerals: [...bannedG], bannedCards: [...bannedC] } });
+    addChatMessage('系统', `已设置禁将${bannedG.size}名，禁牌${bannedC.size}张`);
+    mask.remove();
+  };
+  modal.querySelector('#bl-cancel').onclick = () => mask.remove();
+  modal.querySelector('#bl-close').onclick = () => mask.remove();
+  modal.querySelector('#bl-clear').onclick = () => {
+    bannedG.clear(); bannedC.clear();
+    genBox.querySelectorAll('button').forEach(b => b.classList.remove('btn-primary'));
+    cardBox.querySelectorAll('button').forEach(b => b.classList.remove('btn-primary'));
+  };
+  mask.addEventListener('click', e => { if (e.target === mask) mask.remove(); });
+}
+
+function addChatMessage(name, text) {
+  const box = $('chat-box');
+  if (box) {
+    const div = document.createElement('div');
+    div.innerHTML = `<span class="cname">${name}：</span>${text}`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
   }
 }
 
@@ -327,6 +1649,46 @@ function prompt() { return gameState ? gameState.pendingForMe : null; }
 
 function renderGame() {
   if (!gameState) return;
+  window.gameState = gameState;
+  window._ATTACK_RANGE = attackRange();
+  // 胜负结算
+  if (gameState.finished) {
+    if (!gameState._soundPlayed) {
+      gameState._soundPlayed = true;
+      sfx(gameState.winner === gameState.myIdentity || (gameState.winner === 'zhu' && gameState.myIdentity === 'zhong') ? 'win' : 'lose');
+      if (sound) {
+        const won = gameState.winner === gameState.myIdentity || (gameState.winner === 'zhu' && gameState.myIdentity === 'zhong');
+        sound.onGameEvent(won ? 'victory' : 'defeat');
+      }
+      if (fx) {
+        const me = gameState.myIdentity;
+        const won = gameState.winner === me || (gameState.winner === 'zhu' && me === 'zhong');
+        setTimeout(() => fx.endGameOverlay(won), 300);
+      }
+      recordGameResult(gameState);
+      // 显示查看回放按钮
+      if (fx && roomState && roomState.lastReplayId) {
+        setTimeout(() => {
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-primary';
+          btn.textContent = '📼 查看回放';
+          btn.style.marginTop = '10px';
+          btn.onclick = () => viewReplay(roomState.lastReplayId);
+          const endOverlay = document.querySelector('.fx-end-title');
+          if (endOverlay && endOverlay.parentElement) endOverlay.parentElement.appendChild(btn);
+        }, 500);
+      }
+    }
+  }
+  // 我的回合高亮
+  if (gameState.turnSeat === gameState.mySeat && gameState.phase === 'play' && !gameState._myTurnSound) {
+    gameState._myTurnSound = true;
+    sfx('phase');
+    if (sound) sound.onGameEvent('round_start');
+    if (fx) { fx.banner('出 牌 阶 段', { color: '#e6cf9a', size: 30, duration: 1100 }); fx.turnIndicator(gameState.mySeat); }
+  } else if (gameState.turnSeat !== gameState.mySeat) {
+    gameState._myTurnSound = false;
+  }
   renderOpponents();
   renderCenter();
   renderMyPanel();
@@ -334,6 +1696,7 @@ function renderGame() {
   renderActionBar();
   renderPromptBar();
   renderLog();
+  updateCardCounter();
 }
 
 function orderedOpponents() {
@@ -395,11 +1758,15 @@ function renderCenter() {
   const cur = gameState.players[gameState.turnSeat];
   let status = `第 ${gameState.round} 轮 · ${phaseName[gameState.phase] || gameState.phase || ''} · 牌堆 ${gameState.deckCount}`;
   if (gameState.finished) {
-    status = `🏆 游戏结束：${{ zhu: '主公/忠臣', fan: '反贼', nei: '内奸' }[gameState.winner]}获胜！`;
+    status = `🏆 游戏结束：{{ zhu: '主公/忠臣', fan: '反贼', nei: '内奸' }[gameState.winner]}获胜！`;
   } else if (cur) {
     status += ` — ${cur.seat === gameState.mySeat ? '你的回合' : '等待 ' + cur.name + ' 行动'}`;
   }
   $('center-status').textContent = status;
+  // 当前回合玩家高亮
+  if (fx && cur && !gameState.finished) {
+    fx.turnIndicator(cur.seat);
+  }
 }
 
 function renderMyPanel() {
@@ -432,8 +1799,10 @@ function renderHand() {
   const pr = prompt();
   const inPlay = pr && pr.kind === 'play';
   const inZhangba = pr && pr.kind === 'respond' && sel.zhangbaRespond;
-  gameState.myHand.forEach(c => {
+  const numKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+  gameState.myHand.forEach((c, i) => {
     const isSel = sel.hand.includes(c.uid);
+    const cardNum = numKeys[i] || '';
     const el = cardEl(c, {
       selected: isSel,
       onClick: () => {
@@ -441,6 +1810,7 @@ function renderHand() {
         toggleHand(c.uid);
       },
     });
+    if (cardNum) el.setAttribute('data-num', cardNum);
     box.appendChild(el);
   });
 }
@@ -546,6 +1916,7 @@ function renderActionBar() {
   bar.appendChild(hint);
 
   // 技能按钮
+  let skillIdx = 0;
   for (const s of pr.skills || []) {
     if (s.passive) continue;
     const btn = document.createElement('button');
@@ -553,6 +1924,9 @@ function renderActionBar() {
     btn.textContent = s.name;
     btn.disabled = !s.usable;
     btn.title = s.desc;
+    const fkey = 'F' + (skillIdx + 1);
+    btn.setAttribute('data-key', fkey);
+    skillIdx++;
     btn.addEventListener('click', () => {
       if (sel.skill === s.id) { sel.skill = null; sel.targets = []; }
       else {
@@ -605,6 +1979,7 @@ function renderActionBar() {
   const ok = document.createElement('button');
   ok.className = 'btn btn-primary';
   ok.textContent = '确定';
+  ok.setAttribute('data-key', '↵');
   ok.disabled = !canConfirm;
   ok.addEventListener('click', confirmPlay);
   bar.appendChild(ok);
@@ -612,20 +1987,24 @@ function renderActionBar() {
   const cancel = document.createElement('button');
   cancel.className = 'btn';
   cancel.textContent = '取消';
+  cancel.setAttribute('data-key', 'Esc');
   cancel.addEventListener('click', () => { sel = freshSel(); renderHand(); renderActionBar(); renderOpponents(); });
   bar.appendChild(cancel);
 
   const end = document.createElement('button');
   end.className = 'btn';
   end.textContent = '结束出牌';
+  end.setAttribute('data-key', 'X');
   end.addEventListener('click', () => { send({ type: 'action', action: 'end' }); sel = freshSel(); });
   bar.appendChild(end);
 }
 
 function confirmPlay() {
   if (sel.skill) {
+    sfx('phase');
     send({ type: 'action', action: 'skill', skill: sel.skill, cardIds: sel.hand.slice(), targets: sel.targets.slice() });
   } else if (sel.mode) {
+    sfx(sel.mode === 'sha' ? 'sha' : 'phase');
     send({ type: 'action', action: 'playCard', cardIds: sel.hand.slice(), as: sel.mode, targets: sel.targets.slice() });
   }
   sel = freshSel();
@@ -699,9 +2078,11 @@ function quickBtn(label, fn, primary) {
 function renderRespond(box, pr) {
   box.innerHTML = `<div class="prompt-title">${esc(pr.title)}</div><div class="prompt-options"></div>`;
   const opts = box.querySelector('.prompt-options');
+  let optIdx = 0;
   for (const o of pr.options || []) {
+    optIdx++;
     if (o.zhangba) {
-      const b = quickBtn(o.label, () => {
+      const b = quickBtn(o.label + ` [${optIdx}]`, () => {
         sel.zhangbaRespond = true;
         sel.hand = [];
         renderHand();
@@ -709,14 +2090,17 @@ function renderRespond(box, pr) {
       });
       opts.appendChild(b);
     } else {
-      opts.appendChild(quickBtn(o.label, () => {
+      const b = quickBtn(o.label + ` [${optIdx}]`, () => {
         send({ type: 'action', cardIds: o.cardIds });
-      }));
+      });
+      opts.appendChild(b);
     }
   }
   if (pr.bagua) opts.appendChild(quickBtn('八卦阵·判定', () => send({ type: 'action', skill: 'bagua' })));
   if (pr.jijiang) opts.appendChild(quickBtn('激将', () => send({ type: 'action', skill: 'jijiang' })));
-  opts.appendChild(quickBtn('不出', () => { sel.zhangbaRespond = false; send({ type: 'action', pass: true }); }));
+  const passBtn = quickBtn('不出 [0]', () => { sel.zhangbaRespond = false; send({ type: 'action', pass: true }); });
+  passBtn.setAttribute('data-key', '0');
+  opts.appendChild(passBtn);
 }
 
 function renderRespondZhangba(box, pr) {
@@ -832,26 +2216,94 @@ function openArrangeModal(pr) {
 
 function openChooseGeneralModal(pr) {
   let chosen = null;
+  let searchQuery = '';
+  let filterKingdom = 'all';
+  let filterHp = 'all';
+  let onlyFavorites = false;
+  let favorites = [];
+  try { favorites = JSON.parse(localStorage.getItem('sgk_fav_generals') || '[]'); } catch {}
+
+  const allCandidates = pr.candidates || [];
+  const kingdoms = ['all', ...[...new Set(allCandidates.map(g => g.kingdom))]];
+
+  const getFiltered = () => {
+    let list = allCandidates;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(g =>
+        g.name.toLowerCase().includes(q) ||
+        (g.title || '').toLowerCase().includes(q) ||
+        (g.skills || []).some(s => (s.name || '').toLowerCase().includes(q) || (s.desc || '').toLowerCase().includes(q))
+      );
+    }
+    if (filterKingdom !== 'all') list = list.filter(g => g.kingdom === filterKingdom);
+    if (filterHp !== 'all') list = list.filter(g => String(g.hp) === filterHp);
+    if (onlyFavorites) list = list.filter(g => favorites.includes(g.id));
+    return list;
+  };
+
   const render = () => {
-    $('modal').innerHTML = `<div class="modal-title">${esc(pr.title)}</div><div class="general-grid"></div><div class="modal-actions"></div>`;
-    const grid = $('modal').querySelector('.general-grid');
-    for (const g of pr.candidates || []) {
+    const filtered = getFiltered();
+    let html = `<div class="modal-title">${esc(pr.title)}</div>`;
+    // 搜索和筛选栏
+    html += `<div class="gen-search-bar">
+      <input id="gen-search" placeholder="搜索武将/技能/称号..." value="${esc(searchQuery)}" style="flex:1">
+      <select id="gen-kingdom" style="width:80px">${kingdoms.map(k => `<option value="${k}" ${k === filterKingdom ? 'selected' : ''}>${k === 'all' ? '全部' : KINGDOM_NAME[k] || k}</option>`).join('')}</select>
+      <select id="gen-hp" style="width:60px">${['all','2','3','4','5'].map(h => `<option value="${h}" ${h === filterHp ? 'selected' : ''}>${h === 'all' ? '体力' : h + '血'}</option>`).join('')}</select>
+      <button id="gen-fav-only" class="btn btn-small ${onlyFavorites ? 'btn-primary' : ''}">${onlyFavorites ? '★ 已收藏' : '☆ 收藏'}</button>
+      <button id="gen-clear" class="btn btn-small">清除</button>
+    </div>`;
+    html += `<div class="gen-count" style="font-size:12px;color:#8a7a5f;margin:4px 0">共 ${filtered.length} 名武将</div>`;
+    html += '<div class="general-grid">';
+    for (const g of filtered) {
       const div = document.createElement('div');
       div.className = 'general-card' + (chosen === g.id ? ' selected' : '');
       const img = avatarImg(g.id);
       div.appendChild(img);
+      const isFav = favorites.includes(g.id);
       div.insertAdjacentHTML('beforeend', `
-        <div class="gname"><span class="badge kingdom-${g.kingdom}">${KINGDOM_NAME[g.kingdom]}</span> ${esc(g.name)} ${'❤'.repeat(g.hp)}</div>
+        <div class="gname">
+          <span class="badge kingdom-${g.kingdom}">${KINGDOM_NAME[g.kingdom]}</span>
+          ${esc(g.name)} ${'❤'.repeat(g.hp)}
+          <span class="gen-fav ${isFav ? 'active' : ''}" data-id="${g.id}">${isFav ? '★' : '☆'}</span>
+        </div>
         <div class="gskills">${(g.skills || []).map(s => `<b>${esc(s.name)}</b>：${esc(s.desc)}`).join('<br>')}</div>`);
-      div.addEventListener('click', () => { chosen = g.id; render(); });
-      grid.appendChild(div);
+      div.addEventListener('click', e => {
+        if (e.target.classList.contains('gen-fav')) {
+          e.stopPropagation();
+          const idx = favorites.indexOf(g.id);
+          if (idx >= 0) favorites.splice(idx, 1); else favorites.push(g.id);
+          localStorage.setItem('sgk_fav_generals', JSON.stringify(favorites));
+          render();
+          return;
+        }
+        chosen = g.id; render();
+      });
+      html += div.outerHTML;
     }
+    html += '</div><div class="modal-actions"></div>';
+    $('modal').innerHTML = html;
+    // bind events
+    const sInp = $('gen-search');
+    if (sInp) sInp.addEventListener('input', () => { searchQuery = sInp.value; render(); });
+    const kSel = $('gen-kingdom');
+    if (kSel) kSel.addEventListener('change', () => { filterKingdom = kSel.value; render(); });
+    const hSel = $('gen-hp');
+    if (hSel) hSel.addEventListener('change', () => { filterHp = hSel.value; render(); });
+    const favBtn = $('gen-fav-only');
+    if (favBtn) favBtn.addEventListener('click', () => { onlyFavorites = !onlyFavorites; render(); });
+    const clearBtn = $('gen-clear');
+    if (clearBtn) clearBtn.addEventListener('click', () => { searchQuery = ''; filterKingdom = 'all'; filterHp = 'all'; onlyFavorites = false; render(); });
+    // actions
     const acts = $('modal').querySelector('.modal-actions');
     const ok = quickBtn('确定选择', () => {
       if (chosen) { closeModal(); send({ type: 'action', generalId: chosen }); }
     }, true);
     ok.disabled = !chosen;
     acts.appendChild(ok);
+    // restore selection visual
+    const cards = $('modal').querySelectorAll('.general-card');
+    cards.forEach(c => { if (c.querySelector('.gname')?.textContent?.includes(chosen || '')) c.classList.add('selected'); });
   };
   openModal('');
   render();
@@ -864,34 +2316,144 @@ function renderLog() {
   box.scrollTop = box.scrollHeight;
 }
 
-// ---------- 事件动画 ----------
+// ============ 出牌倒计时 ============
+let turnTimerEl = null;
+function showTurnTimer(remaining) {
+  if (!turnTimerEl) {
+    turnTimerEl = document.createElement('div');
+    turnTimerEl.id = 'turn-timer';
+    turnTimerEl.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-200px);' +
+      'font-size:48px;font-weight:bold;color:#ffd700;text-shadow:0 0 20px #ff4400,0 4px 8px #000;' +
+      'z-index:250;pointer-events:none;font-family:STKaiti,KaiTi,serif;transition:color .3s;';
+    document.body.appendChild(turnTimerEl);
+  }
+  turnTimerEl.textContent = remaining;
+  turnTimerEl.style.color = remaining <= 5 ? '#ff4444' : '#ffd700';
+  turnTimerEl.style.display = 'block';
+  if (remaining <= 5) {
+    turnTimerEl.style.animation = 'timerPulse 0.5s ease-in-out infinite';
+  } else {
+    turnTimerEl.style.animation = '';
+  }
+  if (remaining <= 0) {
+    turnTimerEl.style.display = 'none';
+  }
+}
+
+function hideTurnTimer() {
+  if (turnTimerEl) turnTimerEl.style.display = 'none';
+}
+
+// ---------- 视觉特效 ----------
 function seatEl(seat) {
   if (seat === gameState.mySeat) return $('my-panel');
   return document.querySelector(`.opp[data-seat="${seat}"]`);
 }
 function handleEvent(ev) {
-  if (!ev || !gameState) return;
-  if (ev.type === 'sha') {
-    const from = seatEl(ev.from), to = seatEl(ev.to);
-    if (!from || !to) return;
-    const r1 = from.getBoundingClientRect(), r2 = to.getBoundingClientRect();
-    const fly = document.createElement('div');
-    fly.className = 'fly-card';
-    fly.textContent = '杀';
-    fly.style.left = r1.left + r1.width / 2 - 30 + 'px';
-    fly.style.top = r1.top + r1.height / 2 - 41 + 'px';
-    document.body.appendChild(fly);
-    requestAnimationFrame(() => {
-      fly.style.left = r2.left + r2.width / 2 - 30 + 'px';
-      fly.style.top = r2.top + r2.height / 2 - 41 + 'px';
-      fly.style.transform = 'rotate(720deg)';
-    });
-    setTimeout(() => fly.remove(), 600);
-  } else if (ev.type === 'damage') {
-    const el = seatEl(ev.seat);
-    if (el) { el.classList.add('dmg-flash'); setTimeout(() => el.classList.remove('dmg-flash'), 550); }
+  if (!ev || !gameState || !fx) return;
+  switch (ev.type) {
+    case 'sha': {
+      const from = seatEl(ev.from), to = seatEl(ev.to);
+      if (from && to) {
+        fx.casterGlow(from, 'sha');
+        fx.targetHighlight(to, 'sha');
+        fx.cardFly(from, to, ev.card || { name: '杀', suit: 'spade', rank: 7 }, { type: 'sha', symbol: '⚔' });
+        if (ev.card) {
+          fx.hitEffect(to, 'sha');
+          sound?.onGameEvent(ev.card.key);
+          cardCounter?.recordPlay(ev.card);
+        }
+        sfx('sha');
+      }
+      break;
+    }
+    case 'hit': {
+      const el = seatEl(ev.seat);
+      if (el) fx.damageNumber(el, 1, { prefix: '-', amount: 1 });
+      break;
+    }
+    case 'damage': {
+      const el = seatEl(ev.seat);
+      if (el) {
+        fx.damageNumber(el, ev.amount, { shake: true });
+        el.classList.add('dmg-flash');
+        setTimeout(() => el.classList.remove('dmg-flash'), 550);
+      }
+      sfx('damage');
+      break;
+    }
+    case 'dodge': {
+      const el = seatEl(ev.seat);
+      if (el) fx.dodge(el);
+      sfx('shan');
+      break;
+    }
+    case 'recover': {
+      const el = seatEl(ev.seat);
+      if (el) fx.healNumber(el, 1);
+      sfx('heal');
+      break;
+    }
+    case 'death': {
+      const el = seatEl(ev.seat);
+      if (el) fx.death(el);
+      sfx('death');
+      if (ev.generalId) voice(ev.generalId, 'death');
+      break;
+    }
+    case 'selectGeneral': {
+      if (ev.generalId) voice(ev.generalId, 'select');
+      break;
+    }
+    case 'skillVoice': {
+      if (ev.generalId && ev.skillId) voice(ev.generalId, 'skill', ev.skillId);
+      break;
+    }
+    case 'equip': {
+      fx.equipAnim(ev.seat, { equipName: ev.equipName });
+      sfx('equip');
+      break;
+    }
+    case 'aoe': {
+      const from = seatEl(ev.from);
+      if (ev.aoeType === 'nanman') fx.nanmanSweep(from);
+      else fx.wanjianSweep(from);
+      break;
+    }
+    case 'dying': {
+      fx.dyingEffect(ev.seat);
+      break;
+    }
+    case 'skillAnim': {
+      // 技能专属动画
+      const from = seatEl(ev.from), to = seatEl(ev.to);
+      if (ev.skillId === 'longdan' && from && to) fx.longdanAnim(from, to);
+      else if (ev.skillId === 'wusheng' && from && to) fx.wushengAnim(from, to);
+      break;
+    }
+    case 'judge': {
+      if (ev.card) fx.judgment(ev.card);
+      sfx('judge');
+      break;
+    }
+    case 'wugu':
+    case 'draw':
+      sfx('draw');
+      break;
+    case 'win':
+      sfx('win');
+      break;
+    case 'lose':
+      sfx('lose');
+      break;
   }
 }
+
+// 全局按钮点击音效
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.btn');
+  if (btn && !btn.closest('#audio-control')) sfx('click');
+});
 
 // ============ DIY ============
 async function loadDiy() {
@@ -1000,6 +2562,219 @@ function toggleTarget(seat) {
   if (pr && pr.kind === 'choosePlayers') renderChoosePlayers($('prompt-bar'), pr);
 }
 
+// ============ 战绩统计 ============
+function renderStats() {
+  if (typeof SGKData === 'undefined') return;
+  const stats = window.SGKData.getStats();
+  const history = window.SGKData.getHistory(20);
+  const ranking = window.SGKData.getGeneralRanking().slice(0, 10);
+
+  // 概览
+  const ov = $('stats-overview');
+  if (ov) {
+    const winRate = stats.totalGames ? ((stats.wins || 0) / stats.totalGames * 100).toFixed(1) : '0.0';
+    ov.innerHTML = `
+      <div class="stat-card"><div class="sval">${stats.totalGames || 0}</div><div class="slabel">总场次</div></div>
+      <div class="stat-card"><div class="sval">${stats.wins || 0}</div><div class="slabel">胜利</div></div>
+      <div class="stat-card"><div class="sval">${stats.losses || 0}</div><div class="slabel">失败</div></div>
+      <div class="stat-card"><div class="sval">${winRate}%</div><div class="slabel">胜率</div></div>`;
+  }
+
+  // 武将排行
+  const genBox = $('stats-generals');
+  if (genBox) {
+    if (!ranking.length) { genBox.innerHTML = '<div class="hint">暂无数据</div>'; }
+    else {
+      genBox.innerHTML = '';
+      ranking.forEach((g, i) => {
+        const wr = g.count ? (g.wins / g.count * 100).toFixed(0) : 0;
+        const div = document.createElement('div');
+        div.className = 'stats-row';
+        div.innerHTML = `<span class="r-rank">${i + 1}</span><span class="r-name">${g.name}</span><span class="r-stat">${g.count}场 · ${wr}%胜率 · ${g.kills}击杀</span>`;
+        genBox.appendChild(div);
+      });
+    }
+  }
+
+  // 身份统计
+  const idBox = $('stats-identities');
+  if (idBox) {
+    const ids = stats.identityStats || {};
+    if (!Object.keys(ids).length) { idBox.innerHTML = '<div class="hint">暂无数据</div>'; }
+    else {
+      idBox.innerHTML = '';
+      Object.entries(ids).forEach(([id, d]) => {
+        const wr = d.count ? (d.wins / d.count * 100).toFixed(0) : 0;
+        const div = document.createElement('div');
+        div.className = 'stats-row';
+        div.innerHTML = `<span class="r-name">${IDENTITY_NAME[id] || id}</span><span class="r-stat">${d.count}场 · ${wr}%胜率</span>`;
+        idBox.appendChild(div);
+      });
+    }
+  }
+
+  // 历史
+  const histBox = $('stats-history');
+  if (histBox) {
+    if (!history.length) { histBox.innerHTML = '<div class="hint">暂无对局记录</div>'; }
+    else {
+      histBox.innerHTML = '';
+      history.forEach(rec => {
+        const div = document.createElement('div');
+        div.className = 'hist-item ' + (rec.myResult || '');
+        div.innerHTML = window.SGKData.formatRecord(rec);
+        histBox.appendChild(div);
+      });
+    }
+  }
+
+  // 服务器回放列表
+  const srvBox = $('stats-replays');
+  if (srvBox) {
+    srvBox.innerHTML = '<div class="hint">加载中...</div>';
+    loadReplayList().then(replays => {
+      if (!replays.length) { srvBox.innerHTML = '<div class="hint">暂无服务器回放</div>'; return; }
+      srvBox.innerHTML = '';
+      replays.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'hist-item';
+        const date = new Date(r.createdAt);
+        div.innerHTML = `<span style="color:var(--gold)">${(r.roomName || '对局').slice(0, 10)}</span>
+          <span style="color:#8a7a5f">${date.getMonth() + 1}/${date.getDate()} ${r.rounds}回合</span>
+          <button class="btn btn-small" style="float:right;padding:1px 6px">查看</button>`;
+        div.querySelector('button').onclick = () => viewReplay(r.id);
+        srvBox.appendChild(div);
+      });
+    });
+  }
+}
+
+// ============ 回放查看器 ============
+let currentReplay = null;
+
+async function loadReplayList() {
+  try {
+    const res = await fetch('/api/replays');
+    const data = await res.json();
+    return data.replays || [];
+  } catch { return []; }
+}
+
+async function viewReplay(replayId) {
+  try {
+    const res = await fetch('/api/replays/' + replayId);
+    const data = await res.json();
+    if (!data.replay) return;
+    currentReplay = data.replay;
+    renderReplayViewer(data.replay, data.analysis);
+  } catch (e) { console.error('加载回放失败', e); }
+}
+
+function renderReplayViewer(replay, analysis) {
+  const viewer = $('replay-viewer');
+  const content = $('rv-content');
+  if (!viewer || !content) return;
+
+  let html = '';
+  // 基本信息
+  html += `<div class="rv-section"><div class="rv-section-title">基本信息</div>
+    <div style="color:#c9b98a;font-size:13px">
+      模式: ${replay.gameMode} | 回合: ${replay.rounds} | 胜者: ${replay.winner}
+      | 时长: ${((replay.duration || 0) / 1000).toFixed(0)}秒
+    </div></div>`;
+
+  // 玩家统计
+  if (analysis && analysis.players) {
+    html += `<div class="rv-section"><div class="rv-section-title">玩家数据</div><div class="rv-player-stats">`;
+    analysis.players.forEach(p => {
+      const mvpClass = analysis.mvp === p.seat ? 'rv-mvp' : '';
+      html += `<div class="rv-stat-card ${mvpClass}">
+        <div class="pname">${p.name} (${p.generalName}) ${p.isWinner ? '🏆' : ''} ${analysis.mvp === p.seat ? '⭐MVP' : ''}</div>
+        <div class="pstats">击杀: ${p.kills} | 伤害: ${p.damageDealt} | 受击: ${p.damageTaken} | 治疗: ${p.healDone}</div>
+        <div class="pstats">出牌: ${p.cardsPlayed} | 摸牌: ${p.cardsDrawn} | 技能: ${p.skillsUsed}</div>
+      </div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // 关键事件
+  if (analysis && analysis.keyEvents && analysis.keyEvents.length) {
+    html += `<div class="rv-section"><div class="rv-section-title">关键事件</div><div class="rv-events">`;
+    analysis.keyEvents.forEach(ev => {
+      html += `<div class="rv-event"><span class="ev-type">[${ev.type}]</span> ${JSON.stringify(ev).slice(0, 100)}</div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // 战斗统计
+  if (analysis) {
+    html += `<div class="rv-section"><div class="rv-section-title">战斗统计</div>
+      <div style="color:#8a7a5f;font-size:13px">
+        总伤害: ${analysis.totalDamage} | 总治疗: ${analysis.totalHeal} | 事件数: ${analysis.totalEvents}
+      </div></div>`;
+  }
+
+  content.innerHTML = html;
+  viewer.classList.remove('hidden');
+}
+
+function closeReplayViewer() {
+  $('replay-viewer').classList.add('hidden');
+  currentReplay = null;
+}
+
+function exportReplay(format) {
+  if (!currentReplay || !currentReplay.id) return;
+  window.open(`/api/replays/${currentReplay.id}/export?format=${format}`, '_blank');
+}
+
+function shareReplay() {
+  if (!currentReplay || !currentReplay.id) return;
+  const url = window.location.origin + '#replay=' + currentReplay.id;
+  navigator.clipboard.writeText(url).then(() => {
+    alert('分享链接已复制: ' + url);
+  });
+}
+
+// 绑定回放按钮
+$('rv-close')?.addEventListener('click', closeReplayViewer);
+$('rv-export-text')?.addEventListener('click', () => exportReplay('text'));
+$('rv-export-json')?.addEventListener('click', () => exportReplay('json'));
+$('rv-share')?.addEventListener('click', shareReplay);
+
+// 记录对局结果（游戏结束时调用）
+function recordGameResult(gameState) {
+  if (typeof SGKData === 'undefined' || !gameState) return;
+  const me = gameState.players.find(p => p.seat === gameState.mySeat);
+  if (!me) return;
+  const lord = gameState.players.find(p => p.identity === 'zhu');
+  const iWon = (gameState.winner === me.identity) ||
+    (gameState.winner === 'zhu' && me.identity === 'zhong');
+  const players = gameState.players.map(p => ({
+    name: p.name, identity: p.identity, generalId: p.generalId, generalName: p.generalName,
+    isMe: p.seat === gameState.mySeat, alive: p.alive,
+  }));
+  window.SGKData.recordGame({
+    winner: gameState.winner,
+    myIdentity: me.identity,
+    myGeneral: me.generalName,
+    myResult: iWon ? 'win' : 'lose',
+    rounds: gameState.round,
+    players,
+    log: (gameState.logs || []).slice(-50),
+  });
+}
+
 // ---------- 启动 ----------
+initAudio();
+initFX();
+initShortcuts();
+initSkillEditor();
+initCardEditor();
+initCardCounter();
+initSkinSystem();
+setTimeout(preloadGameResources, 1000);
+// 从 URL 导入规则
+if (location.hash.startsWith('#rules=')) importRulesFromUrl();
 connect();
 })();
