@@ -411,6 +411,12 @@ function handle(msg) {
     case 'timer':
       showTurnTimer(msg.remaining);
       break;
+    case 'danmaku':
+      if (msg.msg) spawnDanmaku(msg.msg.name, msg.msg.text);
+      break;
+    case 'spectator':
+      showSpectatorCount(msg.count);
+      break;
     case 'toast':
     case 'error':
       toast(msg.msg);
@@ -492,6 +498,8 @@ $('btn-diy').addEventListener('click', () => showView('diy'));
 $('btn-skilleditor-tab')?.addEventListener('click', () => showView('skilleditor'));
 $('btn-cardeditor-tab')?.addEventListener('click', () => showView('cardeditor'));
 $('btn-stats')?.addEventListener('click', () => { renderStats(); showView('stats'); });
+$('btn-achievements')?.addEventListener('click', openAchievements);
+$('btn-tutorial')?.addEventListener('click', openTutorial);
 $('btn-stats-back')?.addEventListener('click', () => showView('home'));
 $('btn-clear-stats')?.addEventListener('click', () => { if (confirm('确定清除所有战绩数据？')) { window.SGKData.clearData(); renderStats(); } });
 
@@ -517,6 +525,19 @@ function renderRoomList(rooms) {
       showView('lobby');
     });
     div.appendChild(btn);
+    // 观战按钮
+    if (r.state === 'playing' || r.state === 'ended') {
+      const spectBtn = document.createElement('button');
+      spectBtn.className = 'btn btn-small';
+      spectBtn.textContent = `👁 观战`;
+      spectBtn.addEventListener('click', () => {
+        if (!myName) return toast('先输入昵称');
+        send({ type: 'hello', name: myName, pid: myPid });
+        send({ type: 'spectateRoom', roomId: r.id });
+        showView('game');
+      });
+      div.appendChild(spectBtn);
+    }
     box.appendChild(div);
   }
 }
@@ -605,6 +626,123 @@ function renderSoundSettings() {
 }
 function sfx(name) { if (audio) audio.playSfx(name); }
 function voice(generalId, kind, skillId) { if (audio) audio.playVoice(generalId, kind, skillId); }
+
+// ============ 新手引导 ============
+const TUTORIAL_STEPS = [
+  { title: '🎮 欢迎来到三国杀！', content: '<h3>基本规则</h3><ul><li><b>身份</b>：每局游戏中，玩家分为<b>主公</b>、<b>忠臣</b>、<b>反贼</b>、<b>内奸</b>四种身份，各怀目的</li><li><b>胜利条件</b>：主公+忠臣获胜需消灭所有反贼和内奸；反贼只需击杀主公；内奸需最后存活并亲手击杀主公</li><li><b>回合</b>：每位玩家轮流行动，每回合依次进行：<b>准备阶段→判定阶段→摸牌阶段→出牌阶段→弃牌阶段→结束阶段</b></li></ul>' },
+  { title: '🎯 选将与准备', content: '<h3>选将</h3><ul><li>进入游戏后，系统会随机分配武将供你选择（或自由点将）</li><li>每位武将拥有 <b>1~2 个技能</b>，技能说明在选将界面和游戏中都可查看</li><li>主公会获得 <b>+1 体力上限</b></li><li>开局每人摸 <b>4 张手牌</b></li></ul><h3>身份分配</h3><ul><li>主公身份公开，其他人身份隐藏</li><li>4人局：1主1忠2反 | 5人局：1主1忠2反1内 | 6~8人局依此类推</li></ul>' },
+  { title: '🃏 出牌阶段', content: '<h3>基本操作</h3><ul><li>点击手牌选中 → 上方出现操作条 → 点击使用方式（如「杀」「武圣·红牌当杀」）→ 选择目标 → 点确定</li><li>每回合只能使用 <b>1次杀</b>（连弩除外），锦囊和装备无次数限制</li><li>出牌阶段可随时点「结束出牌」</li></ul><h3>卡牌类型</h3><ul><li><b>杀</b>：对攻击范围内角色使用，目标需出「闪」</li><li><b>闪</b>：抵消杀的效果</li><li><b>桃</b>：回复1点体力（或在他人濒死时救助）</li><li><b>锦囊</b>：各种策略牌（决斗/过河拆桥/无懈可击等）</li><li><b>装备</b>：武器/防具/坐骑，持续生效</li></ul>' },
+  { title: '⚔️ 战斗与结算', content: '<h3>伤害与濒死</h3><ul><li>受到伤害后体力降至0以下 → 进入<b>濒死状态</b></li><li>濒死时，所有玩家依次可打出「桃」救助</li><li>被击杀后揭示身份，执行奖惩（杀反贼摸3张牌，主杀忠弃全部牌）</li></ul><h3>判定阶段</h3><ul><li>「乐不思蜀」「闪电」等延时锦囊在此阶段判定</li><li>判定牌从牌堆顶翻开，结果决定是否生效</li></ul>' },
+  { title: '🧠 技能与策略', content: '<h3>技能类型</h3><ul><li><b>主动技</b>：出牌阶段按钮发动（如刘备「仁德」、黄盖「苦肉」）</li><li><b>触发技</b>：满足条件自动触发（如郭嘉「遗计」、甄姬「洛神」）</li><li><b>转化技</b>：将一张牌当另一张使用（如关羽「武圣」：红牌当杀）</li><li><b>锁定技</b>：始终生效（如张飞「咆哮」：无限出杀）</li></ul><h3>实用技巧</h3><ul><li>手牌上限 = 当前体力值，多的牌要弃掉</li><li>距离限制：杀只能打到攻击范围内的目标</li><li>无懈可击可抵消锦囊效果，且可连锁使用</li></ul>' },
+  { title: '⌨️ 快捷键 & 提示', content: '<h3>快捷键</h3><ul><li><b>1~0</b>：选第1~10张手牌</li><li><b>Enter/Space</b>：确定</li><li><b>Esc</b>：取消</li><li><b>Q/E</b>：切换出牌方式</li><li><b>Tab</b>：切换目标</li><li><b>X</b>：结束出牌</li><li><b>F1~F4</b>：发动技能</li><li><b>H</b>：显示帮助 | <b>M</b>：静音</li></ul><h3>开始游戏</h3><ul><li>创建房间 → 添加AI或邀请好友 → 开始游戏！</li><li>可以先单人加AI练习，熟悉后再联机对战</li></ul>' },
+];
+
+let tutorialStep = 0;
+function openTutorial() {
+  tutorialStep = 0;
+  $('tutorial-overlay').classList.remove('hidden');
+  renderTutorialStep();
+}
+function closeTutorial() {
+  $('tutorial-overlay').classList.add('hidden');
+  localStorage.setItem('sgk_tutorial_done', 'true');
+}
+function renderTutorialStep() {
+  const step = TUTORIAL_STEPS[tutorialStep];
+  const content = $('tutorial-content');
+  const progress = $('tutorial-progress');
+  const prev = $('tutorial-prev');
+  const next = $('tutorial-next');
+  if (!content) return;
+  content.innerHTML = `<h3>${step.title}</h3>${step.content}`;
+  if (progress) progress.textContent = `${tutorialStep + 1} / ${TUTORIAL_STEPS.length}`;
+  if (prev) prev.disabled = tutorialStep === 0;
+  if (next) next.textContent = tutorialStep === TUTORIAL_STEPS.length - 1 ? '完成' : '下一步';
+}
+$('tutorial-prev')?.addEventListener('click', () => { if (tutorialStep > 0) { tutorialStep--; renderTutorialStep(); } });
+$('tutorial-next')?.addEventListener('click', () => {
+  if (tutorialStep < TUTORIAL_STEPS.length - 1) { tutorialStep++; renderTutorialStep(); }
+  else closeTutorial();
+});
+$('tutorial-close')?.addEventListener('click', closeTutorial);
+
+// ============ 成就系统 ============
+const ACHIEVEMENTS = [
+  { id: 'first_win', name: '初露锋芒', desc: '赢得第一场对局', icon: '🏆', check: s => (s.wins || 0) >= 1 },
+  { id: 'win_streak3', name: '三连胜', desc: '连续获胜3场', icon: '🔥', check: s => (s.maxStreak || 0) >= 3 },
+  { id: 'win_streak5', name: '五连胜', desc: '连续获胜5场', icon: '🔥', check: s => (s.maxStreak || 0) >= 5 },
+  { id: 'play_10', name: '老玩家', desc: '完成10场对局', icon: '⚔️', check: s => (s.totalGames || 0) >= 10 },
+  { id: 'play_50', name: '身经百战', desc: '完成50场对局', icon: '🏅', check: s => (s.totalGames || 0) >= 50 },
+  { id: 'lord_win', name: '君临天下', desc: '以主公身份获胜', icon: '👑', check: s => (s.lordWins || 0) >= 1 },
+  { id: 'nei_win', name: '忍者无敌', desc: '以内奸身份获胜', icon: '🦊', check: s => (s.neiWins || 0) >= 1 },
+  { id: 'first_blood', name: '一血', desc: '获得第一次击杀', icon: '🗡️', check: s => (s.firstBlood || 0) >= 1 },
+  { id: 'three_kills', name: '三连杀', desc: '单局获得3次击杀', icon: '💀', check: s => (s.maxKills || 0) >= 3 },
+  { id: 'healer', name: '医者仁心', desc: '累计治疗100点体力', icon: '💚', check: s => (s.totalHeal || 0) >= 100 },
+  { id: 'destroyer', name: '破坏王', desc: '累计造成500点伤害', icon: '💥', check: s => (s.totalDamage || 0) >= 500 },
+  { id: 'diy_master', name: 'DIY大师', desc: '创建5个以上自定义武将', icon: '🎨', check: s => (s.diyCount || 0) >= 5 },
+  { id: 'card_master', name: '记牌大师', desc: '使用过所有108张标准牌', icon: '📊', check: s => (s.uniqueCards || 0) >= 108 },
+  { id: 'fast_win', name: '闪电战', desc: '5回合内获胜', icon: '⚡', check: s => (s.minWinRound || 999) <= 5 },
+  { id: 'survivor', name: '九命猫', desc: '从濒死状态被救回5次', icon: '🐱', check: s => (s.saves || 0) >= 5 },
+  { id: 'full_general', name: '百将录', desc: '使用过25个不同武将', icon: '📜', check: s => (s.uniqueGenerals || 0) >= 25 },
+];
+
+let achievements = {};
+try { achievements = JSON.parse(localStorage.getItem('sgk_achievements') || '{}'); } catch {}
+
+function checkAchievements(stats) {
+  let newUnlocks = [];
+  ACHIEVEMENTS.forEach(a => {
+    if (!achievements[a.id] && a.check(stats)) {
+      achievements[a.id] = { unlockedAt: Date.now() };
+      newUnlocks.push(a);
+    }
+  });
+  localStorage.setItem('sgk_achievements', JSON.stringify(achievements));
+  // 显示新解锁通知
+  newUnlocks.forEach(a => showAchievementToast(a));
+  return newUnlocks;
+}
+
+function showAchievementToast(ach) {
+  const toast = $('achievement-toast');
+  const text = $('ach-toast-text');
+  if (!toast || !text) return;
+  text.textContent = `解锁成就：${ach.icon} ${ach.name} — ${ach.desc}`;
+  toast.classList.remove('hidden');
+  sfx('win');
+  setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+function openAchievements() {
+  $('achievement-panel').classList.remove('hidden');
+  renderAchievements();
+}
+
+function renderAchievements() {
+  const stats = window.SGKData?.getStats() || {};
+  const list = $('ach-list');
+  const statsBox = $('ach-stats');
+  if (!list) return;
+  // 统计
+  const unlocked = Object.keys(achievements).length;
+  if (statsBox) {
+    statsBox.innerHTML = `
+      <div class="ach-stat"><div class="aval">${unlocked}</div><div class="alabel">已解锁</div></div>
+      <div class="ach-stat"><div class="aval">${ACHIEVEMENTS.length}</div><div class="alabel">总数</div></div>
+      <div class="ach-stat"><div class="aval">${Math.round(unlocked / ACHIEVEMENTS.length * 100)}%</div><div class="alabel">完成度</div></div>`;
+  }
+  list.innerHTML = '';
+  ACHIEVEMENTS.forEach(a => {
+    const done = !!achievements[a.id];
+    const div = document.createElement('div');
+    div.className = 'ach-item' + (done ? ' unlocked' : '');
+    div.innerHTML = `<div class="ach-name">${a.icon} ${a.name}${done ? ' ✅' : ''}</div>
+      <div class="ach-desc">${a.desc}</div>`;
+    list.appendChild(div);
+  });
+}
+
+$('ach-close')?.addEventListener('click', () => $('achievement-panel').classList.add('hidden'));
 
 // ============ 卡牌计数器 ============
 let cardCounter = null;
@@ -2562,6 +2700,56 @@ function toggleTarget(seat) {
   if (pr && pr.kind === 'choosePlayers') renderChoosePlayers($('prompt-bar'), pr);
 }
 
+// ============ 观战模式 ============
+let isSpectating = false;
+let danmakuTimer = null;
+
+function enterSpectatorMode() {
+  isSpectating = true;
+  const bar = $('spectator-bar');
+  if (bar) bar.classList.remove('hidden');
+  const danmakuLayer = $('danmaku-layer');
+  if (danmakuLayer) danmakuLayer.innerHTML = '';
+  // 弹幕输入
+  const input = $('danmaku-input');
+  const sendBtn = $('danmaku-send');
+  if (input && sendBtn) {
+    const sendDanmaku = () => {
+      const text = input.value.trim();
+      if (text) { send({ type: 'danmaku', text }); input.value = ''; }
+    };
+    sendBtn.onclick = sendDanmaku;
+    input.onkeydown = e => { if (e.key === 'Enter') sendDanmaku(); };
+  }
+  const leaveBtn = $('btn-leave-spectate');
+  if (leaveBtn) leaveBtn.onclick = () => { leaveSpectatorMode(); };
+}
+
+function leaveSpectatorMode() {
+  isSpectating = false;
+  const bar = $('spectator-bar');
+  if (bar) bar.classList.add('hidden');
+  send({ type: 'leaveRoom' });
+  showView('home');
+}
+
+function spawnDanmaku(name, text) {
+  const layer = $('danmaku-layer');
+  if (!layer) return;
+  const msg = document.createElement('div');
+  msg.className = 'danmaku-msg';
+  msg.textContent = `${name}: ${text}`;
+  msg.style.top = (Math.random() * 70 + 10) + '%';
+  layer.appendChild(msg);
+  setTimeout(() => msg.remove(), 7000);
+}
+
+function showSpectatorCount(count) {
+  if (!roomState) return;
+  const info = document.querySelector('.lobby-state');
+  if (info && count > 0) info.textContent += ` | 👁 ${count} 人观战`;
+}
+
 // ============ 战绩统计 ============
 function renderStats() {
   if (typeof SGKData === 'undefined') return;
@@ -2763,6 +2951,12 @@ function recordGameResult(gameState) {
     players,
     log: (gameState.logs || []).slice(-50),
   });
+
+  // 检查成就
+  if (typeof checkAchievements === 'function') {
+    const stats = window.SGKData.getStats();
+    checkAchievements(stats);
+  }
 }
 
 // ---------- 启动 ----------
@@ -2773,8 +2967,12 @@ initSkillEditor();
 initCardEditor();
 initCardCounter();
 initSkinSystem();
+
+// 首次进入显示新手引导
+if (!localStorage.getItem('sgk_tutorial_done')) {
+  setTimeout(openTutorial, 500);
+}
+
 setTimeout(preloadGameResources, 1000);
-// 从 URL 导入规则
-if (location.hash.startsWith('#rules=')) importRulesFromUrl();
 connect();
 })();

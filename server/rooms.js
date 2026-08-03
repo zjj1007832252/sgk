@@ -49,6 +49,9 @@ class Room {
     this.state = 'lobby';      // lobby | playing | ended
     this.game = null;
     this.chat = [];
+    this.spectators = new Map(); // pid -> { name, ws }
+    this.danmaku = [];          // 弹幕消息
+    this.spectatorDelay = 30;   // 观战延迟（秒）
   }
 
   seatedPlayers() {
@@ -178,8 +181,38 @@ class Room {
     if (pid !== this.hostPid) return { ok: false, msg: '只有房主可以操作' };
     this.state = 'lobby';
     this.game = null;
-    // 移除 AI 座位？保留，方便再开
+    this.spectators.clear();
+    this.danmaku = [];
     return { ok: true };
+  }
+
+  // 观战
+  addSpectator(pid, name) {
+    if (this.state !== 'playing' && this.state !== 'ended') return { ok: false, msg: '游戏未开始' };
+    this.spectators.set(pid, { name, joinTime: Date.now() });
+    return { ok: true };
+  }
+
+  removeSpectator(pid) {
+    this.spectators.delete(pid);
+  }
+
+  isSpectator(pid) {
+    return this.spectators.has(pid);
+  }
+
+  // 弹幕
+  addDanmaku(pid, text) {
+    const spec = this.spectators.get(pid);
+    if (!spec) return;
+    const msg = { name: spec.name, text: String(text).slice(0, 50), time: Date.now() };
+    this.danmaku.push(msg);
+    if (this.danmaku.length > 100) this.danmaku.shift();
+    return msg;
+  }
+
+  getDanmaku(after = 0) {
+    return this.danmaku.filter(d => d.time > after);
   }
 
   publicView() {
@@ -194,6 +227,8 @@ class Room {
       identities: IDENTITIES,
       identityDist: IDENTITY_DIST[this.opts.maxPlayers],
       chat: this.chat.slice(-50),
+      spectatorCount: this.spectators.size,
+      allowSpectate: this.state === 'playing' || this.state === 'ended',
     };
   }
 
@@ -204,6 +239,7 @@ class Room {
       state: this.state,
       players: this.seatedPlayers().length,
       maxPlayers: this.opts.maxPlayers,
+      spectators: this.spectators.size,
     };
   }
 }

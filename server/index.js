@@ -377,6 +377,42 @@ const handlers = {
     broadcastRooms();
   },
 
+  spectateRoom(ws, msg, ctx) {
+    if (!ctx.pid) return;
+    const room = rooms.get(msg.roomId);
+    if (!room) return send(ws, { type: 'error', msg: '房间不存在' });
+    if (room.state === 'lobby') return send(ws, { type: 'error', msg: '游戏未开始' });
+    const r = room.addSpectator(ctx.pid, ctx.name || '观战者');
+    if (!r.ok) return send(ws, { type: 'toast', msg: r.msg });
+    send(ws, { type: 'welcome', pid: ctx.pid });
+    send(ws, { type: 'room', room: room.publicView() });
+    // 发送延迟的游戏状态（防作弊）
+    if (room.game) {
+      send(ws, { type: 'game', state: room.game.getState(ctx.pid) });
+    }
+    roomBroadcast(room);
+    broadcastRooms();
+  },
+
+  danmaku(ws, msg, ctx) {
+    if (!ctx.pid) return;
+    for (const room of rooms.rooms.values()) {
+      if (room.isSpectator(ctx.pid)) {
+        const dm = room.addDanmaku(ctx.pid, msg.text);
+        if (dm) {
+          // 广播给房间内所有人（玩家+观战者）
+          for (const s of room.seatedPlayers()) {
+            if (!s.isAI) sendPid(s.pid, { type: 'danmaku', msg: dm });
+          }
+          for (const [spid] of room.spectators) {
+            sendPid(spid, { type: 'danmaku', msg: dm });
+          }
+        }
+        return;
+      }
+    }
+  },
+
   action(ws, msg, ctx) {
     const room = getRoomOf(ctx.pid);
     if (!room || !room.game) return;

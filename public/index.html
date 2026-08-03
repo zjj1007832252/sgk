@@ -25,6 +25,8 @@
           <button id="btn-skilleditor-tab" class="btn">技能编辑器</button>
           <button id="btn-cardeditor-tab" class="btn">卡牌编辑器</button>
           <button id="btn-stats" class="btn">战绩统计</button>
+          <button id="btn-achievements" class="btn">🏆 成就</button>
+          <button id="btn-tutorial" class="btn">📘 新手引导</button>
         </div>
       </div>
       <div class="room-list-panel">
@@ -89,6 +91,46 @@
         <button id="btn-quit-game" class="btn btn-small">离开（AI托管）</button>
       </div>
     </div>
+  </div>
+
+  <!-- 新手引导 -->
+  <div id="tutorial-overlay" class="tutorial-overlay hidden">
+    <div class="tutorial-inner">
+      <div class="tutorial-title">🎮 三国杀新手引导</div>
+      <div id="tutorial-content" class="tutorial-content"></div>
+      <div class="tutorial-nav">
+        <button id="tutorial-prev" class="btn btn-small">上一步</button>
+        <span id="tutorial-progress" class="tutorial-progress"></span>
+        <button id="tutorial-next" class="btn btn-small btn-primary">下一步</button>
+        <button id="tutorial-close" class="btn btn-small">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成就面板 -->
+  <div id="achievement-panel" class="achievement-panel hidden">
+    <div class="ach-inner">
+      <div class="ach-title">成就系统 <span id="ach-close" class="ach-close">✕</span></div>
+      <div class="ach-stats" id="ach-stats"></div>
+      <div class="ach-list" id="ach-list"></div>
+    </div>
+  </div>
+
+  <!-- 成就解锁通知 -->
+  <div id="achievement-toast" class="achievement-toast hidden">
+    <span class="ach-icon">🏆</span>
+    <span id="ach-toast-text" class="ach-toast-text"></span>
+  </div>
+
+  <!-- 弹幕层 -->
+  <div id="danmaku-layer" class="danmaku-layer"></div>
+
+  <!-- 观战工具栏 -->
+  <div id="spectator-bar" class="spectator-bar hidden">
+    <span class="sp-info">👁 观战中</span>
+    <input id="danmaku-input" class="danmaku-input" placeholder="发弹幕..." maxlength="50">
+    <button id="danmaku-send" class="btn btn-small">发送</button>
+    <button id="btn-leave-spectate" class="btn btn-small btn-danger">退出观战</button>
   </div>
 
   <!-- 卡牌计数器面板 -->
