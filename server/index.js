@@ -30,8 +30,14 @@ const netopt = new NetworkOptimizer();
 
 // pid -> ws
 const clients = new Map();
+// pid -> reconnect token (prevents session hijacking)
+const reconnectTokens = new Map();
 netopt.setWsMap(clients);
 let pidCounter = 1;
+
+function generateToken() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
 
 // ---------- HTTP API ----------
 app.get('/api/meta', (req, res) => {
@@ -182,7 +188,34 @@ function gameBroadcastAll(room) {
       netopt.sendImmediate(ws, delta);
     }
   }
+  // 为观战者记录一帧脱敏快照（观战者视角：mySeat=-1，手牌/身份隐藏）
+  if (room.spectators.size) {
+    room.pushSpectatorSnapshot(game.getState(null));
+  }
 }
+
+// 每秒向观战者推送延迟后的对局状态，防止窥屏作弊
+function flushSpectators() {
+  const now = Date.now();
+  for (const room of rooms.rooms.values()) {
+    if (!room.spectators.size || !room.game) continue;
+    const delayed = room.getDelayedSpectatorState(now);
+    for (const [pid] of room.spectators) {
+      const ws = clients.get(pid);
+      if (!ws || ws.readyState !== 1) continue;
+      if (delayed) {
+        ws.send(JSON.stringify({ type: 'game', state: delayed.state, spectating: true, delay: room.spectatorDelay }));
+      } else {
+        const remain = Math.max(0, room.spectatorDelay - Math.round((now - (room.game.startTime || now)) / 1000));
+        ws.send(JSON.stringify({ type: 'spectatorWaiting', delay: room.spectatorDelay, remaining: remain }));
+      }
+    }
+  }
+}
+
+const spectatorTimer = setInterval(flushSpectators, 1000);
+spectatorTimer.unref();
+server.on('close', () => clearInterval(spectatorTimer));
 
 // 心跳定时器
 const heartbeatTimer = setInterval(() => {
@@ -257,28 +290,35 @@ function makeHooks(room) {
 // ---------- WS 消息处理 ----------
 const handlers = {
   hello(ws, msg, ctx) {
-    let pid = msg.pid && /^[\w-]{1,40}$/.test(msg.pid) ? msg.pid : null;
-    // 断线重连
-    if (pid) {
-      for (const room of rooms.rooms.values()) {
-        const seat = room.seatOf(pid);
-        if (seat >= 0) {
-          ctx.pid = pid;
-          clients.set(pid, ws);
-          room.seats[seat].name = msg.name || room.seats[seat].name;
-          if (room.game) room.game.playerOnline(pid);
-          send(ws, { type: 'welcome', pid });
-          roomBroadcast(room);
-          if (room.game) send(ws, { type: 'game', state: room.game.getState(pid) });
-          broadcastRooms();
-          return;
+    // 断线重连：需要验证 token
+    const pid = msg.pid && /^[\w-]{1,40}$/.test(msg.pid) ? msg.pid : null;
+    if (pid && msg.token) {
+      const expected = reconnectTokens.get(pid);
+      if (expected && expected === msg.token) {
+        for (const room of rooms.rooms.values()) {
+          const seat = room.seatOf(pid);
+          if (seat >= 0) {
+            ctx.pid = pid;
+            clients.set(pid, ws);
+            room.seats[seat].name = msg.name || room.seats[seat].name;
+            if (room.game) room.game.playerOnline(pid);
+            send(ws, { type: 'welcome', pid });
+            roomBroadcast(room);
+            if (room.game) send(ws, { type: 'game', state: room.game.getState(pid) });
+            broadcastRooms();
+            return;
+          }
         }
       }
+      // token 无效，当作新连接处理
     }
     ctx.pid = 'p' + (pidCounter++);
     clients.set(ctx.pid, ws);
     ctx.name = (msg.name || '无名氏').slice(0, 12);
-    send(ws, { type: 'welcome', pid: ctx.pid });
+    // 生成 reconnect token
+    const token = generateToken();
+    reconnectTokens.set(ctx.pid, token);
+    send(ws, { type: 'welcome', pid: ctx.pid, reconnectToken: token });
     send(ws, { type: 'rooms', rooms: rooms.list() });
   },
 
@@ -372,7 +412,12 @@ const handlers = {
   backToLobby(ws, msg, ctx) {
     const room = getRoomOf(ctx.pid);
     if (!room) return;
-    room.backToLobby(ctx.pid);
+    const result = room.backToLobby(ctx.pid);
+    if (!result.ok) {
+      // 失败时 sendTo 客户端给出反馈,避免点了没反应
+      if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'error', msg: result.msg || '返回大厅失败' }));
+      return;
+    }
     roomBroadcast(room);
     broadcastRooms();
   },
@@ -382,14 +427,12 @@ const handlers = {
     const room = rooms.get(msg.roomId);
     if (!room) return send(ws, { type: 'error', msg: '房间不存在' });
     if (room.state === 'lobby') return send(ws, { type: 'error', msg: '游戏未开始' });
+    if (room.spectators.size >= 50) return send(ws, { type: 'toast', msg: '观战人数已满' });
     const r = room.addSpectator(ctx.pid, ctx.name || '观战者');
     if (!r.ok) return send(ws, { type: 'toast', msg: r.msg });
     send(ws, { type: 'welcome', pid: ctx.pid });
     send(ws, { type: 'room', room: room.publicView() });
-    // 发送延迟的游戏状态（防作弊）
-    if (room.game) {
-      send(ws, { type: 'game', state: room.game.getState(ctx.pid) });
-    }
+    // 观战状态由 flushSpectators 按 30 秒延迟推送，此处不发送实时状态
     roomBroadcast(room);
     broadcastRooms();
   },
@@ -416,11 +459,18 @@ const handlers = {
   action(ws, msg, ctx) {
     const room = getRoomOf(ctx.pid);
     if (!room || !room.game) return;
+    if (room.isSpectator && room.isSpectator(ctx.pid)) return; // 观战者不能操作
     room.game.handleAction(ctx.pid, msg);
   },
 };
 
 function leaveRoom(room, pid) {
+  if (room.isSpectator && room.isSpectator(pid)) {
+    room.removeSpectator(pid);
+    roomBroadcast(room);
+    broadcastRooms();
+    return;
+  }
   const seat = room.stand(pid);
   if (room.game) room.game.playerOffline(pid); // 游戏中离开 -> AI 托管
   // 房主离开 -> 移交给下一个人类
@@ -438,6 +488,8 @@ function leaveRoom(room, pid) {
 
 wss.on('connection', (ws) => {
   const ctx = { pid: null, name: '无名氏' };
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
   ws.on('message', (raw) => {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
@@ -452,7 +504,11 @@ wss.on('connection', (ws) => {
     clients.delete(ctx.pid);
     for (const room of rooms.rooms.values()) {
       if (room.hasPid(ctx.pid)) {
-        if (room.state === 'lobby') {
+        if (room.isSpectator && room.isSpectator(ctx.pid)) {
+          room.removeSpectator(ctx.pid);
+          roomBroadcast(room);
+          broadcastRooms();
+        } else if (room.state === 'lobby') {
           leaveRoom(room, ctx.pid);
         } else if (room.game) {
           room.game.playerOffline(ctx.pid);
@@ -462,6 +518,18 @@ wss.on('connection', (ws) => {
     }
   });
 });
+
+const heartbeat = setInterval(() => {
+  for (const ws of wss.clients) {
+    if (ws.isAlive === false) {
+      ws.terminate();
+      continue;
+    }
+    ws.isAlive = false;
+    ws.ping();
+  }
+}, 30000);
+wss.on('close', () => clearInterval(heartbeat));
 
 server.listen(PORT, '0.0.0.0', () => {
   const ip = lanAddress();

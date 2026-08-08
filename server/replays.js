@@ -4,14 +4,25 @@ const path = require('path');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const REPLAY_FILE = path.join(DATA_DIR, 'replays.json');
+let writeLock = false;
 
 function load() {
   try { return JSON.parse(fs.readFileSync(REPLAY_FILE, 'utf8')); } catch { return {}; }
 }
 
 function save(data) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(REPLAY_FILE, JSON.stringify(data, null, 2), 'utf8');
+  // 简单文件锁：写入排队
+  if (writeLock) {
+    setTimeout(() => save(data), 10);
+    return;
+  }
+  writeLock = true;
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(REPLAY_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } finally {
+    writeLock = false;
+  }
 }
 
 function generateId() {

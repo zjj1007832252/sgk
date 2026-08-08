@@ -72,7 +72,7 @@
         if (sk.limitation === 'oncePerTurn') {
           this.flags[`${player.seat}:${sk.id}:turn`] = true;
         }
-        voice(this.game, player, sk.id);
+        if (typeof voice === 'function') voice(player.generalId, 'skill', sk.id);
       }
     }
 

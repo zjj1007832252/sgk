@@ -54,7 +54,7 @@ class Game {
     this.opts = opts;
     this.hooks = hooks;
     this.players = playerInfos.map((info, i) => new Player(info, i));
-    this.deck = buildDeck(this.opts.bannedCards || []);
+    this.deck = buildDeck(this.opts.bannedCards || [], this.opts.customCards || []);
     this.discardPile = [];
     this.logs = [];
     this.pending = null; // {seat, prompt, resolve}
@@ -75,12 +75,13 @@ class Game {
     this.aiDelay = Math.round(this.aiDelay * speedMult);
     this.stepDelay = Math.round((opts.stepDelay != null ? opts.stepDelay : 300) * speedMult);
     this.turnTimer = opts.turnTimer || 0; // 出牌倒计时（秒）
-    this.stepDelay = opts.stepDelay != null ? opts.stepDelay : 300;
     this.publicCard = publicCard;
     this.cardColor = cardColor;
     this.rankLabel = rankLabel;
     this.suitLabel = s => SUITS[s];
     this.customExecutor = new CustomSkillExecutor(this);
+    this.customSkills = Array.isArray(opts.customSkills) ? opts.customSkills : [];
+    this.customCards = Array.isArray(opts.customCards) ? opts.customCards : [];
     // 游戏模式
     const { createGameMode } = require('./game-modes');
     this.gameMode = createGameMode(this, opts.gameMode || 'identity');
@@ -392,9 +393,9 @@ class Game {
     if (p.equips.weapon && p.equips.weapon.key === 'zhuge') return 99;
     return 1;
   }
-  canTargetSha(user, target) {
-    if (!target.alive || target === user) return false;
-    if (this.hasSkill(target, 'kongcheng') && !target.hand.length) return false;
+  canTargetSha(user, target, opts = {}) {
+    if (!target || !target.alive) return false;
+    if (opts.noDistance) return true;
     return this.distance(user, target) <= this.attackRange(user);
   }
 
@@ -545,8 +546,9 @@ class Game {
       }
       if (killer.identity === 'zhu' && target.identity === 'zhong') {
         this.log(`主公杀死忠臣，弃置所有牌`);
-        const kAll = [...killer.hand, ...Object.values(killer.equips).filter(Boolean)];
+        const kAll = [...killer.hand, ...Object.values(killer.equips).filter(Boolean), ...killer.judgeZone];
         killer.hand = [];
+        killer.judgeZone = [];
         for (const slot of Object.keys(killer.equips)) if (killer.equips[slot]) await this.removeEquip(killer, slot);
         this.toDiscard(kAll);
       }
@@ -719,7 +721,12 @@ class Game {
    * cards: 实际消耗的牌（虚拟杀时为转化牌）
    */
   async useSha(user, target, cards, opts = {}) {
-    if (!this.canTargetSha(user, target)) { this.log('目标不合法'); return false; }
+    if (!this.canTargetSha(user, target)) {
+      if (!opts.noDistance || !user.turnFlags?.xianzhenTarget || target.seat !== user.turnFlags.xianzhenTarget) {
+        this.log('目标不合法');
+        return false;
+      }
+    }
     if (!opts.redirected && !opts.noCount) user.turnFlags.shaUsed = (user.turnFlags.shaUsed || 0) + 1;
     cards = cards || [];
     const color = this.shaColorOf(cards);
@@ -1099,8 +1106,9 @@ class Game {
           this.log(`${user.name} 对 ${t.name} 使用【乐不思蜀】${label}`);
           skipFinalDiscard = true; // 进入判定区而非弃牌堆
           for (const c of cards) {
-            c.key = 'lebu'; c.name = '乐不思蜀'; c.type = 'trick'; c.subtype = 'delayed';
-            t.judgeZone.push(c);
+            // 创建虚拟对象，不修改原牌属性
+            const lebuCard = { ...c, key: 'lebu', name: '乐不思蜀', type: 'trick', subtype: 'delayed' };
+            t.judgeZone.push(lebuCard);
           }
           this.sync();
           break;
@@ -1177,8 +1185,8 @@ class Game {
         default:
           this.log(`使用了【${cards[0] ? cards[0].name : key}】`);
       }
-      // 集智
-      if (this.hasSkill(user, 'jizhi') && cards[0] && (cards[0].type === 'trick' || virtual) && key !== 'lebu' && key !== 'shandian') {
+      // 集智：只对实际是锦囊牌的牌触发（不含虚拟杀/闪等基本牌转化）
+      if (this.hasSkill(user, 'jizhi') && cards[0] && cards[0].type === 'trick' && key !== 'lebu' && key !== 'shandian') {
         this.log(`${user.name} 发动【集智】`);
         await this.drawCards(user, 1);
       }
@@ -1200,7 +1208,6 @@ class Game {
     if (!card) card = revealed[0];
     return card;
   }
-
   // ============ 技能使用（出牌阶段按钮） ============
   buildSkillButtons(player) {
     const btns = [];
@@ -1214,6 +1221,7 @@ class Game {
         if (sk === 'jieyin' && player.turnFlags.jieyin) { usable = false; reason = '已用过'; }
         if (sk === 'qingnang' && player.turnFlags.qingnang) { usable = false; reason = '已用过'; }
         if (sk === 'lijian' && player.turnFlags.lijian) { usable = false; reason = '已用过'; }
+        if (sk === 'yanling' && player.turnFlags.yanling) { usable = false; reason = '已用过'; }
         if (sk === 'kurou' && player.hp <= 1 && !player.hand.some(c => c.key === 'tao')) { /* 允许自杀式? 限制 */ }
         btns.push({ id: sk, name: def.name, desc: def.desc, type: 'active', usable, reason, button: def.button || {} });
       } else if (def.type === 'convert' && (sk === 'qixi' || sk === 'guose')) {
@@ -1224,13 +1232,28 @@ class Game {
         btns.push({ id: sk, name: def.name, desc: def.desc, type: def.type, usable: true, passive: true, button: {} });
       }
     }
+    (player.customSkills || []).forEach(sk => {
+      if (!sk.enabled || player.skills.includes(sk.id)) return;
+      const passive = !['active','lord','convert'].includes(sk.type || 'passive');
+      btns.push({ id: sk.id, name: sk.name, desc: sk.desc || '', type: passive ? 'passive' : 'active', usable: true, passive, button: {} });
+    });
     return btns;
   }
 
   async trySkill(user, ans) {
     const sk = ans.skill;
     const def = SKILLS[sk];
-    if (!def || !user.skills.includes(sk)) return this.err(user, '没有此技能');
+    const customDef = (user.customSkills || []).find(s => s.id === sk);
+    if (!def && !customDef) return this.err(user, '没有此技能');
+    if (customDef) {
+      const cards = (ans.cardIds || []).map(uid => user.hand.find(c => c.uid === uid)).filter(Boolean);
+      const targets = (ans.targets || []).map(s => this.players[s]).filter(p => p && p.alive);
+      await this.customExecutor.executeEffect(user, customDef, { cards, targets });
+      await this.passiveSweep();
+      this.sync();
+      return true;
+    }
+    if (!user.skills.includes(sk)) return this.err(user, '没有此技能');
       if (sk === 'jijiang') {
         // 激将出杀
         if (!this.canPlaySha(user)) return this.err(user, '无法使用【杀】');
@@ -1477,6 +1500,7 @@ class Game {
     rest.forEach((p, i) => assigned.set(p.pid, pool[i]));
     for (const p of this.players) p.identity = assigned.get(p.pid);
     const zhu = this.players.find(p => p.identity === 'zhu');
+    if (!zhu) throw new Error('身份分配异常：未生成主公');
     this.log(`主公是 ${zhu.name}！`);
   }
 
@@ -1559,6 +1583,9 @@ class Game {
     p.hp = g.hp;
     p.skills = (g.skills || []).slice();
     p.custom = !!g.custom;
+    if (Array.isArray(this.customSkills)) {
+      p.customSkills = (this.customSkills || []).filter(sk => !p.skills.includes(sk.id));
+    }
     this.log(`${p.name} 选择了武将【${g.name}】`);
     this.broadcastEvent({ type: 'selectGeneral', seat: p.seat, generalId: g.id, name: g.name });
     this.sync();
@@ -1601,7 +1628,9 @@ class Game {
         equips: Object.fromEntries(Object.entries(p.equips).map(([k, v]) => [k, v ? publicCard(v) : null])),
         judgeZone: p.judgeZone.map(publicCard),
         skills: p.skills.map(sk => ({ id: sk, name: (SKILLS[sk] || {}).name || sk, desc: (SKILLS[sk] || {}).desc || '', type: (SKILLS[sk] || {}).type })),
+        stats: p.stats,
         distance: me && me.alive && p.alive && me !== p ? this.distance(me, p) : null,
+        turnFlags: me && me.pid === p.pid ? (p.turnFlags || null) : null,
       })),
     };
   }

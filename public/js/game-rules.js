@@ -89,8 +89,19 @@
           return null;
         case 'custom_script':
           try {
-            const fn = new Function('players', 'game', this.params.script || 'return null;');
-            return fn(alivePlayers, { round: this.game.round, deckCount: this.game.deck.length, players: this.game.players });
+            // 沙箱化执行：只暴露有限的数据，禁止访问全局对象
+            const safeData = {
+              round: this.game.round,
+              deckCount: this.game.deck.length,
+              players: this.game.players.map(p => ({
+                seat: p.seat, hp: p.hp, maxHp: p.maxHp, alive: p.alive,
+                identity: p.identity, handCount: p.hand.length,
+                totalKills: p.totalKills || 0,
+              })),
+            };
+            const script = String(this.params.script || 'return null;').slice(0, 2000);
+            const fn = new Function('data', `"use strict"; ${script}`);
+            return fn(safeData);
           } catch { return null; }
         default: return null;
       }

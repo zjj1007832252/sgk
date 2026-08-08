@@ -1,48 +1,85 @@
-// 古风 SVG 占位头像生成（可替换：往 public/assets/avatars/ 放 <武将id>.png 即可覆盖）
+const fs = require('fs');
+const path = require('path');
+
 const KINGDOM_STYLE = {
-  wei: { c1: '#2c3e5f', c2: '#6f9bd8', name: '魏' },
-  shu: { c1: '#5f2c2c', c2: '#e08a6f', name: '蜀' },
-  wu:  { c1: '#2c5f3a', c2: '#7fd88a', name: '吴' },
-  qun: { c1: '#4a4a52', c2: '#c9b97f', name: '群' },
+  wei: { main: '#1a2a4a', accent: '#4a7ab8', gold: '#c9b37a', name: '魏' },
+  shu: { main: '#3a1208', accent: '#c64428', gold: '#d4af37', name: '蜀' },
+  wu:  { main: '#0e3324', accent: '#3aa86a', gold: '#a3d8a0', name: '吴' },
+  qun: { main: '#2a2630', accent: '#8b7db8', gold: '#c9b97f', name: '群' },
+  god: { main: '#4a3010', accent: '#d4af37', gold: '#ffd700', name: '神' },
 };
 
 function avatarSVG(general) {
   const st = KINGDOM_STYLE[general.kingdom] || KINGDOM_STYLE.qun;
-  const chars = [...(general.name || '？')];
+  // 转义 SVG 特殊字符防止注入
+  const escSvg = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const chars = [...escSvg(general.name || '？')];
   const n = chars.length;
-  const size = n === 1 ? 96 : n === 2 ? 72 : 56;
-  const totalH = n * (size + 8);
-  const startY = 120 - totalH / 2 + size * 0.82;
-  const nameTexts = chars.map((ch, i) =>
-    `<text x="120" y="${startY + i * (size + 8)}" class="name" font-size="${size}">${ch}</text>`
-  ).join('\n  ');
+  const size = n === 1 ? 100 : n === 2 ? 78 : 60;
+  const totalH = n * (size - 8);
+  const startY = 145 - totalH / 2 + size * 0.85;
   const hp = '❤'.repeat(Math.max(1, Math.min(5, general.hp || 4)));
+
+  const nameTexts = chars.map((ch, i) =>
+    `  <text x="120" y="${startY + i * (size - 8)}" text-anchor="middle" font-size="${size}" ` +
+    `font-family="STKaiti,KaiTi,STSong,serif" font-weight="bold" fill="#f7e8c0" ` +
+    `style="text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:3px">${ch}</text>`
+  ).join('\n');
+
   return `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="300" viewBox="0 0 240 300">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${st.c1}"/>
-      <stop offset="1" stop-color="#12100d"/>
+      <stop offset="0" stop-color="${st.main}"/>
+      <stop offset="0.6" stop-color="#1a1208"/>
+      <stop offset="1" stop-color="#0d0a06"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.4" r="0.6">
-      <stop offset="0" stop-color="${st.c2}" stop-opacity="0.45"/>
-      <stop offset="1" stop-color="${st.c2}" stop-opacity="0"/>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${st.gold}"/>
+      <stop offset="0.5" stop-color="#fff5d0"/>
+      <stop offset="1" stop-color="${st.gold}"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.3" r="0.7">
+      <stop offset="0" stop-color="${st.accent}" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="${st.accent}" stop-opacity="0"/>
     </radialGradient>
-    <style>
-      .name { font-family: 'STKaiti','KaiTi','STSong',serif; fill: #f3e6c8; text-anchor: middle; font-weight: bold; }
-      .sub { font-family: 'STKaiti','KaiTi','STSong',serif; fill: #d8c9a3; text-anchor: middle; }
-    </style>
+    <pattern id="bgPattern" patternUnits="userSpaceOnUse" width="22" height="22" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="22" stroke="${st.gold}" stroke-opacity="0.07" stroke-width="1"/>
+    </pattern>
   </defs>
-  <rect width="240" height="300" rx="10" fill="url(#bg)"/>
-  <rect width="240" height="300" rx="10" fill="url(#glow)"/>
-  <circle cx="120" cy="122" r="86" fill="none" stroke="${st.c2}" stroke-opacity="0.45" stroke-width="2"/>
-  <circle cx="120" cy="122" r="78" fill="none" stroke="${st.c2}" stroke-opacity="0.2" stroke-width="1"/>
-  <rect x="10" y="10" width="36" height="36" rx="7" fill="${st.c1}" stroke="${st.c2}" stroke-width="1.5"/>
-  <text x="28" y="36" font-size="24" class="sub" fill="#fff" text-anchor="middle" style="fill:#f3e6c8">${st.name}</text>
-  <text x="228" y="34" font-size="15" class="sub" text-anchor="end">${hp}</text>
-  ${nameTexts}
-  <text x="120" y="272" font-size="17" class="sub">${general.title || ''}</text>
-  <rect x="1.5" y="1.5" width="237" height="297" rx="10" fill="none" stroke="${st.c2}" stroke-opacity="0.6" stroke-width="2"/>
+
+  <!-- 背景 -->
+  <rect width="240" height="300" rx="12" fill="url(#bg)"/>
+  <rect width="240" height="300" rx="12" fill="url(#bgPattern)"/>
+
+  <!-- 光晕 -->
+  <ellipse cx="120" cy="90" rx="100" ry="70" fill="url(#glow)"/>
+
+  <!-- 金色边框（双层） -->
+  <rect x="5" y="5" width="230" height="290" rx="10" fill="none" stroke="url(#frame)" stroke-width="2.5"/>
+  <rect x="12" y="12" width="216" height="276" rx="7" fill="none" stroke="${st.gold}" stroke-opacity="0.35" stroke-width="1"/>
+
+  <!-- 势力角标（左上角三角） -->
+  <polygon points="12,12 52,12 12,52" fill="${st.accent}" stroke="${st.gold}" stroke-width="1.5"/>
+  <text x="26" y="40" font-size="20" text-anchor="middle" font-family="STKaiti,KaiTi,serif" font-weight="bold" fill="#f3e5a3">${st.name}</text>
+
+  <!-- 体力心（右上） -->
+  <text x="226" y="34" font-size="18" text-anchor="end" fill="#ff5555">${hp}</text>
+
+  <!-- 武将名（书法大字） -->
+${nameTexts}
+
+  <!-- 称号条 -->
+  <rect x="25" y="244" width="190" height="34" rx="3" fill="#1a1008" stroke="${st.gold}" stroke-opacity="0.5"/>
+  <line x1="25" y1="244" x2="215" y2="244" stroke="${st.gold}" stroke-opacity="0.7"/>
+  <line x1="25" y1="278" x2="215" y2="278" stroke="${st.gold}" stroke-opacity="0.7"/>
+  <text x="120" y="268" text-anchor="middle" font-size="16"
+    font-family="STKaiti,KaiTi,STSong,serif" letter-spacing="5px" fill="${st.gold}">${escSvg(general.title || '')}</text>
+
+  <!-- 顶部装饰角 -->
+  <path d="M12 70 L12 85 L27 85 Z" fill="${st.gold}" opacity="0.6"/>
+  <path d="M228 70 L228 85 L213 85 Z" fill="${st.gold}" opacity="0.6"/>
 </svg>`;
 }
 
-module.exports = { avatarSVG, KINGDOM_STYLE };
+// 导出
+if (typeof module !== 'undefined') module.exports = { avatarSVG, KINGDOM_STYLE };

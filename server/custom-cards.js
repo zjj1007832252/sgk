@@ -27,10 +27,12 @@ function create(card) {
   const v = validate(card);
   if (!v.ok) return v;
   const list = load();
-  const id = card.id || 'ccard_' + Date.now().toString(36) + Math.floor(Math.random() * 100);
+  // 不允许客户端指定 id 覆盖已有卡牌
+  const id = 'ccard_' + Date.now().toString(36) + Math.floor(Math.random() * 1000);
   const newCard = { id, ...card, createdAt: Date.now() };
-  const idx = list.findIndex(c => c.id === id);
-  if (idx >= 0) list[idx] = newCard; else list.push(newCard);
+  delete newCard.id; // 确保使用服务端生成的 id
+  newCard.id = id;
+  list.push(newCard);
   save(list);
   return { ok: true, value: newCard };
 }

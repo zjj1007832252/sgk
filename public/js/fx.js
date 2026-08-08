@@ -6,7 +6,8 @@
   const CARD_COLORS = {
     sha: '#c03030', shan: '#3a78d8', tao: '#3a8a4a', juedou: '#b06020',
     guohe: '#706050', shunshou: '#c0a020', nanman: '#6a3a8a', wanjian: '#4a5a8a',
-    taoyuan: '#3a8a4a', wugu: '#8a7a3a', lebo: '#5a5a6a', shandian: '#2a2a3a',
+    taoyuan: '#3a8a4a', wugu: '#8a7a3a', lebu: '#5a5a6a', shandian: '#2a2a3a',
+    wuzhong: '#8a6a2a', wuxie: '#5a6a7a', jiedao: '#8a6a3a',
     equip: '#b09020', judge: '#5a6a7a', heal: '#3a8a4a', dodge: '#3a78d8',
   };
 
@@ -17,6 +18,7 @@
       this.layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:150;overflow:hidden;';
       document.body.appendChild(this.layer);
       this.active = [];
+      this._dyingSeats = new Set();
       this.reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
 
@@ -146,7 +148,12 @@
     // 出牌者发光特效
     casterGlow(seatEl, cardType = 'sha') {
       if (this.reduced || !seatEl) return;
-      const colors = { sha: '#ff4a4a', shan: '#5a9af0', tao: '#4ac060', juedou: '#ff8a30', nanman: '#8a4aaa', wanjian: '#5a7aaa' };
+      const colors = {
+        sha: '#ff4a4a', shan: '#5a9af0', tao: '#4ac060', juedou: '#ff8a30',
+        guohe: '#b09060', shunshou: '#d0b040', jiedao: '#c09050',
+        wuzhong: '#d0a040', taoyuan: '#4ac060', wugu: '#c0a050',
+        lebu: '#8080a0', shandian: '#7070a0', nanman: '#8a4aaa', wanjian: '#5a7aaa',
+      };
       const color = colors[cardType] || '#ffd700';
       seatEl.style.animation = 'none';
       seatEl.offsetHeight;
@@ -424,7 +431,7 @@
         { transform: 'translate(-50%,-50%) scale(0.5)', opacity: 0.8, borderWidth: '3px' },
         { transform: 'translate(-50%,-50%) scale(2)', opacity: 0, borderWidth: '1px' }
       ], { duration: 600, iterations: 3 });
-      anim.onfinish = pulse.remove();
+      anim.onfinish = () => pulse.remove();
     }
 
     clearDying(seat) {

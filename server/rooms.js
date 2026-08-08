@@ -2,6 +2,8 @@
 const { Game, IDENTITIES, IDENTITY_DIST } = require('./engine/game');
 const { GENERALS } = require('./engine/generals');
 const { MODES, createGameMode } = require('./engine/game-modes');
+const customCards = require('./custom-cards');
+const customSkills = require('./custom-skills');
 
 let roomCounter = 1;
 let aiCounter = 1;
@@ -52,6 +54,7 @@ class Room {
     this.spectators = new Map(); // pid -> { name, ws }
     this.danmaku = [];          // 弹幕消息
     this.spectatorDelay = 30;   // 观战延迟（秒）
+    this.spectatorSnapshots = []; // { t, state } 延迟观战快照
   }
 
   seatedPlayers() {
@@ -61,7 +64,7 @@ class Room {
     return this.seats.findIndex(s => s && s.pid === pid);
   }
   hasPid(pid) {
-    return this.seatOf(pid) >= 0;
+    return this.seatOf(pid) >= 0 || this.spectators.has(pid);
   }
 
   sit(pid, name, seat) {
@@ -164,14 +167,41 @@ class Room {
     const infos = this.seats.slice(0, n).map(s => ({ pid: s.pid, name: s.name, isAI: s.isAI }));
     const generalPool = GENERALS.concat(this.opts.includeCustoms ? customs : []);
     this.game = new Game(infos, {
+      // 选将
       pickMode: this.opts.pickMode,
       pickCount: this.opts.pickCount,
       generalIds: generalPool.map(g => g.id),
       generals: generalPool,
       allowIdentityPick: this.opts.allowIdentityPick,
       identityPrefs: this.identityPrefs,
+      // AI / 节奏
       aiDelay: this.opts.aiDelay,
       stepDelay: Math.min(600, this.opts.aiDelay / 2 + 200),
+      aiDifficulty: this.opts.aiDifficulty,
+      gameSpeed: this.opts.gameSpeed,
+      turnTimer: this.opts.turnTimer,
+      // 模式
+      gameMode: this.opts.gameMode,
+      // 自定义规则
+      roundLimit: this.opts.roundLimit,
+      startCards: this.opts.startCards,
+      handLimit: this.opts.handLimit,
+      hpBonus: this.opts.hpBonus,
+      lordExtraHp: this.opts.lordExtraHp,
+      discardLimit: this.opts.discardLimit,
+      allowJuedou: this.opts.allowJuedou,
+      allowAoe: this.opts.allowAoe,
+      revealOnDeath: this.opts.revealOnDeath,
+      allowVoteBan: this.opts.allowVoteBan,
+      // 禁将 / 禁牌
+      bannedGenerals: this.opts.bannedGenerals,
+      bannedCards: this.opts.bannedCards,
+      // 自定义卡牌 / 技能
+      customCards: this.opts.includeCustoms ? customCards.load() : [],
+      customSkills: this.opts.includeCustoms ? customSkills.load() : [],
+      // 自定义胜利条件
+      winCondition: this.opts.winCondition,
+      winParams: this.opts.winParams,
     }, hooks);
     this.state = 'playing';
     return { ok: true, game: this.game };
@@ -179,10 +209,15 @@ class Room {
 
   backToLobby(pid) {
     if (pid !== this.hostPid) return { ok: false, msg: '只有房主可以操作' };
+    if (this.game && this.game.phase !== 'over' && this.game.phase !== 'ended') {
+      // 游戏仍在运行中，不能直接返回
+      return { ok: false, msg: '游戏仍在进行中，无法返回大厅' };
+    }
     this.state = 'lobby';
     this.game = null;
     this.spectators.clear();
     this.danmaku = [];
+    this.spectatorSnapshots = [];
     return { ok: true };
   }
 
@@ -213,6 +248,30 @@ class Room {
 
   getDanmaku(after = 0) {
     return this.danmaku.filter(d => d.time > after);
+  }
+
+  // 记录一帧观战快照（节流由调用方保证）
+  pushSpectatorSnapshot(state) {
+    const now = Date.now();
+    const last = this.spectatorSnapshots[this.spectatorSnapshots.length - 1];
+    if (last && now - last.t < 1000) return;
+    this.spectatorSnapshots.push({ t: now, state });
+    // 只保留延迟窗口 + 10 秒内的快照
+    const cutoff = now - (this.spectatorDelay + 10) * 1000;
+    this.spectatorSnapshots = this.spectatorSnapshots.filter(s => s.t >= cutoff);
+  }
+
+  // 返回延迟后的观战状态；未到延迟返回 null
+  // 取"最接近 now-delay"的那一帧（即最后一个 t <= threshold 的快照），
+  // 避免因无 break 退化成取最旧的一帧（实际延迟会比预期多 0~1 个节拍）。
+  getDelayedSpectatorState(now = Date.now()) {
+    const threshold = now - this.spectatorDelay * 1000;
+    let picked = null;
+    for (let i = this.spectatorSnapshots.length - 1; i >= 0; i--) {
+      if (this.spectatorSnapshots[i].t <= threshold) { picked = this.spectatorSnapshots[i]; break; }
+    }
+    if (!picked) return null;
+    return { state: picked.state, serverTime: now, snapshotTime: picked.t };
   }
 
   publicView() {
