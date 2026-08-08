@@ -80,8 +80,9 @@
         }
         case 'hp_threshold': {
           const me = this.game.players.find(p => p.seat === this.game.turnSeat);
-          const enemies = alivePlayers.filter(p => me && this.isEnemy(me, p));
-          if (enemies.every(p => p.hp <= this.params.threshold)) return this.game.turnSeat;
+          if (!me) return null;
+          const enemies = alivePlayers.filter(p => this.isEnemy(me, p));
+          if (enemies.length && enemies.every(p => p.hp <= this.params.threshold)) return this.game.turnSeat;
           return null;
         }
         case 'card_count':

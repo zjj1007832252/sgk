@@ -141,7 +141,7 @@
 
     setEnabled(v) {
       this.enabled = !!v;
-      localStorage.setItem('sgk_cardcounter_enabled', v);
+      localStorage.setItem('sgk_cardcounter_enabled', this.enabled ? 'true' : 'false');
     }
   }
 

@@ -122,8 +122,8 @@
 
     // 切换特效开关
     setSkinEffects(v) {
-      this.skinEffects = v;
-      localStorage.setItem('sgk_skin_effects', v);
+      this.skinEffects = !!v;
+      localStorage.setItem('sgk_skin_effects', this.skinEffects ? 'true' : 'false');
     }
   }
 

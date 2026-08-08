@@ -3,6 +3,7 @@ node_modules/
 *.log
 .env
 /server/data/customs.json
+/server/data/replays.json
 /tmp
 /public/assets/avatars/diy-*.png
 /public/assets/avatars/diy-*.svg

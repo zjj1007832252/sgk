@@ -3,7 +3,6 @@ const { buildDeck, cardColor, rankLabel, publicCard, SUITS } = require('./cards'
 const { GENERALS } = require('./generals');
 const { SKILLS } = require('./skills');
 const AI = require('./ai');
-const { AIBrain } = require('./ai');
 const { CustomSkillExecutor } = require('./custom-skill-executor');
 
 const IDENTITIES = { zhu: '主公', zhong: '忠臣', fan: '反贼', nei: '内奸' };
@@ -14,8 +13,6 @@ const IDENTITY_DIST = {
   7: ['zhu', 'zhong', 'zhong', 'fan', 'fan', 'fan', 'nei'],
   8: ['zhu', 'zhong', 'zhong', 'fan', 'fan', 'fan', 'fan', 'nei'],
 };
-
-let pidCounter = 1;
 
 class Player {
   constructor(info, seat) {
@@ -1620,7 +1617,6 @@ class Game {
       pendingForMe: this.pending && me && this.pending.seat === me.seat ? this.pending.prompt : null,
       players: this.players.map(p => ({
         seat: p.seat,
-        pid: p.pid === (me && me.pid) ? undefined : undefined, // 不暴露连接 id
         name: p.name,
         isAI: p.isAI,
         alive: p.alive,
