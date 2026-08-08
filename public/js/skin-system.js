@@ -8,9 +8,9 @@
     default: { id: 'default', name: '默认', desc: '标准立绘', free: true },
 
     // 经典皮肤（可通过成就解锁）
-    classic: { id: 'classic', name: '经典', desc: '复古水墨风格', free: true, unlock: 'play_10_games' },
-    premium: { id: 'premium', name: '豪华', desc: '华丽特效立绘', free: false, unlock: 'rank_gold' },
-    legend: { id: 'legend', name: '传说', desc: '动态特效立绘', free: false, unlock: 'win_100' },
+    classic: { id: 'classic', name: '经典', desc: '复古水墨风格', free: true, unlock: 'first_win' },
+    premium: { id: 'premium', name: '豪华', desc: '华丽特效立绘', free: false, unlock: 'play_50' },
+    legend: { id: 'legend', name: '传说', desc: '动态特效立绘', free: false, unlock: 'full_general' },
 
     // 特殊皮肤
     festival: { id: 'festival', name: '节日', desc: '春节限定', free: false, unlock: 'event_spring' },
@@ -20,12 +20,12 @@
   // ==================== 头像框定义 ====================
   const AVATAR_FRAMES = {
     none: { id: 'none', name: '无', desc: '不显示头像框', free: true },
-    bronze: { id: 'bronze', name: '青铜', desc: '青铜边框', free: true, unlock: 'play_5_games' },
-    silver: { id: 'silver', name: '白银', desc: '白银边框', free: true, unlock: 'rank_silver' },
-    gold: { id: 'gold', name: '黄金', desc: '黄金边框', free: true, unlock: 'rank_gold' },
-    diamond: { id: 'diamond', name: '钻石', desc: '钻石边框', free: false, unlock: 'rank_diamond' },
-    dragon: { id: 'dragon', name: '龙纹', desc: '动态龙纹边框', free: false, unlock: 'achievement_master' },
-    phoenix: { id: 'phoenix', name: '凤羽', desc: '动态凤羽边框', free: false, unlock: 'achievement_legend' },
+    bronze: { id: 'bronze', name: '青铜', desc: '青铜边框', free: true, unlock: 'play_10' },
+    silver: { id: 'silver', name: '白银', desc: '白银边框', free: true, unlock: 'win_streak3' },
+    gold: { id: 'gold', name: '黄金', desc: '黄金边框', free: true, unlock: 'win_streak5' },
+    diamond: { id: 'diamond', name: '钻石', desc: '钻石边框', free: false, unlock: 'three_kills' },
+    dragon: { id: 'dragon', name: '龙纹', desc: '动态龙纹边框', free: false, unlock: 'card_master' },
+    phoenix: { id: 'phoenix', name: '凤羽', desc: '动态凤羽边框', free: false, unlock: 'destroyer' },
   };
 
   // ==================== 皮肤管理器 ====================
@@ -33,8 +33,8 @@
     constructor() {
       this.currentSkin = localStorage.getItem('sgk_skin') || 'default';
       this.currentFrame = localStorage.getItem('sgk_frame') || 'none';
-      this.unlockedSkins = new Set(JSON.parse(localStorage.getItem('sgk_unlocked_skins') || '["default","classic"]'));
-      this.unlockedFrames = new Set(JSON.parse(localStorage.getItem('sgk_unlocked_frames') || '["none","bronze"]'));
+      try { this.unlockedSkins = new Set(JSON.parse(localStorage.getItem('sgk_unlocked_skins') || '["default","classic"]')); } catch { this.unlockedSkins = new Set(['default', 'classic']); }
+      try { this.unlockedFrames = new Set(JSON.parse(localStorage.getItem('sgk_unlocked_frames') || '["none","bronze"]')); } catch { this.unlockedFrames = new Set(['none', 'bronze']); }
       this.skinEffects = localStorage.getItem('sgk_skin_effects') !== 'false';
     }
 
@@ -63,7 +63,7 @@
     // 解锁皮肤
     unlockSkin(skinId) {
       this.unlockedSkins.add(skinId);
-      localStorage.setItem('sgk_unlocked_skills', JSON.stringify([...this.unlockedSkins]));
+      localStorage.setItem('sgk_unlocked_skins', JSON.stringify([...this.unlockedSkins]));
     }
 
     // 解锁头像框
@@ -75,6 +75,28 @@
     // 检查是否已解锁
     isSkinUnlocked(skinId) { return this.unlockedSkins.has(skinId); }
     isFrameUnlocked(frameId) { return this.unlockedFrames.has(frameId); }
+
+    // 根据成就解锁对应皮肤 / 头像框，返回新解锁的奖励名称列表
+    grantAchievementRewards(achId) {
+      const rewards = [];
+      Object.entries(SKINS).forEach(([id, info]) => {
+        if (info.unlock === achId && !this.unlockedSkins.has(id)) {
+          this.unlockedSkins.add(id);
+          rewards.push(`皮肤「${info.name}」`);
+        }
+      });
+      Object.entries(AVATAR_FRAMES).forEach(([id, info]) => {
+        if (info.unlock === achId && !this.unlockedFrames.has(id)) {
+          this.unlockedFrames.add(id);
+          rewards.push(`头像框「${info.name}」`);
+        }
+      });
+      if (rewards.length) {
+        localStorage.setItem('sgk_unlocked_skins', JSON.stringify([...this.unlockedSkins]));
+        localStorage.setItem('sgk_unlocked_frames', JSON.stringify([...this.unlockedFrames]));
+      }
+      return rewards;
+    }
 
     // 获取皮肤CSS类
     getSkinClass() {

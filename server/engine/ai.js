@@ -67,9 +67,8 @@ class IdentityInference {
     this.probs = {}; // seat -> { zhu, zhong, fan, nei }
   }
 
-  // 推断某座位的身份概率
+  // 推断某座位的身份概率（每次调用重新计算，避免缓存过期）
   infer(seat) {
-    if (this.probs[seat]) return this.probs[seat];
     const me = this.game.players[seat];
     if (!me) return null;
     if (me.identity === 'zhu') return { zhu: 1, zhong: 0, fan: 0, nei: 0 };
@@ -135,12 +134,19 @@ class IdentityInference {
   }
 
   _identityDistribution(aliveCount) {
-    // 简化：根据存活人数估算剩余身份
-    const total = { zhong: 1, fan: 2, nei: 1 };
+    // 根据实际玩家数计算身份分布
+    const n = this.game.players.length;
+    const dist = { zhu: 1 };
+    if (n <= 4) { dist.zhong = 0; dist.fan = n - 1; dist.nei = 0; }
+    else if (n === 5) { dist.zhong = 1; dist.fan = 2; dist.nei = 1; }
+    else if (n === 6) { dist.zhong = 1; dist.fan = 3; dist.nei = 1; }
+    else if (n === 7) { dist.zhong = 2; dist.fan = 3; dist.nei = 1; }
+    else { dist.zhong = 2; dist.fan = 4; dist.nei = 1; }
+    // 减去已知身份
     const aliveIds = this.game.alivePlayers().map(p => p.identity);
-    aliveIds.forEach(id => { if (total[id]) total[id] = Math.max(0, total[id] - 0.3); });
-    const sum = total.zhong + total.fan + total.nei;
-    return { zhong: total.zhong / sum, fan: total.fan / sum, nei: total.nei / sum };
+    aliveIds.forEach(id => { if (dist[id] != null) dist[id] = Math.max(0, dist[id] - 0.5); });
+    const sum = (dist.zhong || 0) + (dist.fan || 0) + (dist.nei || 0);
+    return { zhong: (dist.zhong || 0) / sum, fan: (dist.fan || 0) / sum, nei: (dist.nei || 0) / sum };
   }
 }
 
@@ -434,6 +440,25 @@ class AIBrain {
             if (t) return { action: 'skill', skill: 'jijiang', cardIds: [], targets: [t.seat] };
           }
           break;
+        case 'xianzhen': { // 陷阵（高顺）：与一名角色拼点
+          if (player.hand.length >= 1) {
+            const target = enemies.find(e => e.hand.length <= player.hand.length) || enemies[0];
+            if (target) return { action: 'skill', skill: 'xianzhen', cardIds: [], targets: [target.seat] };
+          }
+          break;
+        }
+        case 'shuangren': { // 双刃（马超）：与一名角色拼点
+          if (player.hand.length >= 1) {
+            const target = enemies.find(e => e.hand.length <= player.hand.length) || enemies[0];
+            if (target) return { action: 'skill', skill: 'shuangren', cardIds: [], targets: [target.seat] };
+          }
+          break;
+        }
+        case 'ganlu': { // 甘露（华佗）：令一名已受伤角色回复
+          const wounded = game.aliveOthers(player).find(p => p.hp < p.maxHp);
+          if (wounded) return { action: 'skill', skill: 'ganlu', cardIds: [], targets: [wounded.seat] };
+          break;
+        }
         case 'qixi': { // 奇袭：有黑色牌且需要拆/杀
           const black = player.hand.filter(c => cardColor(c) === 'black' && c.key !== 'sha' && c.key !== 'shan');
           if (black.length && enemies.length) {
@@ -473,7 +498,7 @@ class AIBrain {
   }
 
   _getSkillDef(skillId) {
-    try { return require('./skills')[SKILL_IDS[skillId]] || { name: skillId }; } catch { return { name: skillId }; }
+    try { return require('./skills').SKILLS[skillId] || { name: skillId }; } catch { return { name: skillId }; }
   }
 
   // ==================== 装备决策 ====================
@@ -751,6 +776,11 @@ class AIBrain {
       const sorted = pool.slice().sort((a, b) => this._cardValue(b, player) - this._cardValue(a, player));
       return { cardIds: [sorted[0].uid] };
     }
+    // 拼点：选 rank 最高的牌（最大点数）以提高胜率
+    if (t.includes('拼点')) {
+      const sorted = pool.slice().sort((a, b) => (b.rank || 0) - (a.rank || 0));
+      return { cardIds: [sorted[0].uid] };
+    }
     // 弃牌：丢低价值
     const myCards = pool.filter(c => player.hand.some(h => h.uid === c.uid));
     const sorted = myCards.sort((a, b) => this._cardValue(a, player) - this._cardValue(b, player));
@@ -908,7 +938,7 @@ class AIBrain {
       case 'chooseCards': return { cardIds: (prompt.cards || []).slice(0, prompt.min || 0).map(c => c.uid) };
       case 'chooseCardOf': return { zone: 'hand' };
       case 'arrange': return { top: (prompt.cards || []).map(c => c.uid), bottom: [] };
-      case 'chooseGeneral': return { generalId: prompt.candidates && prompt.prompt.candidates[0] ? prompt.candidates[0].id : null };
+      case 'chooseGeneral': return { generalId: prompt.candidates && prompt.candidates[0] ? prompt.candidates[0].id : null };
       default: return null;
     }
   }

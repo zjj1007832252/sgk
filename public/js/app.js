@@ -338,11 +338,14 @@ const _seType = $('se-type');
 if (_seType) _seType.addEventListener('change', () => { skillEditor.skill.type = _seType.value; });
 
 // ---------- 连接 ----------
+let reconnectAttempts = 0;
+const MAX_RECONNECT_DELAY = 30000;
 function connect() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   ws = new WebSocket(`${proto}://${location.host}`);
   ws.onopen = () => {
-    ws.send(JSON.stringify({ type: 'hello', name: myName || '无名氏', pid: myPid }));
+    reconnectAttempts = 0;
+    ws.send(JSON.stringify({ type: 'hello', name: myName || '无名氏', pid: myPid, token: localStorage.getItem('sgk_reconnect_token') }));
   };
   ws.onmessage = e => {
     let msg;
@@ -350,8 +353,10 @@ function connect() {
     handle(msg);
   };
   ws.onclose = () => {
-    toast('连接断开，2秒后重连…');
-    setTimeout(connect, 2000);
+    reconnectAttempts++;
+    const delay = Math.min(2000 * Math.pow(1.5, reconnectAttempts - 1), MAX_RECONNECT_DELAY);
+    toast(`连接断开，${Math.round(delay / 1000)}秒后重连…`);
+    setTimeout(connect, delay);
   };
 }
 
@@ -369,6 +374,7 @@ function handle(msg) {
     case 'welcome':
       myPid = msg.pid;
       localStorage.setItem('sgk_pid', myPid);
+      if (msg.reconnectToken) localStorage.setItem('sgk_reconnect_token', msg.reconnectToken);
       break;
     case 'rooms':
       renderRoomList(msg.rooms);
@@ -769,17 +775,18 @@ function initCardCounter() {
   if (typeof CardCounter === 'undefined') return;
   if (!cardCounter) cardCounter = new CardCounter();
   else cardCounter.reset();
-  // 绑定面板开关
-  const panel = $('card-counter-panel');
-  const title = $('ccp-title');
-  const content = $('ccp-content');
-  if (panel && title && content) {
-    // 默认显示
-    if (cardCounter.enabled) panel.classList.remove('hidden');
-    title.addEventListener('click', () => {
-      content.classList.toggle('hidden');
-      $('ccp-toggle').textContent = content.classList.contains('hidden') ? '▶' : '▼';
-    });
+  // 绑定面板开关（只绑一次）
+  if (!window._ccTitleBound) {
+    window._ccTitleBound = true;
+    const title = $('ccp-title');
+    if (title) {
+      title.addEventListener('click', () => {
+        const content = $('ccp-content');
+        if (content) content.classList.toggle('hidden');
+        const toggle = $('ccp-toggle');
+        if (toggle) toggle.textContent = content?.classList.contains('hidden') ? '▶' : '▼';
+      });
+    }
   }
 }
 

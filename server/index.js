@@ -167,7 +167,12 @@ function sendPid(pid, msg) {
 }
 function broadcastRooms() {
   const msg = JSON.stringify({ type: 'rooms', rooms: rooms.list() });
-  for (const ws of clients.values()) if (ws.readyState === 1) ws.send(msg);
+  for (const [pid, ws] of clients) {
+    if (ws.readyState !== 1) continue;
+    // 只广播给大厅/房间中的玩家，不广播给正在进行游戏的玩家
+    const room = getRoomOf(pid);
+    if (!room || room.state === 'lobby') ws.send(msg);
+  }
 }
 function roomBroadcast(room) {
   const view = JSON.stringify({ type: 'room', room: room.publicView() });

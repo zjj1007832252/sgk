@@ -270,7 +270,8 @@ class Game {
     if (!p) return;
     p.offline = true;
     if (this.pending && this.pending.seat === p.seat) {
-      const { prompt, resolve } = this.pending;
+      const { prompt, resolve, timer } = this.pending;
+      if (timer) clearInterval(timer);
       this.pending = null;
       Promise.resolve()
         .then(() => AI.decide(this, p, prompt))
@@ -1158,7 +1159,8 @@ class Game {
           for (const p of [...this.alivePlayers()].sort((a, b) => ((a.seat - user.seat + 99) % 99) - ((b.seat - user.seat + 99) % 99))) {
             if (!p.alive || !revealed.length) continue;
             const picked = await this.chooseWuguCard(p, revealed);
-            revealed.splice(revealed.indexOf(picked), 1);
+            const idx = revealed.indexOf(picked);
+            if (idx >= 0) revealed.splice(idx, 1);
             this.gain(p, [picked]);
             this.log(`${p.name} 从【五谷丰登】获得一张牌`);
           }
@@ -1436,7 +1438,8 @@ class Game {
     for (const p of this.players) await this.drawCards(p, startCards);
     this.log('游戏开始！主公先行动。');
     // 4. 回合循环
-    const zhuSeat = this.players.find(p => p.identity === 'zhu').seat;
+    const zhuPlayer = this.players.find(p => p.identity === 'zhu');
+    const zhuSeat = zhuPlayer ? zhuPlayer.seat : 0;
     let idx = zhuSeat;
     while (!this.finished) {
       const p = this.players[idx];
@@ -1466,7 +1469,13 @@ class Game {
           }
         }
       }
-      if (this.round > 500) { this.winner = 'zhu'; this.finished = true; } // 兜底
+      if (this.round > 500) {
+        // 兜底：回合上限，按存活玩家判定胜负
+        const lord = this.players.find(p => p.identity === 'zhu');
+        this.winner = lord && lord.alive ? 'zhu' : 'fan';
+        this.finished = true;
+        if (this.hooks.onEnd) this.hooks.onEnd(this.winner);
+      }
     }
     this.phase = 'over';
     this.sync();

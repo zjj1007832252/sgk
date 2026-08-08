@@ -63,7 +63,11 @@
           const teams = {};
           alivePlayers.forEach(p => { teams[p.team] = (teams[p.team] || 0) + 1; });
           const keys = Object.keys(teams);
-          return keys.length === 1 ? keys[0] : null;
+          if (keys.length === 1) {
+            // 返回该阵营中存活玩家的座位号
+            return alivePlayers[0] ? alivePlayers[0].seat : null;
+          }
+          return null;
         }
         case 'kill_count_limit': {
           const dead = this.game.players.filter(p => !p.alive);

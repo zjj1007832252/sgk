@@ -102,8 +102,17 @@ const DECK_LIST = [
 
 let uidCounter = 1;
 
-function buildDeck(bannedCards = []) {
+function buildDeck(bannedCards = [], customCards = []) {
   const banned = new Set(bannedCards);
+  const extra = [];
+  customCards.forEach(c => {
+    if (!c || !c.id || !c.key) return;
+    if (!c.name || !['spade','heart','club','diamond'].includes(c.suit) || !(c.rank >= 1 && c.rank <= 13)) return;
+    // 自定义卡牌也受禁卡列表限制
+    if (banned.has(c.key)) return;
+    const type = c.type || 'basic';
+    extra.push({ uid: 'c' + (uidCounter++), id: c.id, key: c.key, suit: c.suit, rank: c.rank, name: c.name, type, subtype: c.subtype || null, range: c.range || null });
+  });
   const deck = DECK_LIST
     .filter(([key]) => !banned.has(key))
     .map(([key, suit, rank]) => ({
@@ -116,6 +125,7 @@ function buildDeck(bannedCards = []) {
       subtype: CARD_DEFS[key].subtype || null,
       range: CARD_DEFS[key].range || null,
     }));
+  deck.push(...extra);
   shuffle(deck);
   return deck;
 }
@@ -137,7 +147,7 @@ function rankLabel(rank) {
 }
 
 function publicCard(c) {
-  return c ? { uid: c.uid, key: c.key, name: c.name, suit: c.suit, rank: c.rank, type: c.type, subtype: c.subtype } : null;
+  return c ? { uid: c.uid, key: c.key, name: c.name, suit: c.suit, rank: c.rank, type: c.type, subtype: c.subtype, range: c.range || null } : null;
 }
 
 module.exports = { CARD_DEFS, SUITS, DECK_LIST, buildDeck, shuffle, cardColor, rankLabel, publicCard };

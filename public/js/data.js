@@ -39,14 +39,51 @@
       s.totalGames = (s.totalGames || 0) + 1;
       if (record.myResult === 'win') s.wins = (s.wins || 0) + 1;
       else s.losses = (s.losses || 0) + 1;
+      // 连胜
+      if (record.myResult === 'win') {
+        s.currentStreak = (s.currentStreak || 0) + 1;
+        s.maxStreak = Math.max(s.maxStreak || 0, s.currentStreak);
+      } else {
+        s.currentStreak = 0;
+      }
+      // 身份胜场
+      if (record.myResult === 'win') {
+        if (me.identity === 'zhu') s.lordWins = (s.lordWins || 0) + 1;
+        if (me.identity === 'nei') s.neiWins = (s.neiWins || 0) + 1;
+      }
+      // 最快胜利回合
+      if (record.myResult === 'win') {
+        s.minWinRound = Math.min(s.minWinRound || 999, record.rounds || 999);
+      }
+      // 击杀 / 伤害 / 治疗 / 救援
+      const mst = me.stats || {};
+      s.totalKills = (s.totalKills || 0) + (mst.kills || 0);
+      s.maxKills = Math.max(s.maxKills || 0, mst.kills || 0);
+      s.totalDamage = (s.totalDamage || 0) + (mst.damageDealt || 0);
+      s.totalHeal = (s.totalHeal || 0) + (mst.healing || 0);
+      s.saves = (s.saves || 0) + (mst.saves || 0);
+      // 首次击杀：记录生涯中完成击杀的总场次（每局最多+1）
+      if ((mst.kills || 0) > 0) s.gamesWithKill = (s.gamesWithKill || 0) + 1;
+      // 使用过的牌种
+      if (Array.isArray(mst.cardKeys)) {
+        s.uniqueCardKeys = Array.from(new Set([...(s.uniqueCardKeys || []), ...mst.cardKeys]));
+        s.uniqueCards = s.uniqueCardKeys.length;
+      }
+      // 使用过的武将
+      if (me.generalId) {
+        s.uniqueGeneralIds = Array.from(new Set([...(s.uniqueGeneralIds || []), me.generalId]));
+        s.uniqueGenerals = s.uniqueGeneralIds.length;
+      }
+      // DIY 武将数量
+      if (typeof data.diyCount === 'number') s.diyCount = data.diyCount;
       // 武将使用统计
       if (!s.generalStats) s.generalStats = {};
       const gid = me.generalId || 'unknown';
       if (!s.generalStats[gid]) s.generalStats[gid] = { name: me.generalName || gid, count: 0, wins: 0, kills: 0, damage: 0 };
       s.generalStats[gid].count++;
       if (record.myResult === 'win') s.generalStats[gid].wins++;
-      s.generalStats[gid].kills += me.kills || 0;
-      s.generalStats[gid].damage += me.damage || 0;
+      s.generalStats[gid].kills += mst.kills || 0;
+      s.generalStats[gid].damage += mst.damageDealt || 0;
       // 身份统计
       if (!s.identityStats) s.identityStats = {};
       const idKey = me.identity || 'unknown';
