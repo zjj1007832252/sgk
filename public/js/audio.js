@@ -29,6 +29,7 @@
       this.synthReady = false;
       this.voices = [];
       this.currentVoice = null;
+      this._voicePool = [];
       this.initSpeech();
     }
 
@@ -250,15 +251,27 @@
     playVoice(generalId, kind, skillId) {
       if (!this.enabled) return;
       this.init();
-      // 优先播放预生成文件
       const fileUrl = this.voiceFileUrl(generalId, kind, skillId);
       if (fileUrl) {
-        const a = new Audio(fileUrl);
+        const a = this._acquireAudio();
+        a.src = fileUrl;
         a.volume = this.volume;
-        a.play().catch(() => this.speakVoice(generalId, kind, skillId));
+        a.play().catch(() => { this._releaseAudio(a); this.speakVoice(generalId, kind, skillId); });
+        a.onended = () => this._releaseAudio(a);
         return;
       }
       this.speakVoice(generalId, kind, skillId);
+    }
+
+    _acquireAudio() {
+      return this._voicePool.length ? this._voicePool.pop() : new Audio();
+    }
+
+    _releaseAudio(a) {
+      a.onended = null;
+      a.onerror = null;
+      a.src = '';
+      if (this._voicePool.length < 3) this._voicePool.push(a);
     }
 
     voiceFileUrl(generalId, kind, skillId) {
@@ -272,19 +285,21 @@
     }
 
     speakVoice(generalId, kind, skillId) {
-      if (!window.speechSynthesis || !this.synthReady) return;
-      const text = this.voiceText(generalId, kind, skillId);
-      if (!text) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'zh-CN';
-      u.rate = 1.05;
-      u.pitch = 1;
-      u.volume = this.volume;
-      if (this.voices.length) {
-        u.voice = this.voices.find(v => v.lang === 'zh-CN') || this.voices[0];
-      }
-      window.speechSynthesis.speak(u);
+      try {
+        if (!window.speechSynthesis || !this.synthReady) return;
+        const text = this.voiceText(generalId, kind, skillId);
+        if (!text) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-CN';
+        u.rate = 1.05;
+        u.pitch = 1;
+        u.volume = this.volume;
+        if (this.voices.length) {
+          u.voice = this.voices.find(v => v.lang === 'zh-CN') || this.voices[0];
+        }
+        window.speechSynthesis.speak(u);
+      } catch (e) { /* 语音合成失败不影响游戏渲染 */ }
     }
 
     voiceText(generalId, kind, skillId) {

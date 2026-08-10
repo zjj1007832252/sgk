@@ -17,7 +17,6 @@
       this.layer.id = 'fx-layer';
       this.layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:150;overflow:hidden;';
       document.body.appendChild(this.layer);
-      this.active = [];
       this._dyingSeats = new Set();
       this.reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
@@ -37,7 +36,6 @@
       const remove = () => el.remove();
       if (cleanupDelay) setTimeout(remove, cleanupDelay);
       else el.addEventListener('animationend', remove, { once: true });
-      this.active.push(el);
       return el;
     }
 
