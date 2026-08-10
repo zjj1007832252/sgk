@@ -79,7 +79,15 @@
       // 武将使用统计
       if (!s.generalStats) s.generalStats = {};
       const gid = me.generalId || 'unknown';
-      if (!s.generalStats[gid]) s.generalStats[gid] = { name: me.generalName || gid, count: 0, wins: 0, kills: 0, damage: 0 };
+      if (!s.generalStats[gid]) {
+        s.generalStats[gid] = { name: me.generalName || gid, count: 0, wins: 0, kills: 0, damage: 0 };
+        // 淘汰最旧的武将统计（保留最近 50 个）
+        const keys = Object.keys(s.generalStats);
+        if (keys.length > 50) {
+          const sorted = keys.sort((a, b) => (s.generalStats[a].count || 0) - (s.generalStats[b].count || 0));
+          for (let i = 0; i < keys.length - 50; i++) delete s.generalStats[sorted[i]];
+        }
+      }
       s.generalStats[gid].count++;
       if (record.myResult === 'win') s.generalStats[gid].wins++;
       s.generalStats[gid].kills += mst.kills || 0;

@@ -133,8 +133,13 @@
 
           ctx.globalAlpha = p.alpha;
           ctx.fillStyle = p.color;
-          ctx.shadowColor = p.color;
-          ctx.shadowBlur = p.size * 2;
+          // 只有大粒子才开 shadow，减少渲染开销
+          if (p.size >= 3) {
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = p.size * 2;
+          } else {
+            ctx.shadowBlur = 0;
+          }
 
           if (p.shape === 'star') {
             this.drawStar(ctx, p.x, p.y, p.size);

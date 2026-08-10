@@ -395,6 +395,7 @@ const handlers = {
     const room = getRoomOf(ctx.pid);
     if (!room) return;
     room.chat.push({ name: ctx.name, text: String(msg.text || '').slice(0, 100) });
+    if (room.chat.length > 100) room.chat.splice(0, room.chat.length - 100);
     roomBroadcast(room);
   },
 

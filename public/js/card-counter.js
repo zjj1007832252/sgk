@@ -78,12 +78,14 @@
     // 记录出的牌
     recordPlay(card) {
       this.playedCards.push({ ...card, time: Date.now() });
+      if (this.playedCards.length > 500) this.playedCards = this.playedCards.slice(-250);
     }
 
     // 记录弃置的牌
     recordDiscard(cards) {
       if (Array.isArray(cards)) {
         cards.forEach(c => this.discardedCards.push({ ...c, time: Date.now() }));
+        if (this.discardedCards.length > 500) this.discardedCards = this.discardedCards.slice(-250);
       }
     }
 

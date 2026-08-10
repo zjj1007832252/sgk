@@ -46,9 +46,15 @@ function remove(id) {
   return true;
 }
 
+let _imageCache = null;
+let _imageCacheTime = 0;
 function getImageData(id) {
-  const files = fs.readdirSync(IMAGE_DIR);
-  const file = files.find(f => f.startsWith(id + '.'));
+  const now = Date.now();
+  // 每 10 秒刷新缓存
+  if (!_imageCache || now - _imageCacheTime > 10000) {
+    try { _imageCache = fs.readdirSync(IMAGE_DIR); _imageCacheTime = now; } catch { _imageCache = []; }
+  }
+  const file = _imageCache.find(f => f.startsWith(id + '.'));
   return file ? '/assets/cards/' + file : null;
 }
 
