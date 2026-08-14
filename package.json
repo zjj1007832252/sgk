@@ -6,6 +6,10 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
+    "test": "node test/run-all.js",
+    "test:fast": "node test/run-all.js --fast",
+    "test:browser": "node test/browser-play.js",
+    "test:ol": "node test/browser-ol-play.js",
     "gen-avatars": "node scripts/gen_avatars.js",
     "gen-voices": "node scripts/gen_voices.js",
     "simulate": "node test/simulate.js",

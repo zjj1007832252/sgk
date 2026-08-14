@@ -28,6 +28,12 @@ Build a complete web-based Three Kingdoms Kill (三国杀) card game with single
 
 ## Accomplished
 
+### Recent (v2)
+- Interactive tutorial — 8-step coachmark with element highlighting + full rules reference fallback
+- Achievement system — 16 achievements with live stat tracking (kills / damage / healing / saves / win streak / identity wins / card variety / general variety / speed wins / DIY count)
+- Achievement rewards — skin & avatar frame unlocks tied to specific achievements
+- Spectator mode — 30s anti-cheat delay via server snapshot queue, read-only client UI, danmaku chat, lobby spectator count
+
 ### Core Engine
 - 108-card standard deck (53 basic + 36 trick + 19 equip)
 - 70 generals (25 standard + 25 军争篇 + 12 一将成名 + 8 神武将)
@@ -102,32 +108,48 @@ Build a complete web-based Three Kingdoms Kill (三国杀) card game with single
 ## Remaining Tasks
 
 ### In Progress (started but not completed)
-1. **Spectator Mode** - rooms.js spectator support added, but server handlers and client UI not yet implemented
-2. **Achievement System** - Not started
-3. **New Player Guide / Tutorial** - Not started
+1. **Spectator Mode** - ✅ Implemented (30s delayed snapshots, client UI, danmaku, read-only mode)
+2. **Achievement System** - ✅ Implemented (16 achievements with stats tracking, skin/frame rewards)
+3. **New Player Guide / Tutorial** - ✅ Implemented (interactive coachmark + full rules reference)
 
 ### Not Started
-- Spectator mode needs:
-  - Server handlers: `spectateRoom`, `spectateAction`, `danmaku` messages
-  - Client UI: spectator view (read-only game view), danmaku overlay, spectator count display
-  - Delay mechanism (30s delay to prevent cheating)
-  - Room lobby shows spectator count
-
-- Achievement system needs:
-  - Achievement definitions (first kill, win streak, general mastery, etc.)
-  - Achievement tracking in game engine
-  - Achievement unlock UI
-  - Achievement rewards (skin/frame unlocks)
-
-- Tutorial needs:
-  - Step-by-step game introduction
-  - Interactive tutorial mode
-  - Rule quick reference panel
-  - Card/skill explanation popups
+### Not Started
+- In-game card/skill tooltip popups (hover to see skill/card description during play)
+- Ranked / ladder system
+- Custom game mode editor UI
 
 ## Relevant files
-- `/Users/jjzhang/chess/sgk/server/rooms.js` - Just modified to add spectator support
-- `/Users/jjzhang/chess/sgk/server/index.js` - Needs spectator/danmaku handlers
-- `/Users/jjzhang/chess/sgk/public/js/app.js` - Needs spectator UI + achievements + tutorial
-- `/Users/jjzhang/chess/sgk/public/index.html` - Needs spectator/achievement/tutorial HTML
-- `/Users/jjzhang/chess/sgk/public/css/style.css` - Needs spectator/achievement/tutorial CSS
+- `/Users/jjzhang/chess/sgk/server/engine/game.js` - Player stats field added for achievement tracking
+- `/Users/jjzhang/chess/sgk/server/rooms.js` - Spectator snapshots + 30s delay mechanism
+- `/Users/jjzhang/chess/sgk/server/index.js` - Spectator handlers + delayed state push timer
+- `/Users/jjzhang/chess/sgk/public/js/data.js` - Expanded stats accumulation for achievements
+- `/Users/jjzhang/chess/sgk/public/js/app.js` - Achievement rewards, spectator client mode, interactive coach tutorial
+- `/Users/jjzhang/chess/sgk/public/js/skin-system.js` - Achievement-based skin/frame unlocks
+- `/Users/jjzhang/chess/sgk/public/index.html` - Coachmark overlay HTML
+- `/Users/jjzhang/chess/sgk/public/css/style.css` - Coachmark styles
+
+## Recent (v3) — Code Review Fixes
+- 修复 `public/index.html:438` 回放查看器「导出文本」按钮标签未闭合
+- 修复 `public/js/app.js` 胜利条件选择/规则预设/禁将按钮 html 在 `box.innerHTML = html;` 之后被追加而永不渲染的 bug
+- 修复 `server/engine/game.js` `stepDelay` 被 `speedMult` 处理后又被原 opts 覆盖（speedMult 永远无效）
+- 修复 `server/engine/game.js` 乐不思蜀原地修改牌的 key/name 污染牌堆，改为推虚拟对象
+- 修复 `public/js/app.js` 禁将预设切换时 `bannedG.has(text && find(...))` 永远 false 导致高亮不刷新
+- 修复 `server/rooms.js` 观战延迟选帧升序遍历取最旧帧，改为反向遍历取最接近 `now-delay` 的帧
+- 修复 `server/engine/game.js` 五谷丰登选牌顺序公式 `(seat - seat + 99) % 99` 在差为负时映射反转，改为 `(seat - seat + n) % n`（n = 玩家数）
+- 修复 `server/engine/game.js` 五谷丰登 `splice(indexOf(picked), 1)` 在 picked 不在 revealed 时会从末尾误删，加 indexOf 校验
+- 修复 `server/engine/game-modes.js` `survive_rounds` / `hp_threshold` 胜利条件可能在 turnSeat 玩家已死时返回死亡 seat 的问题
+- 修复 `server/rooms.js` 房间的 `startGame` 只传极少量 opts 给 Game，自定义规则（hpBonus/handLimit/winCondition/...）全部丢失；补全所有字段
+- 删除 `server/engine/game-modes.js` 重声明的死代码 `createGameMode`
+
+## Verify results
+- test/verify.js: 86/86 稳定（极少数场景有 1 项 forceGenerals 偶发 flaky，与本次修改无关）
+- test/simulate.js: 10 局无错
+- test/ai-test.js: 4 局无错
+- test/balance-test.js: 跑通无错
+
+## Remaining Tasks (after v3)
+### Not Started
+- In-game card/skill tooltip popups (hover to see skill/card description during play)
+- Ranked / ladder system
+- Custom game mode editor UI
+- DIY skill / DIY card system actually wired into Game engine (server/engine/custom-skill-executor.js + server/custom-skills.js + server/custom-cards.js are 孤立模块,未挂载到 player.customSkills / buildDeck)
