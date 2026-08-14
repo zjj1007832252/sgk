@@ -81,14 +81,35 @@
         <div id="my-panel" class="my-panel"></div>
         <div id="my-hand" class="my-hand"></div>
         <div id="action-bar" class="action-bar"></div>
+        <!-- 待用区：OL 经典操作样式（选牌/技能弹出 + 方式选择 + 确定/取消） -->
+        <div id="pending-zone" class="pending-zone"></div>
       </div>
       <div class="side-panel">
         <div id="prompt-bar" class="prompt-bar"></div>
         <div class="side-tabs">
-          <span class="side-tab active">战报</span>
+          <span class="side-tab active" data-tab="log">战报</span>
+          <span class="side-tab" data-tab="counter">记牌</span>
         </div>
-        <div id="game-log" class="game-log"></div>
-        <button id="btn-quit-game" class="btn btn-small">离开（AI托管）</button>
+        <div id="game-log" class="game-log side-tab-content active"></div>
+        <div id="side-counter" class="side-counter side-tab-content">
+          <div class="ccp-section">
+            <div class="ccp-section-title">关键牌剩余</div>
+            <div id="side-ccp-keycards" class="ccp-keycards"></div>
+          </div>
+          <div class="ccp-section">
+            <div class="ccp-section-title">已出牌</div>
+            <div id="side-ccp-played" class="ccp-played"></div>
+          </div>
+          <div class="ccp-section">
+            <div class="ccp-section-title">牌堆信息</div>
+            <div id="side-ccp-deck" class="ccp-deck"></div>
+          </div>
+        </div>
+        <div class="side-actions">
+          <button id="btn-discard-pile" class="btn btn-small">🗑 弃牌堆</button>
+          <button id="btn-end-game" class="btn btn-small btn-danger">🏳 结束对局</button>
+          <button id="btn-quit-game" class="btn btn-small">离开（AI托管）</button>
+        </div>
       </div>
     </div>
   </div>
@@ -103,6 +124,21 @@
         <span id="tutorial-progress" class="tutorial-progress"></span>
         <button id="tutorial-next" class="btn btn-small btn-primary">下一步</button>
         <button id="tutorial-close" class="btn btn-small">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 交互式新手引导（coachmark） -->
+  <div id="coach-overlay" class="coach-overlay hidden">
+    <div id="coach-bubble" class="coach-bubble">
+      <div id="coach-title" class="coach-title"></div>
+      <div id="coach-text" class="coach-text"></div>
+      <div class="coach-nav">
+        <button id="coach-prev" class="btn btn-small">上一步</button>
+        <span id="coach-progress" class="coach-progress"></span>
+        <button id="coach-next" class="btn btn-small btn-primary">下一步</button>
+        <button id="coach-rules" class="btn btn-small">📖 规则速查</button>
+        <button id="coach-close" class="btn btn-small btn-danger">跳过</button>
       </div>
     </div>
   </div>
@@ -124,6 +160,30 @@
 
   <!-- 弹幕层 -->
   <div id="danmaku-layer" class="danmaku-layer"></div>
+
+  <!-- 卡牌详情弹窗 -->
+  <div id="card-detail-modal" class="card-detail-modal hidden">
+    <div class="card-detail-backdrop" onclick="closeCardDetail()"></div>
+    <div class="card-detail-box">
+      <div id="cdm-card" class="cdm-card"></div>
+      <div class="cdm-info">
+        <div id="cdm-name" class="cdm-name"></div>
+        <div id="cdm-type" class="cdm-type"></div>
+        <div id="cdm-desc" class="cdm-desc"></div>
+      </div>
+      <div class="cdm-close" onclick="closeCardDetail()">✕</div>
+    </div>
+  </div>
+
+  <!-- 弃牌堆面板 -->
+  <div id="discard-pile-modal" class="card-detail-modal hidden">
+    <div class="card-detail-backdrop" onclick="closeDiscardPile()"></div>
+    <div class="cdp-box">
+      <div class="cdp-title">弃牌堆（<span id="cdp-count">0</span> 张）</div>
+      <div id="cdp-cards" class="cdp-cards"></div>
+      <div class="cdm-close" onclick="closeDiscardPile()">✕</div>
+    </div>
+  </div>
 
   <!-- 观战工具栏 -->
   <div id="spectator-bar" class="spectator-bar hidden">
@@ -375,7 +435,7 @@
       <div class="rv-title">回放 <span id="rv-close" class="rv-close">✕</span></div>
       <div id="rv-content" class="rv-content"></div>
       <div class="rv-actions">
-        <button id="rv-export-text" class="btn btn-sm导出文本</button>
+        <button id="rv-export-text" class="btn btn-sm">导出文本</button>
         <button id="rv-export-json" class="btn btn-small">导出 JSON</button>
         <button id="rv-share" class="btn btn-small">分享链接</button>
       </div>
@@ -390,6 +450,7 @@
 <script src="/js/card-editor.js"></script>
 <script src="/js/custom-skills.js"></script>
 <script src="/js/data.js"></script>
+  <script src="/js/card-detail.js"></script>
 <script src="/js/perf.js"></script>
 <script src="/js/card-counter.js"></script>
 <script src="/js/skin-system.js"></script>
