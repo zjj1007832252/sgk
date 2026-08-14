@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="300" viewBox="0 0 240 300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2a4a"/>
+      <stop offset="0.6" stop-color="#1a1208"/>
+      <stop offset="1" stop-color="#0d0a06"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c9b37a"/>
+      <stop offset="0.5" stop-color="#fff5d0"/>
+      <stop offset="1" stop-color="#c9b37a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="240" height="300" rx="12" fill="url(#bg)"/>
+
+  <!-- 人物剪影 -->
+  <circle cx="120" cy="105" r="42" fill="#2c3e5f" stroke="#c9b37a" stroke-width="2"/>
+  <path d="M 45 265 Q 60 180 120 180 Q 180 180 195 265 Z" fill="#2c3e5f" stroke="#c9b37a" stroke-width="2"/>
+
+  <!-- 问号 -->
+  <text x="120" y="118" font-family="'STKaiti','KaiTi',serif" font-size="52" font-weight="bold" fill="#e8dcc0" text-anchor="middle">?</text>
+  <text x="120" y="175" font-family="'STKaiti','KaiTi',serif" font-size="16" fill="#d8c9a3" text-anchor="middle">未 知</text>
+
+  <!-- 边框 -->
+  <rect x="3" y="3" width="234" height="294" rx="10" fill="none" stroke="url(#frame)" stroke-width="2.5"/>
+</svg>

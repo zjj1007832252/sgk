@@ -1,27 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="240" height="300" viewBox="0 0 240 300">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2c3e5f"/>
-      <stop offset="1" stop-color="#12100d"/>
+      <stop offset="0" stop-color="#1a2a4a"/>
+      <stop offset="0.6" stop-color="#1a1208"/>
+      <stop offset="1" stop-color="#0d0a06"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.4" r="0.6">
-      <stop offset="0" stop-color="#6f9bd8" stop-opacity="0.45"/>
-      <stop offset="1" stop-color="#6f9bd8" stop-opacity="0"/>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c9b37a"/>
+      <stop offset="0.5" stop-color="#fff5d0"/>
+      <stop offset="1" stop-color="#c9b37a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.3" r="0.7">
+      <stop offset="0" stop-color="#4a7ab8" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#4a7ab8" stop-opacity="0"/>
     </radialGradient>
-    <style>
-      .name { font-family: 'STKaiti','KaiTi','STSong',serif; fill: #f3e6c8; text-anchor: middle; font-weight: bold; }
-      .sub { font-family: 'STKaiti','KaiTi','STSong',serif; fill: #d8c9a3; text-anchor: middle; }
-    </style>
+    <pattern id="bgPattern" patternUnits="userSpaceOnUse" width="22" height="22" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="22" stroke="#c9b37a" stroke-opacity="0.07" stroke-width="1"/>
+    </pattern>
   </defs>
-  <rect width="240" height="300" rx="10" fill="url(#bg)"/>
-  <rect width="240" height="300" rx="10" fill="url(#glow)"/>
-  <circle cx="120" cy="122" r="86" fill="none" stroke="#6f9bd8" stroke-opacity="0.45" stroke-width="2"/>
-  <circle cx="120" cy="122" r="78" fill="none" stroke="#6f9bd8" stroke-opacity="0.2" stroke-width="1"/>
-  <rect x="10" y="10" width="36" height="36" rx="7" fill="#2c3e5f" stroke="#6f9bd8" stroke-width="1.5"/>
-  <text x="28" y="36" font-size="24" class="sub" fill="#fff" text-anchor="middle" style="fill:#f3e6c8">魏</text>
-  <text x="228" y="34" font-size="15" class="sub" text-anchor="end">❤❤❤❤</text>
-  <text x="120" y="99.03999999999999" class="name" font-size="72">李</text>
-  <text x="120" y="179.04" class="name" font-size="72">通</text>
-  <text x="120" y="272" font-size="17" class="sub">万亿吾身</text>
-  <rect x="1.5" y="1.5" width="237" height="297" rx="10" fill="none" stroke="#6f9bd8" stroke-opacity="0.6" stroke-width="2"/>
+
+  <!-- 背景 -->
+  <rect width="240" height="300" rx="12" fill="url(#bg)"/>
+  <rect width="240" height="300" rx="12" fill="url(#bgPattern)"/>
+
+  <!-- 光晕 -->
+  <ellipse cx="120" cy="90" rx="100" ry="70" fill="url(#glow)"/>
+
+  <!-- 金色边框（双层） -->
+  <rect x="5" y="5" width="230" height="290" rx="10" fill="none" stroke="url(#frame)" stroke-width="2.5"/>
+  <rect x="12" y="12" width="216" height="276" rx="7" fill="none" stroke="#c9b37a" stroke-opacity="0.35" stroke-width="1"/>
+
+  <!-- 势力角标（左上角三角） -->
+  <polygon points="12,12 52,12 12,52" fill="#4a7ab8" stroke="#c9b37a" stroke-width="1.5"/>
+  <text x="26" y="40" font-size="20" text-anchor="middle" font-family="STKaiti,KaiTi,serif" font-weight="bold" fill="#f3e5a3">魏</text>
+
+  <!-- 体力心（右上） -->
+  <text x="226" y="34" font-size="18" text-anchor="end" fill="#ff5555">❤❤❤❤</text>
+
+  <!-- 武将名（书法大字） -->
+  <text x="120" y="141.3" text-anchor="middle" font-size="78" font-family="STKaiti,KaiTi,STSong,serif" font-weight="bold" fill="#f7e8c0" style="text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:3px">李</text>
+  <text x="120" y="211.3" text-anchor="middle" font-size="78" font-family="STKaiti,KaiTi,STSong,serif" font-weight="bold" fill="#f7e8c0" style="text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:3px">通</text>
+
+  <!-- 称号条 -->
+  <rect x="25" y="244" width="190" height="34" rx="3" fill="#1a1008" stroke="#c9b37a" stroke-opacity="0.5"/>
+  <line x1="25" y1="244" x2="215" y2="244" stroke="#c9b37a" stroke-opacity="0.7"/>
+  <line x1="25" y1="278" x2="215" y2="278" stroke="#c9b37a" stroke-opacity="0.7"/>
+  <text x="120" y="268" text-anchor="middle" font-size="16"
+    font-family="STKaiti,KaiTi,STSong,serif" letter-spacing="5px" fill="#c9b37a">万亿吾身</text>
+
+  <!-- 顶部装饰角 -->
+  <path d="M12 70 L12 85 L27 85 Z" fill="#c9b37a" opacity="0.6"/>
+  <path d="M228 70 L228 85 L213 85 Z" fill="#c9b37a" opacity="0.6"/>
 </svg>
