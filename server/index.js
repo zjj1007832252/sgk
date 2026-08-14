@@ -6,6 +6,7 @@ const express = require('express');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const multer = require('multer');
+const crypto = require('crypto');
 
 const { MODES } = require('./engine/game-modes');
 const { RoomManager } = require('./rooms');
@@ -36,7 +37,7 @@ netopt.setWsMap(clients);
 let pidCounter = 1;
 
 function generateToken() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  return crypto.randomBytes(24).toString('hex');
 }
 
 // ---------- HTTP API ----------
@@ -86,11 +87,13 @@ const cardUpload = multer({
     },
     filename: (req, file, cb) => {
       const id = (req.params.id || 'card').replace(/[^\w-]/g, '');
-      cb(null, id + path.extname(file.originalname || '.png'));
+      const ext = (path.extname(file.originalname || '') || '.png').toLowerCase();
+      const allowed = ['.png', '.jpg', '.jpeg', '.webp'];
+      cb(null, id + (allowed.includes(ext) ? ext : '.png'));
     },
   }),
   limits: { fileSize: 3 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
+  fileFilter: (req, file, cb) => cb(null, ['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)),
 });
 app.post('/api/card-image/:id', cardUpload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: '需要图片文件' });
@@ -146,11 +149,12 @@ const upload = multer({
     },
     filename: (req, file, cb) => {
       const id = (req.params.id || 'avatar').replace(/[^\w-]/g, '');
+      if (!/^diy_/.test(id)) return cb(new Error('只允许上传 DIY 武将头像'));
       cb(null, id + '.png');
     },
   }),
   limits: { fileSize: 3 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
+  fileFilter: (req, file, cb) => cb(null, ['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)),
 });
 app.post('/api/avatar/:id', upload.single('avatar'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: '需要图片文件' });
@@ -305,7 +309,7 @@ const handlers = {
           if (seat >= 0) {
             ctx.pid = pid;
             clients.set(pid, ws);
-            room.seats[seat].name = msg.name || room.seats[seat].name;
+            room.seats[seat].name = String(msg.name || room.seats[seat].name).slice(0, 12);
             if (room.game) room.game.playerOnline(pid);
             send(ws, { type: 'welcome', pid });
             roomBroadcast(room);
@@ -319,7 +323,7 @@ const handlers = {
     }
     ctx.pid = 'p' + (pidCounter++);
     clients.set(ctx.pid, ws);
-    ctx.name = (msg.name || '无名氏').slice(0, 12);
+    ctx.name = String(msg.name || '无名氏').slice(0, 12);
     // 生成 reconnect token
     const token = generateToken();
     reconnectTokens.set(ctx.pid, token);
@@ -506,8 +510,11 @@ wss.on('connection', (ws) => {
   });
   ws.on('close', () => {
     if (!ctx.pid) return;
+    // 仅当该连接仍是当前连接时才处理关闭（避免陈旧 socket 踩掉重连/多标签页会话）
+    if (clients.get(ctx.pid) !== ws) return;
     netopt.cleanup(ctx.pid);
     clients.delete(ctx.pid);
+    reconnectTokens.delete(ctx.pid);
     for (const room of rooms.rooms.values()) {
       if (room.hasPid(ctx.pid)) {
         if (room.isSpectator && room.isSpectator(ctx.pid)) {

@@ -31,11 +31,19 @@
   // ==================== 皮肤管理器 ====================
   class SkinManager {
     constructor() {
-      this.currentSkin = localStorage.getItem('sgk_skin') || 'default';
-      this.currentFrame = localStorage.getItem('sgk_frame') || 'none';
-      try { this.unlockedSkins = new Set(JSON.parse(localStorage.getItem('sgk_unlocked_skins') || '["default","classic"]')); } catch { this.unlockedSkins = new Set(['default', 'classic']); }
-      try { this.unlockedFrames = new Set(JSON.parse(localStorage.getItem('sgk_unlocked_frames') || '["none","bronze"]')); } catch { this.unlockedFrames = new Set(['none', 'bronze']); }
-      this.skinEffects = localStorage.getItem('sgk_skin_effects') !== 'false';
+      let _skin = 'default', _frame = 'none', _effects = true;
+      this.unlockedSkins = new Set(['default', 'classic']);
+      this.unlockedFrames = new Set(['none', 'bronze']);
+      try {
+        _skin = localStorage.getItem('sgk_skin') || 'default';
+        _frame = localStorage.getItem('sgk_frame') || 'none';
+        _effects = localStorage.getItem('sgk_skin_effects') !== 'false';
+        this.unlockedSkins = new Set(JSON.parse(localStorage.getItem('sgk_unlocked_skins') || '["default","classic"]'));
+        this.unlockedFrames = new Set(JSON.parse(localStorage.getItem('sgk_unlocked_frames') || '["none","bronze"]'));
+      } catch {}
+      this.currentSkin = _skin;
+      this.currentFrame = _frame;
+      this.skinEffects = _effects;
     }
 
     // 获取当前皮肤

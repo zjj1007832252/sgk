@@ -272,7 +272,8 @@ class Game {
       this.pending = null;
       Promise.resolve()
         .then(() => AI.decide(this, p, prompt))
-        .then(ans => resolve(ans == null ? AI.fallback(this, p, prompt) : ans));
+        .then(ans => resolve(ans == null ? AI.fallback(this, p, prompt) : ans))
+        .catch(e => { console.error('AI offline error', e); resolve(AI.fallback(this, p, prompt)); });
     }
     this.sync();
   }
@@ -322,7 +323,9 @@ class Game {
   }
   toDiscard(cards) {
     for (const c of cards.filter(Boolean)) {
-      if (!this.claimed.has(c.uid)) this.discardPile.push(c);
+      if (this.claimed.has(c.uid)) continue;
+      if (this.discardPile.some(x => x.uid === c.uid)) continue;
+      this.discardPile.push(c);
     }
   }
   /** 弃置玩家指定牌（从手牌） */
@@ -393,7 +396,13 @@ class Game {
   }
   canTargetSha(user, target, opts = {}) {
     if (!target || !target.alive) return false;
+    // 空城：无手牌不能成为【杀】目标
+    if (this.hasSkill(target, 'kongcheng') && !target.hand.length) return false;
     if (opts.noDistance) return true;
+    // 天义：拼点获胜后使用【杀】无距离限制
+    if (user.turnFlags && user.turnFlags.tianyi) return true;
+    // 陷阵：拼点获胜后本回合对该目标使用牌无距离限制
+    if (user.turnFlags && user.turnFlags.xianzhenTarget === target.seat) return true;
     return this.distance(user, target) <= this.attackRange(user);
   }
 
@@ -401,7 +410,8 @@ class Game {
   /** opts.keep: 调用方自行处理判定牌（如洛神）；否则非天妒情况下自动弃置 */
   async judge(player, reason, opts = {}) {
     if (!this.deck.length) this.reshuffle();
-    let card = this.deck.shift();
+    let card = this.deck.length ? this.deck.shift() : null;
+    if (!card) { this.log(`${player.name} 判定时牌堆与弃牌堆均为空，跳过判定`); return null; }
     this.log(`${player.name} 的判定牌：【${card.name}】${this.suitLabel(card.suit)}${this.rankLabel(card.rank)}`);
     this.broadcastEvent({ type: 'judge', seat: player.seat, card: { suit: card.suit, rank: card.rank, name: card.name, rankLabel: this.rankLabel(card.rank) } });
     this.sync();
@@ -535,12 +545,13 @@ class Game {
     this.toDiscard(all);
     // 奖惩
     if (killer && killer.alive) {
+      // 所有击杀都记录（lastKill 供 kill_lord 等胜利条件使用）
+      killer.totalKills = (killer.totalKills || 0) + 1;
+      killer.lastKill = target.seat;
+      if (this.__brain && this.__brain.tracker) this.__brain.tracker.recordKill(killer.seat);
       if (target.identity === 'fan') {
         this.log(`${killer.name} 杀死反贼，摸三张牌`);
         await this.drawCards(killer, 3);
-        if (this.__brain && this.__brain.tracker) this.__brain.tracker.recordKill(killer.seat);
-        killer.totalKills = (killer.totalKills || 0) + 1;
-        killer.lastKill = target.seat;
       }
       if (killer.identity === 'zhu' && target.identity === 'zhong') {
         this.log(`主公杀死忠臣，弃置所有牌`);
@@ -725,6 +736,7 @@ class Game {
         return false;
       }
     }
+    if (!opts.redirected) user.turnFlags.shaPlayed = (user.turnFlags.shaPlayed || 0) + 1;
     if (!opts.redirected && !opts.noCount) user.turnFlags.shaUsed = (user.turnFlags.shaUsed || 0) + 1;
     cards = cards || [];
     const color = this.shaColorOf(cards);
@@ -898,7 +910,7 @@ class Game {
           this.loseCards(defender, res.cards);
           this.toDiscard(res.cards);
         }
-        defender.turnFlags.shaUsed = (defender.turnFlags.shaUsed || 0) + 1; // 打出杀也计克己
+        defender.turnFlags.shaPlayed = (defender.turnFlags.shaPlayed || 0) + 1; // 打出杀只计克己，不占出杀次数
         this.log(`${defender.name} 打出【杀】`);
         played++;
         this.sync();
@@ -911,11 +923,30 @@ class Game {
     }
   }
 
+  // ============ 拼点 ============
+  async pindian(user, target, opts = {}) {
+    if (!user || !target || !user.alive || !target.alive) return null;
+    const myCard = this.randomHand(user);
+    const theirCard = this.randomHand(target);
+    if (!myCard || !theirCard) return null;
+    this.loseCards(user, [myCard]);
+    this.loseCards(target, [theirCard]);
+    this.toDiscard([myCard, theirCard]);
+    this.broadcastEvent({ type: 'reveal', player: user.seat, card: this.publicCard(myCard) });
+    this.broadcastEvent({ type: 'reveal', player: target.seat, card: this.publicCard(theirCard) });
+    const suitRank = { spade: 4, heart: 3, club: 2, diamond: 1 };
+    const uWins = myCard.rank > theirCard.rank || (myCard.rank === theirCard.rank && (suitRank[myCard.suit] || 0) > (suitRank[theirCard.suit] || 0));
+    this.log(`${user.name} 与 ${target.name} 拼点，${user.name}${uWins ? '胜' : '负'}`);
+    this.sync();
+    return { winner: uWins ? 'initiator' : 'target', myCard, theirCard };
+  }
+
   // ============ 出牌阶段可用性 ============
   playableShaTargets(user) {
     return this.aliveOthers(user).filter(t => this.canTargetSha(user, t));
   }
   canPlaySha(user) {
+    if (user.turnFlags && user.turnFlags.noSha) return false;
     return (user.turnFlags.shaUsed || 0) < this.shaLimit(user) && this.playableShaTargets(user).length > 0;
   }
 
@@ -971,7 +1002,7 @@ class Game {
     switch (key) {
       case 'sha': {
         if (!this.canPlaySha(user)) return { ok: false, msg: '本回合不能再使用【杀】或无合法目标' };
-        const maxTargets = (user.equips.weapon && user.equips.weapon.key === 'fangtian' && user.hand.length === cards.length) ? 3 : 1;
+        const maxTargets = (user.equips.weapon && user.equips.weapon.key === 'fangtian' && user.hand.length === cards.length) ? 3 : (user.turnFlags && user.turnFlags.tianyi ? 2 : 1);
         if (!targets.length || targets.length > maxTargets) return { ok: false, msg: `【杀】需要 1~${maxTargets} 个目标` };
         for (const tg of targets) if (!this.canTargetSha(user, tg)) return { ok: false, msg: '目标不在攻击范围内或不合法' };
         return { ok: true };
@@ -1057,7 +1088,6 @@ class Game {
           return;
         }
         case 'tao':
-          this.toDiscard(cards);
           await this.recover(user, 1, user, { byTao: true });
           if (this.__brain && this.__brain.tracker) this.__brain.tracker.recordHeal(user.seat, user.seat);
           this.log(`${user.name} 使用【桃】`);
@@ -1134,7 +1164,7 @@ class Game {
             const res = await this.askRespondCard(p, need, { title: `【${cname}】：请打出【${need === 'sha' ? '杀' : '闪'}】，否则受到1点伤害`, attacker: user });
             if (res) {
               if (res.cards.length) { this.loseCards(p, res.cards); this.toDiscard(res.cards); }
-              if (need === 'sha') p.turnFlags.shaUsed = (p.turnFlags.shaUsed || 0) + 1;
+              if (need === 'sha') p.turnFlags.shaPlayed = (p.turnFlags.shaPlayed || 0) + 1;
               this.log(`${p.name} 打出【${need === 'sha' ? '杀' : '闪'}】`);
               this.sync();
             } else {
@@ -1214,6 +1244,7 @@ class Game {
       const def = SKILLS[sk];
       if (!def) continue;
       if (def.type === 'active') {
+        if (typeof def.activate !== 'function') continue; // 未实现的主动技不显示按钮，避免点击崩溃
         let usable = true, reason = '';
         if (sk === 'zhiheng' && player.turnFlags.zhiheng) { usable = false; reason = '已用过'; }
         if (sk === 'fanjian' && (player.turnFlags.fanjian || !player.hand.length)) { usable = false; reason = '已用过/无手牌'; }
@@ -1226,7 +1257,7 @@ class Game {
       } else if (def.type === 'convert' && (sk === 'qixi' || sk === 'guose')) {
         btns.push({ id: sk, name: def.name, desc: def.desc, type: 'convert', usable: true, button: {} });
       } else if (sk === 'jijiang' && player.identity === 'zhu') {
-        btns.push({ id: sk, name: def.name, desc: def.desc, type: 'lord', usable: this.canPlaySha(player), button: {} });
+        btns.push({ id: sk, name: def.name, desc: def.desc, type: 'lord', usable: this.canPlaySha(player) && !player.turnFlags.jijiang, button: {} });
       } else if (def.type !== 'active') {
         btns.push({ id: sk, name: def.name, desc: def.desc, type: def.type, usable: true, passive: true, button: {} });
       }
@@ -1247,17 +1278,21 @@ class Game {
     if (customDef) {
       const cards = (ans.cardIds || []).map(uid => user.hand.find(c => c.uid === uid)).filter(Boolean);
       const targets = (ans.targets || []).map(s => this.players[s]).filter(p => p && p.alive);
-      await this.customExecutor.executeEffect(user, customDef, { cards, targets });
+      const effects = Array.isArray(customDef.effects) ? customDef.effects : (customDef.effects ? [customDef.effects] : []);
+      for (const eff of effects) {
+        await this.customExecutor.executeEffect(user, eff, { cards, targets });
+      }
       await this.passiveSweep();
       this.sync();
       return true;
     }
     if (!user.skills.includes(sk)) return this.err(user, '没有此技能');
       if (sk === 'jijiang') {
-        // 激将出杀
+        // 激将出杀（每回合限一次）
         if (!this.canPlaySha(user)) return this.err(user, '无法使用【杀】');
         const targets = (ans.targets || []).map(s => this.players[s]).filter(p => p && p.alive);
         if (!targets.length || !this.canTargetSha(user, targets[0])) return this.err(user, '请选择合法目标');
+        user.turnFlags.jijiang = true;
         this.broadcastEvent({ type: 'skillVoice', seat: user.seat, generalId: user.generalId, skillId: 'jijiang' });
         const got = await this.askJijiang(user);
         if (got) {
@@ -1274,6 +1309,7 @@ class Game {
     if (need.needCards === 1 && cards.length !== 1) return this.err(user, '需要选择一张牌');
     if (need.needCards === '1+' && !cards.length) return this.err(user, '需要选择至少一张牌');
     if ((need.needTargets || 0) > targets.length) return this.err(user, '需要选择目标');
+    if (typeof def.activate !== 'function') return this.err(user, '该技能尚未实现');
     const ok = await def.activate(this, user, { cards, targets });
     if (!ok) this.err(user, '技能发动失败');
     await this.passiveSweep();
@@ -1391,7 +1427,7 @@ class Game {
     this.sync();
     await this.customExecutor.checkAndExecute(player, 'phase:discard');
     if (player.alive) {
-      const kejiSkip = this.hasSkill(player, 'keji') && !(player.turnFlags.shaUsed > 0);
+      const kejiSkip = this.hasSkill(player, 'keji') && !(player.turnFlags.shaPlayed > 0);
       if (kejiSkip) {
         this.log(`${player.name} 发动【克己】，跳过弃牌阶段`);
       }
@@ -1505,9 +1541,20 @@ class Game {
     }
     rest.forEach((p, i) => assigned.set(p.pid, pool[i]));
     for (const p of this.players) p.identity = assigned.get(p.pid);
+    // 按模式分配阵营（1v1/3v3/斗地主等依赖 p.team 的胜负判定）
+    const modeId = this.gameMode && this.gameMode.id;
+    if (modeId === '1v1') {
+      this.players.forEach((p, i) => { p.team = i % 2 === 0 ? 'a' : 'b'; });
+    } else if (modeId === '3v3') {
+      this.players.forEach((p, i) => { p.team = i < 3 ? 'cold' : 'warm'; });
+    } else if (modeId === 'doudizhu') {
+      this.players.forEach(p => { p.team = p.identity === 'landlord' ? 'landlord' : 'farmer'; });
+    } else {
+      this.players.forEach(p => { p.team = p.identity; });
+    }
     const zhu = this.players.find(p => p.identity === 'zhu');
-    if (!zhu) throw new Error('身份分配异常：未生成主公');
-    this.log(`主公是 ${zhu.name}！`);
+    if (!zhu && modeId === 'identity') throw new Error('身份分配异常：未生成主公');
+    if (zhu) this.log(`主公是 ${zhu.name}！`);
   }
 
   async pickGenerals() {
@@ -1537,11 +1584,12 @@ class Game {
       this.players.forEach((p, i) => {
         offers[p.seat] = shuffled.slice(i * pickCount, i * pickCount + pickCount);
       });
-      await Promise.all(this.players.filter(needPick).map(async p => {
+      // 真人并发 ask 会互相覆盖单槽 pending，改为按座位串行
+      for (const p of this.players.filter(needPick)) {
         const cands = offers[p.seat].map(id => this.generalInfo(id));
         const chosen = await this.chooseGeneral(p, cands);
         this.setGeneral(p, chosen);
-      }));
+      }
     } else {
       // 自由点将：按座位顺序
       const taken = new Set(this.players.filter(p => !needPick(p)).map(p => p.generalId));

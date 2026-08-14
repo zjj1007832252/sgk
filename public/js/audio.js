@@ -24,8 +24,11 @@
   class AudioManager {
     constructor() {
       this.ctx = null;
-      this.enabled = localStorage.getItem('sgk_audio_enabled') !== 'false';
-      this.volume = parseFloat(localStorage.getItem('sgk_audio_volume') || '0.7');
+      let _enabled = true, _volume = 0.7;
+      try { _enabled = localStorage.getItem('sgk_audio_enabled') !== 'false'; } catch {}
+      try { const v = parseFloat(localStorage.getItem('sgk_audio_volume') || '0.7'); if (isFinite(v)) _volume = v; } catch {}
+      this.enabled = _enabled;
+      this.volume = _volume;
       this.synthReady = false;
       this.voices = [];
       this.currentVoice = null;

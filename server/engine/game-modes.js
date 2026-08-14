@@ -162,11 +162,6 @@ function createGameMode(game, modeId) {
   return new Cls(game);
 }
 
-function createGameMode(game, modeId) {
-  const Cls = MODES[modeId] || GameMode;
-  return new Cls(game);
-}
-
 // ==================== 胜利条件评估器（服务端） ====================
 class WinConditionEvaluator {
   constructor(game, condition, params) {
@@ -185,7 +180,14 @@ class WinConditionEvaluator {
         return enemies.length === 0 ? me.seat : null;
       }
       case 'survive_rounds':
-        if (this.game.round >= this.params.rounds) return this.game.turnSeat;
+        if (this.game.round >= this.params.rounds) {
+          // 取回合末仍存活的玩家；优先 turnSeat 该回合操作者（表示"我活到了"）
+          // 但如果他已死，则取第一个活着的人（避免"死人赢"）
+          const cur = this.game.players.find(p => p.seat === this.game.turnSeat);
+          if (cur && cur.alive) return cur.seat;
+          const any = this.game.players.find(p => p.alive);
+          return any ? any.seat : null;
+        }
         return null;
       case 'first_kills': {
         const killer = alivePlayers.find(p => (p.totalKills || 0) >= this.params.kills);
@@ -218,22 +220,22 @@ class WinConditionEvaluator {
       }
       case 'hp_threshold': {
         const me = this.game.players.find(p => p.seat === this.game.turnSeat);
-        const enemies = alivePlayers.filter(p => me && this._isEnemy(me, p));
-        if (enemies.every(p => p.hp <= this.params.threshold)) return this.game.turnSeat;
+        if (!me || !me.alive) return null;
+        const enemies = alivePlayers.filter(p => this._isEnemy(me, p));
+        if (enemies.every(p => p.hp <= this.params.threshold)) return me.seat;
         return null;
       }
       case 'card_count':
         if (this.game.deck.length === 0) {
           let best = alivePlayers[0];
-          alivePlayers.forEach(p => { if (p.handCount > best.handCount) best = p; });
+          alivePlayers.forEach(p => { if ((p.hand ? p.hand.length : 0) > (best.hand ? best.hand.length : 0)) best = p; });
           return best ? best.seat : null;
         }
         return null;
       case 'custom_script':
-        try {
-          const fn = new Function('players', 'game', this.params.script || 'return null;');
-          return fn(alivePlayers, { round: this.game.round, deckCount: this.game.deck.length, players: this.game.players });
-        } catch { return null; }
+        // 安全：不再支持任意脚本执行，避免服务端 RCE
+        if (this.game && this.game.log) this.game.log('自定义脚本胜利条件已禁用');
+        return null;
       default: return null;
     }
   }

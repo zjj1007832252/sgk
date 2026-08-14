@@ -4,9 +4,12 @@ node_modules/
 .env
 /server/data/customs.json
 /server/data/replays.json
+/server/data/custom-cards.json
+/server/data/custom-skills.json
 /tmp
 /public/assets/avatars/diy-*.png
 /public/assets/avatars/diy-*.svg
+/public/assets/cards
 /dist
 .vscode/
 .idea/

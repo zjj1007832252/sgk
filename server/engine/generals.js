@@ -72,7 +72,7 @@ const GENERALS = [
   { id: 'yanshi',       name: '严颜',   kingdom: 'shu', hp: 4, gender: 'm', title: '断头将军', skills: ['shike'] },
 
   // ================= 神武将 =================
-  { id: 'shenguan',     name: '神关羽', kingdom: 'god', hp: 5, gender: 'm', title: '鬼神再临', skills: ['wuhun', 'wushen_s'] },
+  { id: 'shenguan',     name: '神关羽', kingdom: 'god', hp: 5, gender: 'm', title: '鬼神再临', skills: ['wuhun_s', 'wushen_s'] },
   { id: 'shenmeng',     name: '神吕蒙', kingdom: 'god', hp: 3, gender: 'm', title: '国士无双', skills: ['shelie', 'gongxin'] },
   { id: 'shenzhou',     name: '神周瑜', kingdom: 'god', hp: 4, gender: 'm', title: '赤壁的火神', skills: ['qinyin', 'yanye'] },
   { id: 'shenliang',    name: '神诸葛亮', kingdom: 'god', hp: 3, gender: 'm', title: '赤壁的妖术师', skills: ['qixing', 'kuangfeng', 'dawu'] },

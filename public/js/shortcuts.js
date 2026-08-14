@@ -56,7 +56,7 @@
     handle(e) {
       const k = e.key;
       // 帮助键全局有效
-      if (this._isHelpKey(k)) { e.preventDefault(); this.onHelp && this.onHelp(); return; }
+      if (this._isHelpKey(k) && !this._typing()) { e.preventDefault(); this.onHelp && this.onHelp(); return; }
       // 静音全局有效（非输入框）
       if (this._isMuteKey(k) && !this._typing()) { e.preventDefault(); this.onMute && this.onMute(); return; }
       // 音量（非输入框）

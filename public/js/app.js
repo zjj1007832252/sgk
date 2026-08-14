@@ -381,10 +381,9 @@ function handle(msg) {
       break;
     case 'room':
       roomState = msg.room;
-      if (msg.room.state === 'lobby' && view === 'game') {
-        gameState = null;
-        closeModal();
-        showView('lobby');
+      if (msg.room.state === 'lobby') {
+        if (view === 'game') { gameState = null; closeModal(); }
+        if (view !== 'lobby') showView('lobby');
       }
       if (view === 'lobby') renderLobby();
       break;
@@ -393,7 +392,9 @@ function handle(msg) {
       // 新对局开始（选将阶段）：清空上一局遗留的身份标记，避免误导本局判断
       if (msg.state.phase === 'picking') {
         try { localStorage.removeItem(ID_MARKS_KEY); } catch (e) {}
+        _gameEndHandled = false;
       }
+      if (msg.spectating && !isSpectating) enterSpectatorMode();
       if (view !== 'game') showView('game');
       const key = promptKey(gameState.pendingForMe);
       if (key !== lastPromptKey) { sel = freshSel(); lastPromptKey = key; hideTurnTimer(); }
@@ -492,7 +493,7 @@ function cardEl(card, opts = {}) {
   const el = document.createElement('div');
   el.className = 'card ' + (isRed(card) ? 'red' : 'black') + (opts.small ? ' small' : '') + (opts.selected ? ' selected' : '') + (opts.unplayable ? ' unplayable' : '');
   const typeName = { basic: '基本', trick: '锦囊', equip: '装备' }[card.type] || '';
-  el.innerHTML = `<div class="ctype">${typeName}</div><div class="cname">${card.name}</div>
+  el.innerHTML = `<div class="ctype">${typeName}</div><div class="cname">${esc(card.name)}</div>
     <div class="csuit">${SUIT[card.suit]}</div><div class="crank">${RANK(card.rank)}</div>`;
   if (opts.onClick) el.addEventListener('click', opts.onClick);
   return el;
@@ -565,6 +566,7 @@ function renderRoomList(rooms) {
   }
 }
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+let _gameEndHandled = false; // 每局结束只结算一次（不能挂在每次重建的 state 对象上）
 
 // ============ 音效与配音 ============
 let audio = null;
@@ -1464,7 +1466,6 @@ function renderOpts(isHost) {
   // ---- 投票禁将 / 死亡揭示（需在写入 DOM 前） ----
   if (isHost) {
     html += row('投票禁将', `<input type="checkbox" id="opt-voteban" ${o.allowVoteBan ? 'checked' : ''}>`);
-    html += row('死亡揭示身份', `<input type="checkbox" id="opt-reveal" ${o.revealOnDeath ? 'checked' : ''}>`);
   }
   box.innerHTML = html;
   if (isHost) {
@@ -1870,8 +1871,8 @@ function renderGame() {
   window._ATTACK_RANGE = attackRange();
   // 胜负结算
   if (gameState.finished) {
-    if (!gameState._soundPlayed) {
-      gameState._soundPlayed = true;
+    if (!_gameEndHandled) {
+      _gameEndHandled = true;
       sfx(gameState.winner === gameState.myIdentity || (gameState.winner === 'zhu' && gameState.myIdentity === 'zhong') ? 'win' : 'lose');
       if (sound) {
         try {
@@ -2023,8 +2024,8 @@ function renderOpponents() {
       <div class="opp-row2">
         <span>${'<span class="hand-back"></span>'.repeat(Math.min(p.handCount, 6))}</span>
         <span class="hand-count">×${p.handCount}</span>
-        ${Object.values(p.equips).filter(Boolean).map(e => `<span class="equip-mini ${e.subtype === 'weapon' ? 'weapon' : e.subtype === 'armor' ? 'armor' : 'horse'}" title="${e.name}${e.range ? ' 范围' + e.range : ''}">${e.name.slice(0, 2)}</span>`).join('')}
-        ${p.judgeZone.map(j => `<span class="judge-mini">${j.name}</span>`).join('')}
+        ${Object.values(p.equips).filter(Boolean).map(e => `<span class="equip-mini ${e.subtype === 'weapon' ? 'weapon' : e.subtype === 'armor' ? 'armor' : 'horse'}" title="${esc(e.name)}${e.range ? ' 范围' + e.range : ''}">${esc(e.name.slice(0, 2))}</span>`).join('')}
+        ${p.judgeZone.map(j => `<span class="judge-mini">${esc(j.name)}</span>`).join('')}
       </div>`;
     div.querySelector('.opp-avatar-slot').replaceWith(avatarImg(p.generalId || 'unknown', 'opp-avatar'));
     if (identityMarkEnabled()) {
@@ -2103,8 +2104,8 @@ function renderMyPanel() {
       </div>
     </div>
     <div class="my-turn-bar-wrap"><div id="my-turn-bar" class="my-turn-bar"></div></div>
-    <div class="my-equips">${Object.values(p.equips).filter(Boolean).map(e => `<span class="equip-mini" title="${e.name}${e.range ? ' 范围' + e.range : ''}">${e.name}</span>`).join('') || '<span style="font-size:11px;color:#5a4c3a">无装备</span>'}
-    ${p.judgeZone.map(j => `<span class="judge-mini">${j.name}</span>`).join('')}</div>
+    <div class="my-equips">${Object.values(p.equips).filter(Boolean).map(e => `<span class="equip-mini" title="${esc(e.name)}${e.range ? ' 范围' + e.range : ''}">${esc(e.name)}</span>`).join('') || '<span style="font-size:11px;color:#5a4c3a">无装备</span>'}
+    ${p.judgeZone.map(j => `<span class="judge-mini">${esc(j.name)}</span>`).join('')}</div>
     <div class="my-skills">${skills}</div>`;
   box.querySelector('.my-avatar-slot').replaceWith(avatarImg(p.generalId || 'unknown', 'my-avatar'));
   box.onclick = cands.includes(p.seat) ? () => toggleTarget(p.seat) : null;
@@ -3078,7 +3079,7 @@ function renderDiySkills() {
   for (const s of meta.diySkills) {
     const div = document.createElement('div');
     div.className = 'diy-skill-item' + (diySelSkills.includes(s.id) ? ' selected' : '');
-    div.innerHTML = `<span class="sname">${s.name}</span><span class="hint">（${{ passive: '锁定', trigger: '触发', active: '主动', convert: '转化' }[s.type] || s.type}）</span><div class="sdesc">${s.desc}</div>`;
+    div.innerHTML = `<span class="sname">${esc(s.name)}</span><span class="hint">（${{ passive: '锁定', trigger: '触发', active: '主动', convert: '转化' }[s.type] || s.type}）</span><div class="sdesc">${esc(s.desc)}</div>`;
     div.addEventListener('click', () => {
       const i = diySelSkills.indexOf(s.id);
       if (i >= 0) diySelSkills.splice(i, 1);
@@ -3306,7 +3307,7 @@ function renderStats() {
         const div = document.createElement('div');
         div.className = 'hist-item';
         const date = new Date(r.createdAt);
-        div.innerHTML = `<span style="color:var(--gold)">${(r.roomName || '对局').slice(0, 10)}</span>
+        div.innerHTML = `<span style="color:var(--gold)">${esc((r.roomName || '对局').slice(0, 10))}</span>
           <span style="color:#8a7a5f">${date.getMonth() + 1}/${date.getDate()} ${r.rounds}回合</span>
           <button class="btn btn-small" style="float:right;padding:1px 6px">查看</button>`;
         div.querySelector('button').onclick = () => viewReplay(r.id);
@@ -3356,7 +3357,7 @@ function renderReplayViewer(replay, analysis) {
     analysis.players.forEach(p => {
       const mvpClass = analysis.mvp === p.seat ? 'rv-mvp' : '';
       html += `<div class="rv-stat-card ${mvpClass}">
-        <div class="pname">${p.name} (${p.generalName}) ${p.isWinner ? '🏆' : ''} ${analysis.mvp === p.seat ? '⭐MVP' : ''}</div>
+        <div class="pname">${esc(p.name)} (${esc(p.generalName)}) ${p.isWinner ? '🏆' : ''} ${analysis.mvp === p.seat ? '⭐MVP' : ''}</div>
         <div class="pstats">击杀: ${p.kills} | 伤害: ${p.damageDealt} | 受击: ${p.damageTaken} | 治疗: ${p.healDone}</div>
         <div class="pstats">出牌: ${p.cardsPlayed} | 摸牌: ${p.cardsDrawn} | 技能: ${p.skillsUsed}</div>
       </div>`;
@@ -3368,7 +3369,7 @@ function renderReplayViewer(replay, analysis) {
   if (analysis && analysis.keyEvents && analysis.keyEvents.length) {
     html += `<div class="rv-section"><div class="rv-section-title">关键事件</div><div class="rv-events">`;
     analysis.keyEvents.forEach(ev => {
-      html += `<div class="rv-event"><span class="ev-type">[${ev.type}]</span> ${JSON.stringify(ev).slice(0, 100)}</div>`;
+      html += `<div class="rv-event"><span class="ev-type">[${ev.type}]</span> ${esc(JSON.stringify(ev).slice(0, 100))}</div>`;
     });
     html += '</div></div>';
   }

@@ -261,11 +261,13 @@
     constructor() {
       this.phrases = new PhraseManager();
       this.bgm = new BGMGenerator();
-      this.pack = localStorage.getItem('sgk_sound_pack') || 'classic';
-      this.bgmEnabled = localStorage.getItem('sgk_bgm_enabled') !== 'false';
-      this.sfxEnabled = localStorage.getItem('sgk_sfx_enabled') !== 'false';
-      this.bgmVolume = parseFloat(localStorage.getItem('sgk_bgm_volume') || '0.3');
-      this.sfxVolume = parseFloat(localStorage.getItem('sgk_sfx_volume') || '0.7');
+      let _pack = 'classic', _bgmOn = true, _sfxOn = true, _bgmVol = 0.3, _sfxVol = 0.7;
+      try { _pack = localStorage.getItem('sgk_sound_pack') || 'classic'; _bgmOn = localStorage.getItem('sgk_bgm_enabled') !== 'false'; _sfxOn = localStorage.getItem('sgk_sfx_enabled') !== 'false'; const b = parseFloat(localStorage.getItem('sgk_bgm_volume') || '0.3'); if (isFinite(b)) _bgmVol = b; const f = parseFloat(localStorage.getItem('sgk_sfx_volume') || '0.7'); if (isFinite(f)) _sfxVol = f; } catch {}
+      this.pack = _pack;
+      this.bgmEnabled = _bgmOn;
+      this.sfxEnabled = _sfxOn;
+      this.bgmVolume = _bgmVol;
+      this.sfxVolume = _sfxVol;
       this.currentScene = null;
 
       this.phrases.enabled = this.sfxEnabled;
@@ -301,27 +303,29 @@
 
     // 游戏事件触发对应音效
     onGameEvent(type) {
-      switch (type) {
-        case 'sha': this.playPhrase('sha'); break;
-        case 'shan': this.playPhrase('shan'); break;
-        case 'tao': this.playPhrase('tao'); break;
-        case 'wuxie': this.playPhrase('wuxie'); break;
-        case 'juedou': this.playPhrase('juedou'); break;
-        case 'nanman': this.playPhrase('nanman'); break;
-        case 'wanjian': this.playPhrase('wanjian'); break;
-        case 'wugu': this.playPhrase('wugu'); break;
-        case 'taoyuan': this.playPhrase('taoyuan'); break;
-        case 'guohe': this.playPhrase('guohe'); break;
-        case 'shunshou': this.playPhrase('shunshou'); break;
-        case 'jiedao': this.playPhrase('jiedao'); break;
-        case 'lebu': this.playPhrase('lebu'); break;
-        case 'shandian': this.playPhrase('shandian'); break;
-        case 'jiu': this.playPhrase('jiu'); break;
-        case 'dying': this.playPhrase('dying'); break;
-        case 'round_start': this.playPhrase('round_start'); break;
-        case 'victory': this.playPhrase('shengli'); break;
-        case 'defeat': this.playPhrase('shibai'); break;
-      }
+      try {
+        switch (type) {
+          case 'sha': this.playPhrase('sha'); break;
+          case 'shan': this.playPhrase('shan'); break;
+          case 'tao': this.playPhrase('tao'); break;
+          case 'wuxie': this.playPhrase('wuxie'); break;
+          case 'juedou': this.playPhrase('juedou'); break;
+          case 'nanman': this.playPhrase('nanman'); break;
+          case 'wanjian': this.playPhrase('wanjian'); break;
+          case 'wugu': this.playPhrase('wugu'); break;
+          case 'taoyuan': this.playPhrase('taoyuan'); break;
+          case 'guohe': this.playPhrase('guohe'); break;
+          case 'shunshou': this.playPhrase('shunshou'); break;
+          case 'jiedao': this.playPhrase('jiedao'); break;
+          case 'lebu': this.playPhrase('lebu'); break;
+          case 'shandian': this.playPhrase('shandian'); break;
+          case 'jiu': this.playPhrase('jiu'); break;
+          case 'dying': this.playPhrase('dying'); break;
+          case 'round_start': this.playPhrase('round_start'); break;
+          case 'victory': this.playPhrase('shengli'); break;
+          case 'defeat': this.playPhrase('shibai'); break;
+        }
+      } catch (e) { /* 音效失败不影响渲染 */ }
     }
 
     // 设置

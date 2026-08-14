@@ -30,7 +30,10 @@ function runGame(gameIdx, playerCount) {
         resolve({ winner, rounds: game.round, logs: game.logs });
       },
     });
-    game.start().catch(err => {
+    game.start().then(() => {
+      clearTimeout(timeout);
+      resolve({ winner: game.winner, rounds: game.round, logs: game.logs });
+    }).catch(err => {
       clearTimeout(timeout);
       err.gameLogs = game.logs.slice(-40);
       reject(err);

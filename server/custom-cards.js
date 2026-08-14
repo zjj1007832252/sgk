@@ -11,7 +11,9 @@ function load() {
 
 function save(list) {
   fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-  fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2), 'utf8');
+  const tmp = DATA_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(list, null, 2), 'utf8');
+  fs.renameSync(tmp, DATA_FILE);
 }
 
 function validate(card) {

@@ -34,13 +34,16 @@ class BehaviorTracker {
     const lord = this.game.players.find(p => p.identity === 'zhu');
     if (target && lord) {
       if (toSeat === lord.seat) d.attackedLord = true;
-      if (fromSeat === lord.seat) this.data[toSeat].protectedLord = true;
     }
   }
 
   recordHeal(fromSeat, toSeat) {
     if (fromSeat != null) this.data[fromSeat].healsGiven++;
-    this.data[toSeat].healsReceived++;
+    if (toSeat != null) this.data[toSeat].healsReceived++;
+    const lord = this.game.players.find(p => p.identity === 'zhu');
+    if (fromSeat != null && lord && toSeat === lord.seat) {
+      this.data[fromSeat].protectedLord = true;
+    }
   }
 
   recordKill(killerSeat) {
@@ -72,7 +75,7 @@ class IdentityInference {
     const me = this.game.players[seat];
     if (!me) return null;
     if (me.identity === 'zhu') return { zhu: 1, zhong: 0, fan: 0, nei: 0 };
-    if (!me.alive && me.dead) return { [me.dead.identity]: 1 };
+    if (!me.alive && me.dead) return { zhu: 0, zhong: 0, fan: 0, nei: 0, [me.dead.identity]: 1 };
 
     const lord = this.game.players.find(p => p.identity === 'zhu');
     const alive = this.game.alivePlayers();
@@ -104,10 +107,16 @@ class IdentityInference {
     // 治疗他人 → 忠臣/内奸概率↑
     if (bt.healsGiven >= 1) { probs.zhong += 0.1; probs.nei += 0.05; }
 
+    // clamp 到非负，防止负概率
+    probs.zhong = Math.max(0, probs.zhong);
+    probs.fan = Math.max(0, probs.fan);
+    probs.nei = Math.max(0, probs.nei);
     // 归一化
     const total = probs.zhong + probs.fan + probs.nei;
     if (total > 0) {
       probs.zhong /= total; probs.fan /= total; probs.nei /= total;
+    } else {
+      probs.zhong = probs.fan = probs.nei = 1 / 3;
     }
     probs.zhu = 0;
 
@@ -136,17 +145,21 @@ class IdentityInference {
   _identityDistribution(aliveCount) {
     // 根据实际玩家数计算身份分布
     const n = this.game.players.length;
-    const dist = { zhu: 1 };
-    if (n <= 4) { dist.zhong = 0; dist.fan = n - 1; dist.nei = 0; }
-    else if (n === 5) { dist.zhong = 1; dist.fan = 2; dist.nei = 1; }
-    else if (n === 6) { dist.zhong = 1; dist.fan = 3; dist.nei = 1; }
-    else if (n === 7) { dist.zhong = 2; dist.fan = 3; dist.nei = 1; }
-    else { dist.zhong = 2; dist.fan = 4; dist.nei = 1; }
-    // 减去已知身份
-    const aliveIds = this.game.alivePlayers().map(p => p.identity);
-    aliveIds.forEach(id => { if (dist[id] != null) dist[id] = Math.max(0, dist[id] - 0.5); });
-    const sum = (dist.zhong || 0) + (dist.fan || 0) + (dist.nei || 0);
-    return { zhong: (dist.zhong || 0) / sum, fan: (dist.fan || 0) / sum, nei: (dist.nei || 0) / sum };
+    const remaining = { zhong: 0, fan: 0, nei: 0 };
+    if (n <= 4) { remaining.zhong = 0; remaining.fan = n - 1; remaining.nei = 0; }
+    else if (n === 5) { remaining.zhong = 1; remaining.fan = 2; remaining.nei = 1; }
+    else if (n === 6) { remaining.zhong = 1; remaining.fan = 3; remaining.nei = 1; }
+    else if (n === 7) { remaining.zhong = 2; remaining.fan = 3; remaining.nei = 1; }
+    else { remaining.zhong = 2; remaining.fan = 4; remaining.nei = 1; }
+    // 扣除已死亡玩家已揭示的身份（主公身份公开，不计入未知池）
+    for (const p of this.game.players) {
+      if (!p.alive && p.dead && p.identity && p.identity !== 'zhu' && remaining[p.identity] != null) {
+        remaining[p.identity] = Math.max(0, remaining[p.identity] - 1);
+      }
+    }
+    const sum = (remaining.zhong || 0) + (remaining.fan || 0) + (remaining.nei || 0);
+    if (sum <= 0) return { zhong: 1 / 3, fan: 1 / 3, nei: 1 / 3 };
+    return { zhong: remaining.zhong / sum, fan: remaining.fan / sum, nei: remaining.nei / sum };
   }
 }
 
@@ -177,7 +190,7 @@ class ThreatAssessor {
     else if (dist <= 2) score += 8;
 
     // 手牌越多威胁越大
-    score += Math.min(p.handCount, 5) * 3;
+    score += Math.min(p.hand.length, 5) * 3;
 
     // 装备威胁
     if (p.equips.weapon) score += 8;
@@ -211,7 +224,7 @@ class ThreatAssessor {
     // 低血量 = 更脆弱
     score += (p.maxHp - p.hp) * 15;
     // 手牌少 = 更脆弱
-    score += Math.max(0, 4 - p.handCount) * 8;
+    score += Math.max(0, 4 - p.hand.length) * 8;
     // 无防具 = 更脆弱
     if (!p.equips.armor) score += 10;
     // 无武器 = 威胁低但脆弱
@@ -403,7 +416,7 @@ class AIBrain {
           break;
         }
         case 'fanjian': { // 反间：手牌多且敌人手牌少
-          const target = enemies.find(e => e.handCount <= 2) || enemies[0];
+          const target = enemies.find(e => e.hand.length <= 2) || enemies[0];
           if (target && player.hand.length >= 2) {
             return { action: 'skill', skill: 'fanjian', cardIds: [], targets: [target.seat] };
           }
@@ -434,7 +447,7 @@ class AIBrain {
           break;
         }
         case 'jijiang': // 激将：蜀国队友多
-          if (game.aliveOthers(player).some(p => p.kingdom === 'shu') && game.canPlaySha(player)) {
+          if (!player.turnFlags.jijiang && game.aliveOthers(player).some(p => p.kingdom === 'shu') && game.canPlaySha(player)) {
             const targets = game.playableShaTargets(player);
             const t = this._pickBestTarget(targets, player);
             if (t) return { action: 'skill', skill: 'jijiang', cardIds: [], targets: [t.seat] };
@@ -459,18 +472,22 @@ class AIBrain {
           if (wounded) return { action: 'skill', skill: 'ganlu', cardIds: [], targets: [wounded.seat] };
           break;
         }
-        case 'qixi': { // 奇袭：有黑色牌且需要拆/杀
+        case 'qixi': { // 奇袭：有黑色牌且需要拆/杀（只选有牌的目标，避免反复对空手目标使用）
           const black = player.hand.filter(c => cardColor(c) === 'black' && c.key !== 'sha' && c.key !== 'shan');
           if (black.length && enemies.length) {
-            const t = this._pickBestTarget(enemies, player);
+            const valid = enemies.filter(e => game.cardCountOf(e) > 0);
+            const t = this._pickBestTarget(valid, player);
             if (t) return { action: 'playCard', cardIds: [black[0].uid], as: 'guohe', targets: [t.seat] };
           }
           break;
         }
-        case 'guose': { // 国色：有方块且敌人需要乐不
+        case 'guose': { // 国色：有方块且敌人需要乐不（过滤谦逊/已有乐不的目标，避免反复失败）
           const diamond = player.hand.find(c => c.suit === 'diamond');
-          const t = threats[0];
-          if (diamond && t && !game.players[t.seat].judgeZone.some(j => j.key === 'lebu')) {
+          const t = threats.find(th => {
+            const p = game.players[th.seat];
+            return p && p.alive && p !== player && !game.hasSkill(p, 'qianxun') && !p.judgeZone.some(j => j.key === 'lebu');
+          });
+          if (diamond && t) {
             return { action: 'playCard', cardIds: [diamond.uid], as: 'lebu', targets: [t.seat] };
           }
           break;
@@ -523,15 +540,16 @@ class AIBrain {
     // 优先拆高威胁敌人的装备/手牌
     const highThreat = threats.find(t => {
       const p = game.players[t.seat];
-      return (p.equips.weapon || p.handCount >= 3) && this.game.distance(player, p) <= (shun ? 1 : 99);
+      return (p.equips.weapon || p.hand.length >= 3) && this.game.distance(player, p) <= (shun ? 1 : 99);
     });
 
     if (highThreat) {
       const target = highThreat.seat;
-      if (shun && game.distance(player, game.players[target]) <= 1 && this._cardCountOf(game.players[target]) > 0) {
+      const tp = game.players[target];
+      if (shun && !game.hasSkill(tp, 'qianxun') && game.distance(player, tp) <= 1 && this._cardCountOf(tp) > 0) {
         return { action: 'playCard', cardIds: [shun.uid], targets: [target] };
       }
-      if (guo && this._cardCountOf(game.players[target]) > 0) {
+      if (guo && this._cardCountOf(tp) > 0) {
         return { action: 'playCard', cardIds: [guo.uid], targets: [target] };
       }
     }
@@ -576,7 +594,7 @@ class AIBrain {
     const target = enemies.find(e => {
       if (e.skills.includes('kongcheng') && !e.hand.length) return false;
       const mySha = player.hand.filter(c => c.key === 'sha').length;
-      return e.handCount <= mySha || e.hp <= 1;
+      return e.hand.length <= mySha || e.hp <= 1;
     });
     if (target) return { action: 'playCard', cardIds: [jd.uid], targets: [target.seat] };
     return null;
@@ -899,7 +917,7 @@ class AIBrain {
 
   _getAttacker(prompt) {
     const title = prompt.title || '';
-    const m = title.match(/(\S+)\s*对你使用/);
+    const m = title.match(/([^\s（]+)(?:（[^）]*）)?\s*对你使用/);
     if (!m) return null;
     const name = m[1];
     return this.game.players.find(p => p.name === name && p.alive);
@@ -1078,8 +1096,9 @@ class HardAI extends AIBrain {
   // 内奸策略：前期混战，后期收割
   _neiStrategy(game, player, prompt) {
     const alive = game.alivePlayers();
-    const fans = alive.filter(p => p.identity === 'fan');
-    const zhongs = alive.filter(p => p.identity === 'zhong');
+    // 用身份推理概率而非真实身份（内奸不应开上帝视角）
+    const fans = alive.filter(p => { const pr = this.inference.infer(p.seat); return pr && pr.fan > pr.zhong; });
+    const zhongs = alive.filter(p => { const pr = this.inference.infer(p.seat); return pr && pr.zhong > pr.fan; });
     const lord = alive.find(p => p.identity === 'zhu');
     // 前期：帮主忠打反贼
     if (fans.length > 0) {

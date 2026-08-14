@@ -218,7 +218,7 @@ const SKILLS = {
       }
       const used = new Set([...top, ...bottom].map(c => c.uid));
       const rest = cards.filter(c => !used.has(c.uid));
-      top = top.concat(rest); // 未分配的默认放顶
+      bottom = rest.concat(bottom); // 未分配的默认置底（规则：其余置于牌堆底）
       game.deck.splice(0, n);
       game.deck.unshift(...top);
       game.deck.push(...bottom);
@@ -324,7 +324,8 @@ const SKILLS = {
       game.loseCards(player, [card]);
       game.gain(target, [card]);
       game.broadcastEvent({ type: 'reveal', player: player.seat, card: game.publicCard(card) });
-      game.log(`${target.name} 选择了${suits.find(s => s.id === suit).label}，获得 ${player.name} 的【${card.name}】（${game.suitLabel(card.suit)}${game.rankLabel(card.rank)}）`);
+      const suitObj = suits.find(s => s.id === suit) || suits[0];
+      game.log(`${target.name} 选择了${suitObj.label}，获得 ${player.name} 的【${card.name}】（${game.suitLabel(card.suit)}${game.rankLabel(card.rank)}）`);
       if (card.suit !== suit) {
         game.log('花色不同，【反间】造成1点伤害');
         await game.damage(player, target, 1, { skill: 'fanjian' });
@@ -412,7 +413,7 @@ const SKILLS = {
       if (player.turnFlags.lijian) return false;
       const [a, b] = payload.targets;
       const cards = payload.cards;
-      if (!a || !b || cards.length !== 1) return false;
+      if (!a || !b || a === b || cards.length !== 1) return false;
       if (a.gender !== 'm' || b.gender !== 'm') return false;
       player.turnFlags.lijian = true;
       await game.discard(player, cards);
@@ -464,9 +465,10 @@ const SKILLS = {
       const target = payload.targets[0];
       if (!target || !target.alive) return false;
       if (player.equips.weapon && player.hand.length < 2) {
+        const weapon = player.equips.weapon;
         game.log(`${player.name} 发动【强袭】，弃置武器对 ${target.name} 造成1点伤害`);
         await game.removeEquip(player, 'weapon');
-        await game.discard(player, [player.equips.weapon]);
+        game.toDiscard([weapon]);
         await game.damage(player, target, 1, { skill: 'qiangxi' });
       } else {
         game.log(`${player.name} 发动【强袭】，失去体力对 ${target.name} 造成1点伤害`);
@@ -483,16 +485,9 @@ const SKILLS = {
     async activate(game, player, payload) {
       const target = payload.targets[0];
       if (!target || !target.hand.length) return false;
-      const myCard = game.randomHand(player);
-      const theirCard = game.randomHand(target);
-      if (!myCard || !theirCard) return false;
-      game.loseCards(player, [myCard]);
-      game.loseCards(target, [theirCard]);
-      game.toDiscard([myCard, theirCard]);
-      game.broadcastEvent({ type: 'reveal', player: player.seat, card: game.publicCard(myCard) });
-      game.broadcastEvent({ type: 'reveal', player: target.seat, card: game.publicCard(theirCard) });
-      const win = myCard.rank > theirCard.rank || (myCard.rank === theirCard.rank && myCard.suit > theirCard.suit);
-      if (win) {
+      const r = await game.pindian(player, target, { skill: 'tianyi' });
+      if (!r) return false;
+      if (r.winner === 'initiator') {
         player.turnFlags.tianyi = true;
         game.log(`${player.name} 拼点获胜，【天义】成功`);
       } else {
@@ -506,6 +501,31 @@ const SKILLS = {
     name: '推锋', type: 'trigger',
     desc: '当你回复体力后，你可以令一名角色摸一张牌。',
   },
+  qiaohui: {
+    name: '巧慧', type: 'trigger',
+    desc: '当你于回合外使用或打出【杀】或非延时锦囊牌时，你可以令一名其他角色摸一张牌。',
+  },
+  yanling: {
+    name: '燕语', type: 'active',
+    desc: '出牌阶段限一次，你可以重铸一张【杀】；若你以此法重铸的是红色【杀】，你摸一张牌。',
+    button: { needCards: 1 },
+    async activate(game, player, payload) {
+      if (player.turnFlags.yanling) return false;
+      const cards = payload.cards;
+      if (!cards || cards.length !== 1 || cards[0].key !== 'sha') return false;
+      player.turnFlags.yanling = true;
+      const red = game.cardColor(cards[0]) === 'red';
+      await game.discard(player, cards);
+      await game.drawCards(player, 1);
+      game.log(`${player.name} 发动【燕语】重铸了【${cards[0].name}】`);
+      voice(game, player, 'yanling');
+      if (red) {
+        await game.drawCards(player, 1);
+        game.log(`${player.name} 重铸红色【杀】，额外摸一张牌`);
+      }
+      return true;
+    },
+  },
   longyin: {
     name: '龙吟', type: 'trigger',
     desc: '当一名角色使用【杀】时，你可以弃置一张牌令此【杀】不计次数。',
@@ -513,6 +533,7 @@ const SKILLS = {
   xiansi: {
     name: '陷嗣', type: 'active',
     desc: '出牌阶段限一次，你可以将一张装备区里的牌当【杀】使用。',
+    button: { needCards: 1, needTargets: 1 },
   },
   qianxi: {
     name: '潜袭', type: 'trigger',
@@ -529,6 +550,7 @@ const SKILLS = {
   jiefan: {
     name: '解烦', type: 'active',
     desc: '出牌阶段限一次，你可以令一名角色回复1点体力。',
+    button: { needTargets: 1, targetFilter: 'other' },
   },
   faen: {
     name: '法恩', type: 'trigger',
@@ -537,6 +559,7 @@ const SKILLS = {
   dingpin: {
     name: '定品', type: 'active',
     desc: '出牌阶段限一次，你可以弃置一张手牌令一名角色摸两张牌或弃一张牌。',
+    button: { needCards: 1, needTargets: 1, targetFilter: 'other' },
   },
   shenxing: {
     name: '慎行', type: 'trigger',
@@ -565,6 +588,7 @@ const SKILLS = {
   anxu: {
     name: '安恤', type: 'active',
     desc: '出牌阶段限一次，你可以获得一名其他角色的一张手牌并展示之。',
+    button: { needTargets: 1, targetFilter: 'other' },
   },
   zhuiyi: {
     name: '追忆', type: 'trigger',
@@ -607,6 +631,7 @@ const SKILLS = {
   xuanhuo: {
     name: '眩惑', type: 'active',
     desc: '出牌阶段限一次，你可以将一张手牌交给一名其他角色，然后该角色可以令你摸牌或弃其一张牌。',
+    button: { needCards: 1, needTargets: 1, targetFilter: 'other' },
   },
   enyuan: {
     name: '恩怨', type: 'trigger',
@@ -619,6 +644,7 @@ const SKILLS = {
   jujian: {
     name: '举荐', type: 'active',
     desc: '出牌阶段限一次，你可以弃置一张牌令一名角色摸两张牌。',
+    button: { needCards: 1, needTargets: 1 },
   },
   xuanfeng: {
     name: '旋风', type: 'trigger',
@@ -631,6 +657,7 @@ const SKILLS = {
   xingong: {
     name: '心攻', type: 'active',
     desc: '出牌阶段限一次，你可以观看牌堆顶的牌并获得其中的锦囊牌。',
+    button: { needTargets: 0 },
   },
   huilei: {
     name: '挥泪', type: 'trigger',
@@ -639,6 +666,24 @@ const SKILLS = {
   xianzhen: {
     name: '陷阵', type: 'active',
     desc: '出牌阶段限一次，你可以与一名角色拼点：若你赢，你本回合对其使用牌无次数和距离限制。',
+    button: { needTargets: 1, targetFilter: 'other' },
+    async activate(game, user, { targets }) {
+      if (!targets || !targets.length) return false;
+      const target = targets[0];
+      user.turnFlags.xianzhen = true;
+      user.turnFlags.xianzhenTarget = target.seat;
+      const r = await game.pindian(user, target, { skill: 'xianzhen' });
+      if (r && r.winner === 'initiator') {
+        game.log(`${user.name} 陷阵：拼点获胜，本回合对 ${target.name} 使用牌无次数和距离限制`);
+        return true;
+      } else {
+        // 拼点失败：清标记
+        delete user.turnFlags.xianzhen;
+        delete user.turnFlags.xianzhenTarget;
+        game.log(`${user.name} 陷阵：拼点失败`);
+        return false;
+      }
+    },
   },
   jinjiu: {
     name: '禁酒', type: 'passive',
@@ -647,10 +692,25 @@ const SKILLS = {
   shuangren: {
     name: '双刃', type: 'active',
     desc: '出牌阶段开始时，你可以与一名角色拼点。若你赢，你视为对其使用一张【杀】。',
+    button: { needTargets: 1, targetFilter: 'other' },
+    async activate(game, user, { targets }) {
+      if (!targets || !targets.length) return false;
+      const target = targets[0];
+      const r = await game.pindian(user, target, { skill: 'shuangren' });
+      if (r && r.winner === 'initiator') {
+        // 视为对 target 使用一张杀（不消耗手牌）
+        await game.useSha(user, target, [], { shuangren: true });
+        return true;
+      } else {
+        game.log(`${user.name} 双刃：拼点失败`);
+        return false;
+      }
+    },
   },
   ganlu: {
     name: '甘露', type: 'active',
     desc: '出牌阶段限一次，你可以令一名已受伤的角色回复1点体力，然后你摸一张牌。',
+    button: { needTargets: 1, targetFilter: 'wounded' },
   },
   buyi: {
     name: '补益', type: 'trigger',
@@ -658,7 +718,8 @@ const SKILLS = {
   },
   zhijian: {
     name: '直谏', type: 'active',
-    desc: '出牌阶段限一次，你可以弃置一张牌令一名角色摸一张牌。',
+    desc: '出牌阶段限一次，你可以弃置一张牌令一名其他角色摸一张牌。',
+    button: { needCards: 1, needTargets: 1, targetFilter: 'other' },
   },
   guzheng: {
     name: '固政', type: 'trigger',
@@ -667,6 +728,7 @@ const SKILLS = {
   zongxuan: {
     name: '纵玄', type: 'active',
     desc: '当你因弃置而失去牌时，你可以令一名其他角色摸一张牌。',
+    button: { needTargets: 1, targetFilter: 'other' },
   },
   zhiyan: {
     name: '直言', type: 'trigger',
@@ -725,6 +787,7 @@ const SKILLS = {
   gongxin: {
     name: '攻心', type: 'active',
     desc: '出牌阶段限一次，你可以观看一名其他角色的手牌，并可以展示其中的一张红桃牌，然后弃置或获得之。',
+    button: { needTargets: 1, targetFilter: 'other' },
   },
   qinyin: {
     name: '琴音', type: 'trigger',
@@ -733,6 +796,7 @@ const SKILLS = {
   yanye: {
     name: '业炎', type: 'active',
     desc: '限定技。出牌阶段，你可以对一至三名角色造成至多共3点火焰伤害。',
+    button: { needTargets: 3, targetFilter: 'any' },
   },
   qixing: {
     name: '七星', type: 'trigger',
@@ -741,10 +805,12 @@ const SKILLS = {
   kuangfeng: {
     name: '狂风', type: 'active',
     desc: '限定技。出牌阶段，你可以令一名角色下一次受到的火焰伤害+1。',
+    button: { needTargets: 1, targetFilter: 'other' },
   },
   dawu: {
     name: '大雾', type: 'active',
     desc: '限定技。出牌阶段，你可以令所有其他角色下一次受到的非雷电伤害-1。',
+    button: { needTargets: 1, targetFilter: 'other' },
   },
   guixin: {
     name: '归心', type: 'trigger',
@@ -757,6 +823,7 @@ const SKILLS = {
   wuqiang: {
     name: '无前', type: 'active',
     desc: '出牌阶段，你可以弃置两张手牌并选择一名其他角色，本回合你对该角色使用牌无次数和距离限制。',
+    button: { needCards: 2, needTargets: 1, targetFilter: 'other' },
   },
   shenwei: {
     name: '神威', type: 'passive',

@@ -47,7 +47,7 @@ class NetworkOptimizer {
   // 计算状态哈希（用于 delta 检测）
   hashState(state) {
     // 轻量级哈希：取关键字段 + 增加校验位减少碰撞
-    let h = state.phase + '|' + state.turnSeat + '|' + state.round + '|' + state.deckCount + '|' + (state.winner || '') + '|';
+    let h = state.phase + '|' + state.turnSeat + '|' + state.round + '|' + state.deckCount + '|' + (state.discardCount || 0) + '|' + (state.finished ? 1 : 0) + '|' + (state.winner || '') + '|';
     for (const p of state.players || []) {
       h += p.seat + ':' + p.hp + ':' + p.maxHp + ':' + p.handCount + ':' + (p.alive ? 1 : 0) + ':';
       // 包含装备和判定区信息减少碰撞
@@ -55,6 +55,9 @@ class NetworkOptimizer {
         for (const [k, v] of Object.entries(p.equips)) {
           h += k + (v ? v.key : '') + ',';
         }
+      }
+      if (p.judgeZone) {
+        h += 'jz:' + p.judgeZone.map(j => j && j.key).join(',') + ';';
       }
       h += '|';
     }

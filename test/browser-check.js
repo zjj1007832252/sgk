@@ -42,6 +42,7 @@ function cdp(ws, method, params) {
 }
 
 (async () => {
+  let fails = 0;
   const keepalive = process.env.KEEP_ROOM !== '0';
   // 1. 创建一个房间保活
   let roomName = '';
@@ -78,13 +79,20 @@ function cdp(ws, method, params) {
     console.log('JS 错误:', errors);
     console.log('房间列表内容:', JSON.stringify(roomList));
     if (keepalive && roomName) {
-      console.log(roomList.includes(roomName) ? '✅ 浏览器 WS 联通，房间列表正常' : '⚠️ 未看到房间（可能时序问题）');
+      const ok = roomList.includes(roomName);
+      console.log(ok ? '✅ 浏览器 WS 联通，房间列表正常' : '⚠️ 未看到房间（可能时序问题）');
+      if (!ok) fails++;
     } else {
-      console.log(roomList.length > 0 ? '✅ 房间列表已渲染' : '❌ 房间列表为空');
+      const ok = roomList.length > 0;
+      console.log(ok ? '✅ 房间列表已渲染' : '❌ 房间列表为空');
+      if (!ok) fails++;
     }
     cdpWs.close();
+  } catch (e) {
+    console.error('❌ 测试异常:', e.message);
+    fails++;
   } finally {
     edge.kill();
-    process.exit(0);
   }
+  process.exit(fails ? 1 : 0);
 })();

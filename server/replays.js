@@ -4,25 +4,16 @@ const path = require('path');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const REPLAY_FILE = path.join(DATA_DIR, 'replays.json');
-let writeLock = false;
-
 function load() {
   try { return JSON.parse(fs.readFileSync(REPLAY_FILE, 'utf8')); } catch { return {}; }
 }
 
 function save(data) {
-  // 简单文件锁：写入排队
-  if (writeLock) {
-    setTimeout(() => save(data), 10);
-    return;
-  }
-  writeLock = true;
-  try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(REPLAY_FILE, JSON.stringify(data, null, 2), 'utf8');
-  } finally {
-    writeLock = false;
-  }
+  // 原子写入：临时文件 + rename，避免崩溃时 JSON 损坏
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  const tmp = REPLAY_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
+  fs.renameSync(tmp, REPLAY_FILE);
 }
 
 function generateId() {
@@ -51,7 +42,7 @@ function createReplay(gameRecord) {
 
 function getReplay(id) {
   const replays = load();
-  return replays[id] || null;
+  return Object.prototype.hasOwnProperty.call(replays, id) ? replays[id] : null;
 }
 
 function listReplays(limit = 20) {
@@ -63,7 +54,7 @@ function listReplays(limit = 20) {
 
 function deleteReplay(id) {
   const replays = load();
-  if (replays[id]) { delete replays[id]; save(replays); return true; }
+  if (Object.prototype.hasOwnProperty.call(replays, id)) { delete replays[id]; save(replays); return true; }
   return false;
 }
 

@@ -577,7 +577,9 @@
 
     // 胜负结算
     endGameOverlay(isWin) {
+      this.clearEndOverlay();
       const overlay = document.createElement('div');
+      overlay.id = 'fx-end-overlay';
       overlay.style.cssText = `position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
         pointer-events:auto;z-index:250;background:${isWin ? 'radial-gradient(circle,#ffd70044,transparent 70%)' : 'radial-gradient(circle,#2a1a3a,transparent 70%)'};`;
       const title = isWin ? '胜 利' : '失 败';
@@ -596,6 +598,12 @@
           }, i * 200);
         }
       }
+    }
+
+    // 移除结束遮罩（返回大厅/重开时由外部调用，也可避免重复叠加）
+    clearEndOverlay() {
+      const old = document.getElementById('fx-end-overlay');
+      if (old) old.remove();
     }
 
     // 屏震

@@ -97,6 +97,7 @@ class Room {
 
   removeSeat(pid, seat) {
     if (pid !== this.hostPid) return { ok: false, msg: '只有房主可以操作' };
+    if (this.state !== 'lobby') return { ok: false, msg: '游戏已开始，无法移除座位' };
     const s = this.seats[seat];
     if (!s) return { ok: false, msg: '座位为空' };
     if (s.pid === this.hostPid) return { ok: false, msg: '不能移除自己' };
@@ -124,8 +125,15 @@ class Room {
     if (patch.gameSpeed && ['fast', 'normal', 'slow'].includes(patch.gameSpeed)) o.gameSpeed = patch.gameSpeed;
     if (patch.turnTimer != null) o.turnTimer = Math.max(0, Math.min(120, patch.turnTimer | 0));
     if (patch.gameMode && MODES[patch.gameMode]) o.gameMode = patch.gameMode;
-    if (patch.winCondition) o.winCondition = patch.winCondition;
-    if (patch.winParams) o.winParams = { ...o.winParams, ...patch.winParams };
+    if (patch.winCondition) {
+      const allowed = ['default', 'kill_all', 'survive_rounds', 'first_kills', 'kill_lord', 'last_standing', 'team_kill_all', 'kill_count_limit', 'hp_threshold', 'card_count'];
+      if (allowed.includes(patch.winCondition)) o.winCondition = patch.winCondition;
+    }
+    if (patch.winParams) {
+      const wp = { ...patch.winParams };
+      delete wp.script; // 禁止自定义脚本（防止服务端 RCE）
+      o.winParams = { ...o.winParams, ...wp };
+    }
     // 自定义规则
     if (patch.roundLimit != null) o.roundLimit = Math.max(0, Math.min(100, patch.roundLimit | 0));
     if (patch.startCards != null) o.startCards = Math.max(2, Math.min(8, patch.startCards | 0));

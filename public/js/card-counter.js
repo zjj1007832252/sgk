@@ -8,7 +8,9 @@
       this.playedCards = []; // 已出的牌
       this.discardedCards = []; // 弃置的牌
       this.playerHands = {}; // 座位 -> 手数数量
-      this.enabled = localStorage.getItem('sgk_cardcounter_enabled') !== 'false';
+      let _enabled = true;
+      try { _enabled = localStorage.getItem('sgk_cardcounter_enabled') !== 'false'; } catch {}
+      this.enabled = _enabled;
       this._initCardDefs();
     }
 
