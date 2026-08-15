@@ -41,6 +41,24 @@ function generateToken() {
 }
 
 // ---------- HTTP API ----------
+// 调试端点：查看当前对局状态（战报/pending），用于定位卡死
+app.get('/api/debug', (req, res) => {
+  const out = [];
+  for (const room of rooms.rooms.values()) {
+    const g = room.game;
+    out.push({
+      roomId: room.id, name: room.name, state: room.state, hostPid: room.hostPid,
+      seats: room.seats.map((s, i) => s ? { seat: i, name: s.name, isAI: s.isAI } : null),
+      game: g ? {
+        phase: g.phase, turnSeat: g.turnSeat, round: g.round, finished: g.finished, winner: g.winner,
+        pending: g.pending ? { seat: g.pending.seat, kind: g.pending.prompt && g.pending.prompt.kind, title: g.pending.prompt && g.pending.prompt.title, need: g.pending.prompt && g.pending.prompt.need } : null,
+        players: g.players.map(p => ({ seat: p.seat, name: p.name, isAI: p.isAI, alive: p.alive, offline: p.offline, hp: p.hp, maxHp: p.maxHp, identity: p.identity, generalId: p.generalId, handLen: p.hand.length, judge: p.judgeZone.map(j => j.name) })),
+        logs: g.logs.slice(-30),
+      } : null,
+    });
+  }
+  res.json({ rooms: out, time: Date.now() });
+});
 app.get('/api/meta', (req, res) => {
   res.json({ generals: GENERALS, diySkills: DIY_SKILLS, customs: customs.load() });
 });

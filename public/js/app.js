@@ -2375,113 +2375,10 @@ function pendingInfo() {
 }
 
 function renderPendingZone() {
+  // 已取消中央待用区弹窗：确定/取消/使用方式改由底部操作条(renderActionBar)承担
   const zone = $('pending-zone');
-  if (!zone) return;
-  const pr = prompt();
-  // OL 经典：响应阶段（闪/桃/无懈等）也在中央待用区显示标题与「不出」
-  if (pr && pr.kind === 'respond' && !gameState.finished) {
-    zone.classList.add('active');
-    const inner = document.createElement('div');
-    inner.className = 'pending-inner';
-    const title = document.createElement('div');
-    title.className = 'pending-skill';
-    title.innerHTML = `${esc(pr.title)}<span>点击高亮的手牌响应</span>`;
-    inner.appendChild(title);
-    const acts = document.createElement('div');
-    acts.className = 'pending-actions';
-    const pass = document.createElement('button');
-    pass.className = 'btn pending-cancel';
-    pass.textContent = '不 出 [0]';
-    pass.setAttribute('data-key', '0');
-    pass.addEventListener('click', () => { sel.zhangbaRespond = false; send({ type: 'action', pass: true }); });
-    acts.appendChild(pass);
-    inner.appendChild(acts);
-    zone.innerHTML = '';
-    zone.appendChild(inner);
-    return;
-  }
-  const active = pr && pr.kind === 'play' && !gameState.finished && (sel.hand.length || sel.skill);
-  if (!active) {
-    zone.innerHTML = '';
-    zone.classList.remove('active');
-    return;
-  }
-  zone.classList.add('active');
-  const info = pendingInfo();
-  const cards = myHandCards();
-  const div = document.createElement('div');
-  div.className = 'pending-inner';
-
-  // 选中牌（放大展示，OL 样式）
-  if (cards.length) {
-    const cardsRow = document.createElement('div');
-    cardsRow.className = 'pending-cards';
-    for (const c of cards) {
-      const el = cardEl(c, { selected: true });
-      el.classList.add('pending-card');
-      cardsRow.appendChild(el);
-    }
-    div.appendChild(cardsRow);
-  }
-
-  // 技能信息
-  if (sel.skill) {
-    const s = (pr.skills || []).find(x => x.id === sel.skill);
-    if (s) {
-      const box = document.createElement('div');
-      box.className = 'pending-skill';
-      box.innerHTML = `【${esc(s.name)}】<span>${esc(s.desc)}</span>`;
-      div.appendChild(box);
-    }
-  }
-
-  // 使用方式选项（多方式时）
-  const modes = sel.skill ? [] : modesForSelection();
-  if (modes.length > 1) {
-    const modesRow = document.createElement('div');
-    modesRow.className = 'pending-modes';
-    for (const m of modes) {
-      const opt = document.createElement('span');
-      opt.className = 'pending-mode' + (sel.mode === m.as ? ' cur' : '');
-      opt.textContent = m.label;
-      opt.addEventListener('click', () => {
-        sel.mode = sel.mode === m.as ? null : m.as;
-        sel.targets = [];
-        renderPendingZone(); renderOpponents(); renderMyPanel(); renderActionBar();
-      });
-      modesRow.appendChild(opt);
-    }
-    div.appendChild(modesRow);
-  }
-
-  // 提示文字
-  const hint = document.createElement('div');
-  hint.className = 'pending-hint';
-  hint.textContent = info.hint || (sel.skill ? '请选择目标' : '请选择目标或确定使用');
-  div.appendChild(hint);
-
-  // 确定 / 取消
-  const acts = document.createElement('div');
-  acts.className = 'pending-actions';
-  const ok = document.createElement('button');
-  ok.className = 'btn btn-primary pending-ok';
-  ok.textContent = '确 定';
-  ok.setAttribute('data-key', '↵');
-  ok.disabled = !info.canConfirm;
-  ok.addEventListener('click', confirmPlay);
-  acts.appendChild(ok);
-  const cancel = document.createElement('button');
-  cancel.className = 'btn pending-cancel';
-  cancel.textContent = '取 消';
-  cancel.setAttribute('data-key', 'Esc');
-  cancel.addEventListener('click', () => { sel = freshSel(); refreshAll(); });
-  acts.appendChild(cancel);
-  div.appendChild(acts);
-
-  zone.innerHTML = '';
-  zone.appendChild(div);
+  if (zone) { zone.innerHTML = ''; zone.classList.remove('active'); }
 }
-
 /** 全量刷新渲染（供交互函数复用） */
 function refreshAll() {
   renderHand(); renderOpponents(); renderMyPanel(); renderActionBar(); renderPromptBar(); renderPendingZone();
@@ -2502,6 +2399,43 @@ function renderActionBar() {
     hint.textContent = '出牌阶段：点选手牌或技能 → 指定目标 → 确定';
   }
   bar.appendChild(hint);
+
+  // 使用方式（多方式时，如杀 ↔ 武圣红牌当杀）
+  if (!sel.skill && sel.hand.length) {
+    const modes = modesForSelection();
+    if (modes.length > 1) {
+      const modesRow = document.createElement('div');
+      modesRow.className = 'pending-modes';
+      for (const m of modes) {
+        const opt = document.createElement('span');
+        opt.className = 'pending-mode' + (sel.mode === m.as ? ' cur' : '');
+        opt.textContent = m.label;
+        opt.addEventListener('click', () => {
+          sel.mode = sel.mode === m.as ? null : m.as;
+          sel.targets = [];
+          refreshAll();
+        });
+        modesRow.appendChild(opt);
+      }
+      bar.appendChild(modesRow);
+    }
+  }
+
+  // 确定 / 取消（OL 风格：底部操作条，不弹中央待用区）
+  if (sel.hand.length || sel.skill) {
+    const info = pendingInfo();
+    const ok = document.createElement('button');
+    ok.className = 'btn btn-primary';
+    ok.textContent = '确 定';
+    ok.disabled = !info.canConfirm;
+    ok.addEventListener('click', confirmPlay);
+    bar.appendChild(ok);
+    const cancel = document.createElement('button');
+    cancel.className = 'btn';
+    cancel.textContent = '取 消';
+    cancel.addEventListener('click', () => { sel = freshSel(); refreshAll(); });
+    bar.appendChild(cancel);
+  }
 
   // 技能按钮
   let skillIdx = 0;
@@ -3230,6 +3164,14 @@ function toggleTarget(seat) {
   renderActionBar();
   renderPendingZone();
   if (pr && pr.kind === 'choosePlayers') renderChoosePlayers($('prompt-bar'), pr);
+  // 自动使用：出牌阶段单目标牌，选够目标后自动确认（OL 经典：点牌→点目标→出牌）
+  if (pr && pr.kind === 'play' && !sel.skill && sel.mode && i < 0) {
+    const rule = modeRule(sel.mode);
+    if (rule.min === 1 && rule.max === 1 && sel.targets.length >= 1) {
+      confirmPlay();
+      return;
+    }
+  }
   if (i < 0) {
     requestAnimationFrame(() => {
       const el = seatEl(seat);
