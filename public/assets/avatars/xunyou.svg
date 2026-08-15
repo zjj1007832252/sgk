@@ -10,8 +10,8 @@
       <stop offset="0.5" stop-color="#fff5d0"/>
       <stop offset="1" stop-color="#c9b37a"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.3" r="0.7">
-      <stop offset="0" stop-color="#4a7ab8" stop-opacity="0.5"/>
+    <radialGradient id="glow" cx="0.5" cy="0.28" r="0.7">
+      <stop offset="0" stop-color="#4a7ab8" stop-opacity="0.55"/>
       <stop offset="1" stop-color="#4a7ab8" stop-opacity="0"/>
     </radialGradient>
     <pattern id="bgPattern" patternUnits="userSpaceOnUse" width="22" height="22" patternTransform="rotate(45)">
@@ -24,7 +24,35 @@
   <rect width="240" height="300" rx="12" fill="url(#bgPattern)"/>
 
   <!-- 光晕 -->
-  <ellipse cx="120" cy="90" rx="100" ry="70" fill="url(#glow)"/>
+  <ellipse cx="120" cy="80" rx="100" ry="72" fill="url(#glow)"/>
+
+
+  <!-- 武将剪影 -->
+  <g transform="translate(120,92)">
+    <!-- 披风 -->
+    <path d="M0,-4 C-46,2 -72,22 -82,58 L-56,60 C-48,34 -28,20 0,14 Z" fill="#4a7ab8" opacity="0.45"/>
+    <path d="M0,-4 C46,2 72,22 82,58 L56,60 C48,34 28,20 0,14 Z" fill="#4a7ab8" opacity="0.45"/>
+    <!-- 长袍身躯 -->
+    <path d="M-30,12 L30,12 L40,78 L-40,78 Z" fill="#1a2a4a" stroke="#4a7ab8" stroke-width="2.5"/>
+    <!-- 腰带 -->
+    <rect x="-32" y="48" width="64" height="8" rx="4" fill="#c9b37a"/>
+    <!-- 肩甲 -->
+    <path d="M-30,12 L-45,22 L-35,30 Z" fill="#c9b37a" opacity="0.85"/>
+    <path d="M30,12 L45,22 L35,30 Z" fill="#c9b37a" opacity="0.85"/>
+    <!-- 头部 -->
+    <circle cx="0" cy="-20" r="16" fill="#1a2a4a" stroke="#4a7ab8" stroke-width="2.5"/>
+    <circle cx="0" cy="-20" r="6" fill="#4a7ab8" opacity="0.25"/>
+    <!-- 头盔 -->
+    <path d="M-8,-34 L0,-48 L8,-34 Z" fill="#c9b37a"/>
+    <path d="M0,-48 C-9,-55 -4,-61 0,-58 C4,-61 9,-55 0,-48" stroke="#4a7ab8" stroke-width="2" fill="none"/>
+    <!-- 剑 -->
+    <rect x="34" y="4" width="5" height="66" rx="2.5" fill="#c9b37a"/>
+    <rect x="25" y="-2" width="23" height="7" rx="3" fill="#c9b37a"/>
+  </g>
+
+  <!-- 武将名（书法字，缩小置于剪影下方） -->
+  <text x="120" y="187.7" text-anchor="middle" font-size="42" font-family="STKaiti,KaiTi,STSong,serif" font-weight="bold" fill="#f7e8c0" style="text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:3px">荀</text>
+  <text x="120" y="223.7" text-anchor="middle" font-size="42" font-family="STKaiti,KaiTi,STSong,serif" font-weight="bold" fill="#f7e8c0" style="text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:3px">攸</text>
 
   <!-- 金色边框（双层） -->
   <rect x="5" y="5" width="230" height="290" rx="10" fill="none" stroke="url(#frame)" stroke-width="2.5"/>
@@ -36,10 +64,6 @@
 
   <!-- 体力心（右上） -->
   <text x="226" y="34" font-size="18" text-anchor="end" fill="#ff5555">❤❤❤</text>
-
-  <!-- 武将名（书法大字） -->
-  <text x="120" y="141.3" text-anchor="middle" font-size="78" font-family="STKaiti,KaiTi,STSong,serif" font-weight="bold" fill="#f7e8c0" style="text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:3px">荀</text>
-  <text x="120" y="211.3" text-anchor="middle" font-size="78" font-family="STKaiti,KaiTi,STSong,serif" font-weight="bold" fill="#f7e8c0" style="text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:3px">攸</text>
 
   <!-- 称号条 -->
   <rect x="25" y="244" width="190" height="34" rx="3" fill="#1a1008" stroke="#c9b37a" stroke-opacity="0.5"/>
