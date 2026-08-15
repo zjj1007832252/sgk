@@ -459,6 +459,7 @@ function toast(text) {
 }
 function showView(v) {
   view = v;
+  if (v !== 'game' && fx) { try { fx.clearEndOverlay(); } catch (e) {} }
   closeIdMarkMenu();
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   $('view-' + v).classList.add('active');
@@ -476,7 +477,7 @@ function openModal(html) {
   $('modal').innerHTML = html;
   $('modal-mask').classList.remove('hidden');
 }
-function closeModal() { $('modal-mask').classList.add('hidden'); modalPromptKey = null; }
+function closeModal() { $('modal-mask').classList.add('hidden'); $('modal-mask').classList.remove('pick-players'); modalPromptKey = null; }
 $('modal-mask').addEventListener('click', e => { if (e.target === $('modal-mask')) closeModal(); });
 
 function avatarImg(id, cls) {
@@ -1310,9 +1311,9 @@ function handleShortcut(action, payload) {
   }
 }
 
-function confirmRespond() {  // 找到当前高亮的选项并点击
-  const opts = document.querySelectorAll('#prompt-bar .prompt-options .btn');
-  const highlighted = document.querySelector('#prompt-bar .prompt-options .btn.btn-primary');
+function confirmRespond() {  // 找到当前高亮的选项并点击（弹窗或右上角提示条）
+  const opts = document.querySelectorAll('#modal .pick-cards .btn, #prompt-bar .prompt-options .btn');
+  const highlighted = document.querySelector('#modal .pick-cards .btn.btn-primary, #prompt-bar .prompt-options .btn.btn-primary');
   if (highlighted) highlighted.click();
   else if (opts.length) opts[0].click();
 }
@@ -2580,18 +2581,16 @@ function renderPromptBar() {
     return;
   }
   if (pr.kind === 'confirm') {
-    box.innerHTML = `<div class="prompt-title">${esc(pr.title)}</div><div class="prompt-options"></div>`;
-    const opts = box.querySelector('.prompt-options');
-    opts.appendChild(quickBtn('确定', () => send({ type: 'action', yes: true })));
-    opts.appendChild(quickBtn('取消', () => send({ type: 'action', yes: false })));
+    if (modalPromptKey === promptKey(pr)) return;
+    modalPromptKey = promptKey(pr);
+    openConfirmModal(pr);
     return;
   }
   if (pr.kind === 'chooseOption') {
-    box.innerHTML = `<div class="prompt-title">${esc(pr.title)}</div><div class="prompt-options"></div>`;
-    const opts = box.querySelector('.prompt-options');
-    for (const o of pr.options || []) {
-      opts.appendChild(quickBtn(o.label, () => send({ type: 'action', option: o.id })));
-    }
+    // 反间/雌雄双股剑等选项改为居中弹窗，更醒目
+    if (modalPromptKey === promptKey(pr)) return; // 弹窗已打开
+    modalPromptKey = promptKey(pr);
+    openChooseOptionModal(pr);
     return;
   }
   if (pr.kind === 'chooseCards' || pr.kind === 'chooseCardOf' || pr.kind === 'arrange' || pr.kind === 'chooseGeneral') {
@@ -2603,11 +2602,13 @@ function renderPromptBar() {
     else openChooseGeneralModal(pr);
     return;
   }
-  modalPromptKey = null;
   if (pr.kind === 'choosePlayers') {
-    renderChoosePlayers(box, pr);
+    if (modalPromptKey === promptKey(pr)) return; // 弹窗已打开
+    modalPromptKey = promptKey(pr);
+    renderChoosePlayersModal(pr);
     return;
   }
+  modalPromptKey = null;
   box.innerHTML = `<div class="prompt-title">${esc(pr.title || '等待…')}</div>`;
 }
 
@@ -2620,31 +2621,10 @@ function quickBtn(label, fn, primary) {
 }
 
 function renderRespond(box, pr) {
-  box.innerHTML = `<div class="prompt-title">${esc(pr.title)}</div><div class="prompt-options"></div>`;
-  const opts = box.querySelector('.prompt-options');
-  let optIdx = 0;
-  for (const o of pr.options || []) {
-    optIdx++;
-    if (o.zhangba) {
-      const b = quickBtn(o.label + ` [${optIdx}]`, () => {
-        sel.zhangbaRespond = true;
-        sel.hand = [];
-        renderHand();
-        renderRespondZhangba(box, pr);
-      });
-      opts.appendChild(b);
-    } else {
-      const b = quickBtn(o.label + ` [${optIdx}]`, () => {
-        send({ type: 'action', cardIds: o.cardIds });
-      });
-      opts.appendChild(b);
-    }
-  }
-  if (pr.bagua) opts.appendChild(quickBtn('八卦阵·判定', () => send({ type: 'action', skill: 'bagua' })));
-  if (pr.jijiang) opts.appendChild(quickBtn('激将', () => send({ type: 'action', skill: 'jijiang' })));
-  const passBtn = quickBtn('不出 [0]', () => { sel.zhangbaRespond = false; send({ type: 'action', pass: true }); });
-  passBtn.setAttribute('data-key', '0');
-  opts.appendChild(passBtn);
+  // 响应（出闪/杀/桃等）改为居中弹窗，避免右上角不醒目
+  if (modalPromptKey === promptKey(pr)) return; // 弹窗已打开
+  modalPromptKey = promptKey(pr);
+  openRespondModal(pr);
 }
 
 function renderRespondZhangba(box, pr) {
@@ -2661,22 +2641,49 @@ function renderRespondZhangba(box, pr) {
   opts.appendChild(quickBtn('返回', () => { sel.zhangbaRespond = false; sel.hand = []; renderHand(); renderPromptBar(); }));
 }
 
-function renderChoosePlayers(box, pr) {
-  // 高亮候选人，点选后确认
+function modalBtn(label, fn, primary) {
+  const b = document.createElement('button');
+  b.className = primary ? 'btn btn-primary' : 'btn';
+  b.style.cssText = 'font-size:20px;padding:12px 26px;min-width:110px;';
+  b.textContent = label;
+  b.addEventListener('click', fn);
+  return b;
+}
+
+// 是否发动技能（confirm）居中弹窗
+function openConfirmModal(pr) {
+  openModal('');
+  const html = `<div class="modal-title">${esc(pr.title)}</div><div class="pick-cards" style="display:flex;gap:14px;justify-content:center;padding:16px"></div>`;
+  $('modal').innerHTML = html;
+  const box = $('modal').querySelector('.pick-cards');
+  box.appendChild(modalBtn('确定', () => { closeModal(); send({ type: 'action', yes: true }); }, true));
+  box.appendChild(modalBtn('取消', () => { closeModal(); send({ type: 'action', yes: false }); }));
+}
+
+// 选择目标玩家（choosePlayers）：居中确认条 + 对手面板点选（遮罩穿透）
+function renderChoosePlayersModal(pr) {
   sel.playerPick = { min: pr.min, max: pr.max, cands: pr.candidates || [] };
-  box.innerHTML = `<div class="prompt-title">${esc(pr.title)}（已选 ${sel.targets.length}/${pr.max}）</div><div class="prompt-options"></div>`;
-  const opts = box.querySelector('.prompt-options');
-  const ok = quickBtn('确定', () => {
+  const mask = $('modal-mask');
+  mask.classList.remove('hidden');
+  mask.classList.add('pick-players'); // 允许点击穿透到对手面板
+  const html = `<div class="modal-title">${esc(pr.title)}（已选 ${sel.targets.length}/${pr.max}）</div><div class="pick-cards" style="display:flex;gap:14px;justify-content:center;padding:14px"></div>`;
+  $('modal').innerHTML = html;
+  const box = $('modal').querySelector('.pick-cards');
+  const ok = modalBtn('确定', () => {
     if (sel.targets.length >= pr.min) {
+      closeModal();
       send({ type: 'action', targetIds: sel.targets.slice() });
       sel.targets = []; sel.playerPick = null;
     }
   }, true);
   ok.disabled = sel.targets.length < pr.min;
-  opts.appendChild(ok);
-  if (pr.min === 0) opts.appendChild(quickBtn('跳过', () => { send({ type: 'action', targetIds: [] }); sel.targets = []; sel.playerPick = null; }));
-  // 复用对手面板点选
+  box.appendChild(ok);
+  if (pr.min === 0) box.appendChild(modalBtn('跳过', () => { closeModal(); send({ type: 'action', targetIds: [] }); sel.targets = []; sel.playerPick = null; }));
   renderOpponents();
+}
+
+function renderChoosePlayers(box, pr) {
+  renderChoosePlayersModal(pr);
 }
 
 // ---------- 弹窗类询问 ----------
@@ -2707,6 +2714,57 @@ function openChooseCardsModal(pr) {
   };
   openModal('');
   render();
+}
+
+// 选项弹窗（反间选花色 / 雌雄双股剑 / 刚烈等）：居中醒目
+// 响应弹窗（出闪/杀/桃/八卦/激将/不出）：居中醒目
+function openRespondModal(pr) {
+  openModal('');
+  const html = `<div class="modal-title">${esc(pr.title)}</div><div class="pick-cards" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;padding:18px"></div>`;
+  $('modal').innerHTML = html;
+  const box = $('modal').querySelector('.pick-cards');
+  const mk = (label, fn) => {
+    const b = document.createElement('button');
+    b.className = 'btn btn-primary';
+    b.style.cssText = 'font-size:20px;padding:12px 22px;min-width:110px;';
+    b.textContent = label;
+    b.addEventListener('click', fn);
+    return b;
+  };
+  let optIdx = 0;
+  for (const o of pr.options || []) {
+    optIdx++;
+    const suffix = optIdx <= 9 ? ` [${optIdx % 10}]` : '';
+    if (o.zhangba) {
+      box.appendChild(mk(o.label + suffix, () => {
+        closeModal();
+        sel.zhangbaRespond = true;
+        sel.hand = [];
+        renderHand();
+        renderRespondZhangba($('prompt-bar'), pr);
+      }));
+    } else {
+      box.appendChild(mk(o.label + suffix, () => { closeModal(); send({ type: 'action', cardIds: o.cardIds }); }));
+    }
+  }
+  if (pr.bagua) box.appendChild(mk('八卦阵·判定', () => { closeModal(); send({ type: 'action', skill: 'bagua' }); }));
+  if (pr.jijiang) box.appendChild(mk('激将', () => { closeModal(); send({ type: 'action', skill: 'jijiang' }); }));
+  box.appendChild(mk('不出 [0]', () => { closeModal(); sel.zhangbaRespond = false; send({ type: 'action', pass: true }); }));
+}
+
+function openChooseOptionModal(pr) {
+  openModal('');
+  const html = `<div class="modal-title">${esc(pr.title)}</div><div class="pick-cards" style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center;padding:18px"></div>`;
+  $('modal').innerHTML = html;
+  const box = $('modal').querySelector('.pick-cards');
+  for (const o of pr.options || []) {
+    const b = document.createElement('button');
+    b.className = 'btn btn-primary';
+    b.style.cssText = 'font-size:22px;padding:14px 26px;min-width:120px;';
+    b.textContent = o.label;
+    b.addEventListener('click', () => { closeModal(); send({ type: 'action', option: o.id }); });
+    box.appendChild(b);
+  }
 }
 
 function openChooseCardOfModal(pr) {

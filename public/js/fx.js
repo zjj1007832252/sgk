@@ -581,7 +581,7 @@
       const overlay = document.createElement('div');
       overlay.id = 'fx-end-overlay';
       overlay.style.cssText = `position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-        pointer-events:auto;z-index:250;background:${isWin ? 'radial-gradient(circle,#ffd70044,transparent 70%)' : 'radial-gradient(circle,#2a1a3a,transparent 70%)'};`;
+        pointer-events:none;z-index:250;background:${isWin ? 'radial-gradient(circle,#ffd70044,transparent 70%)' : 'radial-gradient(circle,#2a1a3a,transparent 70%)'};`;
       const title = isWin ? '胜 利' : '失 败';
       const color = isWin ? '#ffd700' : '#8a7a9a';
       overlay.innerHTML = `<div class="fx-end-title" style="font-size:80px;font-weight:bold;color:${color};
@@ -589,6 +589,10 @@
         font-family:'STKaiti','KaiTi',serif;animation:fxEndIn .8s cubic-bezier(.3,.1,.5,1);">${title}</div>
         <div style="margin-top:16px;font-size:20px;color:#b8a88a;letter-spacing:4px;">— 对局结束 —</div>`;
       document.body.appendChild(overlay);
+      // 点击遮罩即可关闭（避免遮挡返回大厅等按钮）
+      overlay.style.cursor = 'pointer';
+      overlay.title = '点击关闭';
+      overlay.addEventListener('click', () => this.clearEndOverlay());
       // 粒子庆祝 / 散落
       if (isWin) {
         for (let i = 0; i < 5; i++) {

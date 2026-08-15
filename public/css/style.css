@@ -312,6 +312,8 @@ input:focus { border-color: var(--gold); }
   display: flex; align-items: center; justify-content: center;
 }
 .modal-mask.hidden { display: none; }
+.modal-mask.pick-players { pointer-events: none; background: transparent; }
+.modal-mask.pick-players .modal { pointer-events: auto; }
 .modal {
   background: var(--panel2); border: 1px solid var(--gold); border-radius: 12px;
   padding: 20px; max-width: 860px; max-height: 86vh; overflow-y: auto; min-width: 420px;
