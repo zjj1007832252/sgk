@@ -484,9 +484,12 @@ function avatarImg(id, cls) {
   const img = document.createElement('img');
   img.className = cls || '';
   // 先绑定 onerror 再设置 src：部分浏览器在元素插入 DOM 前设置 src 会立即发起请求，
-  // 若 onerror 尚未绑定，png 404 后不会回退到 svg，导致头像空白。
-  img.onerror = () => { img.onerror = null; img.src = `/assets/avatars/${id}.svg`; };
-  img.src = `/assets/avatars/${id}.png`;
+  // 若 onerror 尚未绑定，404 后不会逐级回退，导致头像空白。加载链：jpg(官方立绘) → png(自定义上传) → svg(程序生成)。
+  img.onerror = () => {
+    if (img.dataset.fallback === 'png') { img.onerror = null; img.src = `/assets/avatars/${id}.svg`; }
+    else { img.dataset.fallback = 'png'; img.src = `/assets/avatars/${id}.png`; }
+  };
+  img.src = `/assets/avatars/${id}.jpg`;
   return img;
 }
 
@@ -2075,8 +2078,11 @@ function renderMyPanel() {
   const canTgt = cands.includes(p.seat);
   const selIdx = sel.targets.indexOf(p.seat);
   box.className = 'my-panel' +
+    (p.alive ? '' : ' dead') +
     (canTgt ? ' targetable' : '') +
     (selIdx >= 0 ? ' selected' : '');
+  // 制衡等「弃任意张牌」技能：装备/判定区牌可点选
+  const pickEquip = !!sel.skill && cardsNeededForSkill(sel.skill) > 0;
   const tgtMark = canTgt ? '<span class="tgt-mark tgt-can">可指定</span>' : '';
   const selMark = selIdx >= 0 ? `<span class="tgt-mark tgt-selected">${selIdx + 1}</span>` : '';
   // 区分主动/被动/触发技能；主动技能可点击（与 action-bar 同源）
@@ -2098,18 +2104,26 @@ function renderMyPanel() {
     <div class="my-top">
       <span class="my-avatar-slot"></span>
       <div>
-        <div class="my-name">${esc(p.name)}</div>
+        <div class="my-name">${esc(p.name)}${p.alive ? '' : ' <span class="dead-tag">死亡</span>'}</div>
         <div class="my-general" style="color:var(--${p.kingdom})">${esc(p.generalName) || ''} <span class="badge kingdom-${p.kingdom}">${KINGDOM_NAME[p.kingdom]}</span></div>
         <div class="my-identity">身份：${IDENTITY_NAME[gameState.myIdentity] || '？'}</div>
         <div class="my-hp">${hpHtml(p.hp, p.maxHp)} <span style="font-size:12px;color:#9a8a6a">${p.hp}/${p.maxHp}</span></div>
       </div>
     </div>
     <div class="my-turn-bar-wrap"><div id="my-turn-bar" class="my-turn-bar"></div></div>
-    <div class="my-equips">${Object.values(p.equips).filter(Boolean).map(e => `<span class="equip-mini" title="${esc(e.name)}${e.range ? ' 范围' + e.range : ''}">${esc(e.name)}</span>`).join('') || '<span style="font-size:11px;color:#5a4c3a">无装备</span>'}
-    ${p.judgeZone.map(j => `<span class="judge-mini">${esc(j.name)}</span>`).join('')}</div>
+    <div class="my-equips">${pickEquip ?
+      Object.values(p.equips).filter(Boolean).map(e => `<span class="equip-mini selectable${sel.hand.includes(e.uid) ? ' selected' : ''}" data-equip="${e.uid}" title="点击选择弃置【${esc(e.name)}】">${esc(e.name)}</span>`).join('') || '<span style="font-size:11px;color:#5a4c3a">无装备</span>' :
+      Object.values(p.equips).filter(Boolean).map(e => `<span class="equip-mini" title="${esc(e.name)}${e.range ? ' 范围' + e.range : ''}">${esc(e.name)}</span>`).join('') || '<span style="font-size:11px;color:#5a4c3a">无装备</span>'
+    }
+    ${pickEquip ? p.judgeZone.map(j => `<span class="judge-mini selectable${sel.hand.includes(j.uid) ? ' selected' : ''}" data-equip="${j.uid}" title="点击选择弃置【${esc(j.name)}】">${esc(j.name)}</span>`).join('') : p.judgeZone.map(j => `<span class="judge-mini">${esc(j.name)}</span>`).join('')}</div>
     <div class="my-skills">${skills}</div>`;
   box.querySelector('.my-avatar-slot').replaceWith(avatarImg(p.generalId || 'unknown', 'my-avatar'));
   box.onclick = cands.includes(p.seat) ? () => toggleTarget(p.seat) : null;
+  if (pickEquip) {
+    box.querySelectorAll('.equip-mini[data-equip], .judge-mini[data-equip]').forEach(el => {
+      el.addEventListener('click', e => { e.stopPropagation(); toggleEquip(el.dataset.equip); });
+    });
+  }
   // 绑定技能按钮点击:与 action-bar 一致逻辑
   box.querySelectorAll('.skill-btn[data-skill]').forEach(btn => {
     btn.addEventListener('click', e => {
@@ -2179,6 +2193,15 @@ function renderHand() {
     if (cardNum) el.setAttribute('data-num', cardNum);
     box.appendChild(el);
   });
+}
+
+function toggleEquip(uid) {
+  const i = sel.hand.indexOf(uid);
+  if (i >= 0) sel.hand.splice(i, 1);
+  else sel.hand.push(uid);
+  renderMyPanel();
+  renderActionBar();
+  renderPendingZone();
 }
 
 function toggleHand(uid) {

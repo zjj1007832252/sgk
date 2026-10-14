@@ -262,7 +262,19 @@ const SKILLS = {
       const cards = payload.cards;
       if (!cards.length) return false;
       player.turnFlags.zhiheng = true;
-      await game.discard(player, cards);
+      // 制衡可弃置手牌/装备/判定区牌
+      const handCards = cards.filter(c => player.hand.includes(c));
+      const equipCards = cards.filter(c => Object.values(player.equips).includes(c));
+      const judgeCards = cards.filter(c => player.judgeZone.includes(c));
+      if (handCards.length) await game.discard(player, handCards);
+      for (const c of equipCards) {
+        const slot = Object.keys(player.equips).find(k => player.equips[k] === c);
+        if (slot) { await game.removeEquip(player, slot); game.toDiscard([c]); }
+      }
+      for (const c of judgeCards) {
+        player.judgeZone = player.judgeZone.filter(x => x !== c);
+        game.toDiscard([c]);
+      }
       await game.drawCards(player, cards.length);
       game.log(`${player.name} 发动【制衡】，弃 ${cards.length} 摸 ${cards.length}`);
       voice(game, player, 'zhiheng');

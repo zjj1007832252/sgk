@@ -217,8 +217,8 @@ class Room {
 
   backToLobby(pid) {
     if (pid !== this.hostPid) return { ok: false, msg: '只有房主可以操作' };
-    if (this.game && this.game.phase !== 'over' && this.game.phase !== 'ended') {
-      // 游戏仍在运行中，不能直接返回
+    // 以 finished 判断是否可返回（phase 在 onEnd 后、start 循环退出前可能仍是 play/end）
+    if (this.game && !this.game.finished) {
       return { ok: false, msg: '游戏仍在进行中，无法返回大厅' };
     }
     this.state = 'lobby';

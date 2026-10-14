@@ -1301,7 +1301,11 @@ class Game {
         return true;
       }
     if (def.type !== 'active') return this.err(user, '该技能不能主动发动');
-    const cards = (ans.cardIds || []).map(uid => user.hand.find(c => c.uid === uid)).filter(Boolean);
+    const cards = (ans.cardIds || []).map(uid =>
+      user.hand.find(c => c.uid === uid) ||
+      Object.values(user.equips).find(c => c && c.uid === uid) ||
+      user.judgeZone.find(c => c.uid === uid)
+    ).filter(Boolean);
     const targets = (ans.targets || []).map(s => this.players[s]).filter(p => p && p.alive);
     // 基本校验
     const need = def.button || {};

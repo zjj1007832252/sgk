@@ -166,6 +166,8 @@ input:focus { border-color: var(--gold); }
 .opp.targetable, .my-panel.targetable { border-color: #d86a5a; box-shadow: 0 0 14px rgba(216,106,90,.6); cursor: pointer; animation: pulse 1s infinite; }
 .opp.selected, .my-panel.selected { border-color: #ffd700; box-shadow: 0 0 18px rgba(255,215,0,.8); }
 .opp.dead { filter: grayscale(1) brightness(.55); }
+.my-panel.dead { filter: grayscale(1) brightness(.55); }
+.my-panel.dead .dead-tag { display: inline-block; margin-left: 6px; font-size: 11px; color: #ff8877; border: 1px solid #ff5544; border-radius: 4px; padding: 1px 6px; }
 .opp.dead .badge.identity,
 .opp.dead .badge.identity-zhu { filter: none; border-color: #ff5544; color: #ffdcd0; }
 .opp.dead .dead-tag { display: inline-block; margin-left: 6px; font-size: 11px; color: #ff8877; border: 1px solid #ff5544; border-radius: 4px; padding: 1px 6px; }
@@ -222,6 +224,8 @@ input:focus { border-color: var(--gold); }
 .equip-mini.weapon { color: #dd9d9d; } .equip-mini.armor { color: #9db8dd; }
 .equip-mini.horse { color: #9dddad; }
 .judge-mini { font-size: 10px; padding: 1px 4px; border-radius: 3px; background: #3d2f4a; color: #c9a8dd; border: 1px solid #5a4a6a; }
+.my-equips .equip-mini.selectable, .my-equips .judge-mini.selectable { cursor: pointer; border: 1px solid var(--gold); }
+.my-equips .equip-mini.selectable.selected, .my-equips .judge-mini.selectable.selected { background: #ffd700; color: #1c1611; border-color: #ffd700; }
 .dmg-flash { animation: dmgflash .5s; }
 @keyframes dmgflash { 0%,100% { background: rgba(28,22,17,.92);} 50% { background: rgba(160,30,30,.75);} }
 
