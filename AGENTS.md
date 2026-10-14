@@ -24,26 +24,28 @@ Build a complete web-based Three Kingdoms Kill (三国杀) card game with single
 - `sed -i ''` on macOS differs from Linux `sed -i`
 - CDP (Chrome DevTools Protocol) synthetic key events may double-fire in headless browsers - test accordingly
 - WebSocket `unref()` prevents the heartbeat timer from keeping the process alive
-- `buildDeck(bannedCards)` filtering is done at deck construction time
+- `buildDeck(bannedCards)` filtering is done at deck construction time; the signature is now `buildDeck(bannedCards, customCards)` and DIY cards are merged at the same point
+- `test/browser-check.js` drives headless **Edge** (msedge) via CDP, not Chrome
+- `scripts/gen_voices.js` now iterates all 70 generals; shipped voice assets only cover the 25 standard ones (89 WAVs)
 
 ## Accomplished
 
 ### Recent (v2)
-- Interactive tutorial — 8-step coachmark with element highlighting + full rules reference fallback
-- Achievement system — 16 achievements with live stat tracking (kills / damage / healing / saves / win streak / identity wins / card variety / general variety / speed wins / DIY count)
-- Achievement rewards — skin & avatar frame unlocks tied to specific achievements
+- New player guide — 6-step text modal tutorial + full rules reference fallback (coachmark overlay HTML/CSS exists but no JS drives it — see Known gaps)
+- Achievement system — 16 achievements defined with client-side stat accumulation in data.js; server per-player stats chain is dangling (Player has no stats field) so several achievements are unreachable — see Known gaps
+- Achievement rewards — skin & avatar frame unlock logic defined in skin-system.js, but `grantAchievementRewards` is never called — see Known gaps
 - Spectator mode — 30s anti-cheat delay via server snapshot queue, read-only client UI, danmaku chat, lobby spectator count
 
 ### Core Engine
 - 108-card standard deck (53 basic + 36 trick + 19 equip)
-- 70 generals (25 standard + 25 军争篇 + 12 一将成名 + 8 神武将)
+- 70 generals (25 standard + 23 军争篇 + 14 一将成名 + 8 神武将)
 - All skills implemented with hooks
 - Identity mode with 4-8 player support
 - Game modes: identity, 1v1, 3v3, 国战, 斗地主
 
 ### Features
 - Custom room rules (HP bonus, hand limit, round limit, AOE toggle, etc.)
-- Custom win conditions (10 built-in + JS script)
+- Custom win conditions (10 built-in + JS script; note: `rooms.js` strips `winParams.script` server-side as an RCE guard, so JS-script conditions only work outside room play)
 - Rule presets with share codes
 - Ban list (generals/cards) with presets
 - Game speed (fast/normal/slow) + turn timer (30/60/90s/∞)
@@ -51,6 +53,7 @@ Build a complete web-based Three Kingdoms Kill (三国杀) card game with single
 - Custom skill editor (DSL-based)
 - Custom card editor with image upload
 - DIY generals
+- DIY skills / DIY cards fully wired into the engine (details under "Done since v3" below)
 - Card counter (remaining cards, key cards)
 - Skin system (6 skins, 7 frames, effects)
 - Replay system (JSON/text export, analysis, share links)
@@ -62,27 +65,29 @@ Build a complete web-based Three Kingdoms Kill (三国杀) card game with single
 
 ### Server Files
 - `server/index.js` - Main server (Express + WS)
-- `server/engine/game.js` - Game engine (~1600 lines)
-- `server/engine/ai.js` - AI system (SimpleAI, NormalAI, HardAI)
+- `server/engine/game.js` - Game engine (~1700 lines)
+- `server/engine/ai.js` - AI system (`AIBrain` base + `SimpleAI` / `HardAI`; difficulty via `AI_DIFFICULTIES` config + `createAI()` factory)
 - `server/engine/cards.js` - 108-card deck
 - `server/engine/generals.js` - 70 generals
 - `server/engine/skills.js` - Skill registry
 - `server/engine/game-modes.js` - Game modes + win condition evaluator
-- `server/engine/custom-skill-executor.js` - Custom skill execution
+- `server/engine/custom-skill-executor.js` - DIY skill executor (wired into Game engine)
 - `server/rooms.js` - Room management with spectator support
 - `server/replays.js` - Replay storage + analysis
 - `server/customs.js` - DIY general persistence
 - `server/custom-cards.js` - Custom card persistence
 - `server/custom-skills.js` - Custom skill persistence
 - `server/netopt.js` - Network optimization (batching, delta)
-- `server/avatar.js` - SVG avatar generation
+- `server/avatar.js` - Procedural SVG silhouette placeholder avatar generation; real JPG portraits in `public/assets/avatars/` take priority (client load order JPG→PNG→SVG)
+- `server/data/` - Runtime persistence store (`customs.json`, `replays.json`)
 
 ### Client Files
-- `public/js/app.js` - Main client (~2800 lines)
+- `public/js/app.js` - Main client (~3500 lines)
 - `public/js/fx.js` - Visual effects engine
 - `public/js/audio.js` - AudioManager
 - `public/js/sound.js` - Sound manager + BGM
 - `public/js/card-counter.js` - Card counter
+- `public/js/card-detail.js` - Card detail modal, hand sorting, discard-pile panel
 - `public/js/skin-system.js` - Skin system
 - `public/js/skill-editor.js` - Skill editor DSL
 - `public/js/card-editor.js` - Card editor DSL
@@ -94,39 +99,42 @@ Build a complete web-based Three Kingdoms Kill (三国杀) card game with single
 - `public/css/style.css` - Ancient-style theme
 
 ### Tests
+- `test/run-all.js` - Test suite entry (`npm test` / `npm run test:fast`)
 - `test/simulate.js` - Headless AI simulation
 - `test/e2e.js` - WebSocket end-to-end test
-- `test/verify.js` - Data integrity + per-general test
+- `test/verify.js` - Data integrity + per-general test (24 checks)
+- `test/pindian.js` - 拼点 engine + distance exemption + AI card choice
 - `test/browser-play.js` - CDP browser full game test
 - `test/browser-audio.js` - CDP audio test
 - `test/browser-fx.js` - CDP effects test
 - `test/browser-keys.js` - CDP keyboard shortcuts test
 - `test/browser-skilleditor.js` - CDP skill editor test
+- `test/browser-check.js` - CDP smoke test (drives headless Edge, not Chrome)
+- `test/browser-ol-play.js` - CDP online-mode full game test (`npm run test:ol`)
 - `test/ai-test.js` - AI-specific test
 - `test/balance-test.js` - Balance testing
 
 ## Remaining Tasks
 
-### In Progress (started but not completed)
+### Implemented (verified by doc audit 2026-10)
 1. **Spectator Mode** - ✅ Implemented (30s delayed snapshots, client UI, danmaku, read-only mode)
-2. **Achievement System** - ✅ Implemented (16 achievements with stats tracking, skin/frame rewards)
-3. **New Player Guide / Tutorial** - ✅ Implemented (interactive coachmark + full rules reference)
+2. **Achievement System** - ⚠️ Partially implemented (16 achievements + client stats accumulation defined; server stats chain dangling, reward granting never called — see Known gaps)
+3. **New Player Guide / Tutorial** - ⚠️ Partially implemented (6-step text modal + rules reference; coachmark HTML/CSS not driven by JS — see Known gaps)
 
 ### Not Started
-### Not Started
-- In-game card/skill tooltip popups (hover to see skill/card description during play)
+- In-game skill hover tooltip popups during play (card detail modal already exists via `card-detail.js`)
 - Ranked / ladder system
 - Custom game mode editor UI
 
 ## Relevant files
-- `/Users/jjzhang/chess/sgk/server/engine/game.js` - Player stats field added for achievement tracking
-- `/Users/jjzhang/chess/sgk/server/rooms.js` - Spectator snapshots + 30s delay mechanism
-- `/Users/jjzhang/chess/sgk/server/index.js` - Spectator handlers + delayed state push timer
-- `/Users/jjzhang/chess/sgk/public/js/data.js` - Expanded stats accumulation for achievements
-- `/Users/jjzhang/chess/sgk/public/js/app.js` - Achievement rewards, spectator client mode, interactive coach tutorial
-- `/Users/jjzhang/chess/sgk/public/js/skin-system.js` - Achievement-based skin/frame unlocks
-- `/Users/jjzhang/chess/sgk/public/index.html` - Coachmark overlay HTML
-- `/Users/jjzhang/chess/sgk/public/css/style.css` - Coachmark styles
+- `/Users/jjzhang/sgk/server/engine/game.js` - `getState` reads `p.stats` but the `Player` class never defines/assigns it (dangling — see Known gaps)
+- `/Users/jjzhang/sgk/server/rooms.js` - Spectator snapshots + 30s delay mechanism
+- `/Users/jjzhang/sgk/server/index.js` - Spectator handlers + delayed state push timer
+- `/Users/jjzhang/sgk/public/js/data.js` - Expanded stats accumulation for achievements (kills/damage/heal/saves/uniqueCards/uniqueGenerals/diyCount…)
+- `/Users/jjzhang/sgk/public/js/app.js` - Achievement checks (16) + spectator client mode; tutorial is a 6-step text modal (coachmark not driven)
+- `/Users/jjzhang/sgk/public/js/skin-system.js` - Achievement-based skin/frame unlock definitions; `grantAchievementRewards` defined but never called
+- `/Users/jjzhang/sgk/public/index.html` - Coachmark overlay HTML (present, not driven by JS)
+- `/Users/jjzhang/sgk/public/css/style.css` - Coachmark styles
 
 ## Recent (v3) — Code Review Fixes
 - 修复 `public/index.html:438` 回放查看器「导出文本」按钮标签未闭合
@@ -135,21 +143,31 @@ Build a complete web-based Three Kingdoms Kill (三国杀) card game with single
 - 修复 `server/engine/game.js` 乐不思蜀原地修改牌的 key/name 污染牌堆，改为推虚拟对象
 - 修复 `public/js/app.js` 禁将预设切换时 `bannedG.has(text && find(...))` 永远 false 导致高亮不刷新
 - 修复 `server/rooms.js` 观战延迟选帧升序遍历取最旧帧，改为反向遍历取最接近 `now-delay` 的帧
-- 修复 `server/engine/game.js` 五谷丰登选牌顺序公式 `(seat - seat + 99) % 99` 在差为负时映射反转，改为 `(seat - seat + n) % n`（n = 玩家数）
+- `server/engine/game.js` 五谷丰登选牌顺序公式：当时记录的改为 `(seat - seat + n) % n` 实际未落地，代码仍为 `(seat - seat + 99) % 99`（座位 0-7 下恰好排序正确，无实际影响）
 - 修复 `server/engine/game.js` 五谷丰登 `splice(indexOf(picked), 1)` 在 picked 不在 revealed 时会从末尾误删，加 indexOf 校验
 - 修复 `server/engine/game-modes.js` `survive_rounds` / `hp_threshold` 胜利条件可能在 turnSeat 玩家已死时返回死亡 seat 的问题
 - 修复 `server/rooms.js` 房间的 `startGame` 只传极少量 opts 给 Game，自定义规则（hpBonus/handLimit/winCondition/...）全部丢失；补全所有字段
 - 删除 `server/engine/game-modes.js` 重声明的死代码 `createGameMode`
 
 ## Verify results
-- test/verify.js: 86/86 稳定（极少数场景有 1 项 forceGenerals 偶发 flaky，与本次修改无关）
+- test/verify.js: 24/24 通过（run-all.js 中 "86 项" 描述标签已过时，实际为 24 项检查）
 - test/simulate.js: 10 局无错
 - test/ai-test.js: 4 局无错
 - test/balance-test.js: 跑通无错
 
 ## Remaining Tasks (after v3)
 ### Not Started
-- In-game card/skill tooltip popups (hover to see skill/card description during play)
+- In-game skill hover tooltip popups during play (card detail modal already exists via card-detail.js)
 - Ranked / ladder system
 - Custom game mode editor UI
-- DIY skill / DIY card system actually wired into Game engine (server/engine/custom-skill-executor.js + server/custom-skills.js + server/custom-cards.js are 孤立模块,未挂载到 player.customSkills / buildDeck)
+
+### Done since v3 (verified by doc audit 2026-10)
+- ✅ DIY skill / DIY card system now wired into Game engine: `Game` instantiates `CustomSkillExecutor`, `buildDeck(bannedCards, customCards)` accepts DIY cards, `player.customSkills` assigned in `setGeneral`, `trySkill` executes custom effects, executor hooks on damage/heal/die/kill/phase events; `rooms.js` passes `customCards.load()` / `customSkills.load()` gated by `includeCustoms`
+
+## Known gaps (found by doc audit 2026-10, not yet fixed)
+- `Player` has no `stats` field; `getState` sends `stats: p.stats` (always undefined) and the client never reports per-player stats → achievements `three_kills` / `healer` / `destroyer` / `card_master` / `survivor` unreachable; `first_blood` checks `s.firstBlood` which data.js never writes (it tracks `gamesWithKill`)
+- `grantAchievementRewards` (skin-system.js) is never called → achievement skin/frame rewards never actually unlock
+- Coachmark tutorial: overlay HTML (index.html) + CSS (style.css) exist but no JS drives them; shipped tutorial is a 6-step text modal
+- DIY skills are granted to **every** player regardless of general binding (game.js only dedupes against built-in skill ids)
+- `rooms.js` strips `winParams.script` (RCE guard) → JS-script win condition unavailable in room play
+- `test/run-all.js` labels verify as "86 项" (actually 24)

@@ -43,16 +43,16 @@ npm start
 | 吴 | 孙权（制衡/救援）、甘宁（奇袭）、吕蒙（克己）、黄盖（苦肉）、周瑜（英姿/反间）、大乔（国色/流离）、陆逊（谦逊/连营）、孙尚香（结姻/枭姬） |
 | 群 | 华佗（急救/青囊）、吕布（无双）、貂蝉（离间/闭月） |
 
-**军争篇（25 名）**
+**军争篇（23 名）**
 
 | 势力 | 武将 |
 |---|---|
 | 魏 | 张春华（绝情/伤逝）、曹植（落英/酒诗）、于禁（节钺）、张郃（巧变）、典韦（强袭）、李通（推锋）、陈群（法恩/定品）、荀攸（奇策/智愚） |
-| 蜀 | 关平（龙吟）、刘封（陷嗣）、马岱（马术/潜袭）、夏侯氏（巧慧/燕语） |
-| 吴 | 太史慈（天义）、徐盛（破军）、韩当（弓骑/解烦）、步练师（安恤/追忆）、孙鲁班（谮毁/骄恣）、朱桓（平寇/奋励）、岑昏（链祸/极奢） |
+| 蜀 | 关平（龙吟）、刘封（陷嗣）、马岱（马术/潜袭）、夏侯氏（巧慧/燕语）、关羽(将)（武圣/威重）、张飞(将)（咆哮/替身） |
+| 吴 | 太史慈（天义）、徐盛（破军）、韩当（弓骑/解烦）、步练师（安恤/追忆）、孙鲁班（谮毁/骄恣）、朱桓（平寇/奋励）、岑昏（链祸/极奢）、顾雍（慎行/敛财） |
 | 群 | 王异（秘计/贞烈） |
 
-**一将成名（12 名）**
+**一将成名（14 名）**
 
 | 势力 | 武将 |
 |---|---|
@@ -75,6 +75,14 @@ npm start
 - 所有转化技：武圣 / 龙胆 / 倾国 / 急救 / 奇袭 / 国色 / 丈八蛇矛
 - 主公技（激将 / 救援）
 - 重洗牌堆、断线 AI 托管、断线重连
+
+### 模式与扩展功能
+- 多种游戏模式：身份局 / 1v1 / 3v3 / 国战 / 斗地主
+- 自定义房间规则（血量加成 / 手牌上限 / 回合数限制 / AOE 开关等）、10 种内置胜利条件、规则预设分享码、禁将 / 禁牌
+- 观战模式（30 秒防作弊延迟快照、只读界面、弹幕聊天）
+- 录像回放（JSON / 文本导出、对局分析、分享链接）
+- DIY 技能（可视化 DSL 编辑器）与 DIY 卡牌（图片上传），均已接入引擎（牌堆构建与技能执行生效）
+- 记牌器、皮肤 / 头像框系统、成就系统、游戏速度 / 回合计时器
 
 ### AI
 
@@ -106,7 +114,7 @@ npm run ai-test          # AI 专项测试
 
 - **实时音效**：全部音效由 Web Audio API 实时合成，无需加载音频文件，零额外体积
   - 杀（挥击）、闪（躲避）、桃（回复音）、受伤（打击）、回复（闪烁音）、阵亡（低沉铜锣）、判定（翻牌）、摸牌（洗牌）、装备（金属撞击）、胜利号角、失败音、出牌提示等
-- **武将配音**：25 名武将的选将 / 阵亡 / 技能语音由 macOS `say` 语音 Tingting（中文）预生成（`npm run gen-voices`），共 89 个 WAV 文件
+- **武将配音**：随包语音覆盖标准 25 名武将的选将 / 阵亡 / 技能语音（共 89 个 WAV），由 macOS `say` 语音 Tingting（中文）预生成；`npm run gen-voices` 脚本现已遍历全部 70 名武将（重新生成会补齐全部语音）
   - 选中武将时播报「{武将名}，{称号}」
   - 武将阵亡时播报「{武将名}，呃啊……」
   - 主动技能（仁德 / 制衡 / 苦肉 / 反间 / 结姻 / 青囊 / 离间 / 激将）触发时播报技能名
@@ -127,7 +135,7 @@ npm run ai-test          # AI 专项测试
 | `Q` / `E` | 切换出牌方式（如杀 ↔ 武圣·红牌当杀） |
 | `Tab` / `←` `→` | 切换目标 |
 | `X` / `End` | 结束出牌 |
-| `F1` - `F4` | 发动第 1~4 个主动技能 |
+| `F1` - `F8` | 发动第 1~8 个主动技能 |
 | `M` | 静音 / 开启 |
 | `↑` / `↓` | 音量增减 10% |
 | `H` / `?` | 显示 / 关闭快捷键帮助 |
@@ -135,18 +143,20 @@ npm run ai-test          # AI 专项测试
 - 帮助面板：右上角浮窗，显示全部快捷键
 - 输入框内按键不触发快捷键（避免打字冲突）
 - 模态弹窗打开时快捷键暂停
-- 音频数据：`public/assets/audio/voices/<武将id>/*.wav`（约 4.6MB）
+- 音频数据：`public/assets/audio/voices/<武将id>/*.wav` + `phrases/` 短语音（约 5.4MB）
 
 ```bash
-npm run simulate    # 无头模拟 15 局（全 AI，验证引擎稳定性）
-npm run gen-avatars# 重新生成占位头像 SVG
+npm run simulate    # 无头模拟 10 局（全 AI，验证引擎稳定性）
+npm run gen-avatars # 重新生成程序化剪影占位头像 SVG
+npm run test:fast   # 快速测试套件（数据完整性 / 拼点，无需服务器）
+npm test            # 完整测试套件（含浏览器 CDP 测试）
 ```
 
-额外浏览器端 E2E 测试位于 `test/`（需启动服务器后运行 `test/e2e.js`、`test/browser-play.js`）。
+额外浏览器端 E2E 测试位于 `test/`（`test/e2e.js` 需先启动服务器；`test/browser-*.js` 由 CDP 驱动无头浏览器，其中 `browser-check.js` 驱动的是 Edge）。
 
 ## 替换/自定义头像
 
-把 PNG 图片放到 `public/assets/avatars/<武将id>.png`（如 `caocao.png`）即可覆盖对应武将的 SVG 占位头像；界面会优先加载 PNG，失败时回退到 SVG。DIY 武将可在创建时上传。
+`public/assets/avatars/` 现内置 70 名武将的真实 JPG 头像。把 JPG / PNG 放到 `public/assets/avatars/<武将id>.jpg|png`（如 `caocao.jpg`）即可覆盖对应武将头像；界面按 **JPG → PNG → SVG** 顺序加载，全部缺失时回退到程序化生成的剪影 SVG 占位头像。DIY 武将可在创建时上传。
 
 ## 技术栈
 
@@ -159,26 +169,38 @@ npm run gen-avatars# 重新生成占位头像 SVG
 ```
 server/
   index.js          # HTTP + WS 主入口
-  rooms.js          # 房间 / 大厅 / 座位 / 点身份
+  rooms.js          # 房间 / 大厅 / 座位 / 点身份 / 观战快照
   customs.js        # DIY 武将持久化
-  avatar.js         # 古风 SVG 占位头像生成
+  custom-skills.js  # DIY 技能持久化（已接入引擎）
+  custom-cards.js   # DIY 卡牌持久化（已接入引擎）
+  replays.js        # 回放存储 + 分析
+  netopt.js         # WS 报文批处理 / delta 优化
+  avatar.js         # 程序化 SVG 剪影占位头像生成
+  data/             # 运行时持久化（customs.json / replays.json）
   engine/
     cards.js        # 108 张牌堆
-    generals.js     # 25 武将数据
+    generals.js     # 70 武将数据
     skills.js       # 技能注册表 + 实现钩子
     game.js         # 游戏引擎（流程/结算/胜负）
+    game-modes.js   # 游戏模式 + 胜利条件求值
     ai.js           # 智能 AI（身份推理/威胁评估/资源管理/技能协同）
+    custom-skill-executor.js  # DIY 技能执行器（已接入引擎）
 public/
-  index.html / css/style.css / js/app.js
-  assets/avatars/   # 头像文件
-scripts/gen_avatars.js
-test/               # 模拟 / E2E / 浏览器测试
+  index.html / css/style.css
+  js/               # app / fx / audio / sound / card-counter / card-detail /
+                    # skin-system / skill-editor / card-editor / custom-skills /
+                    # game-rules / shortcuts / perf / data
+  assets/avatars/   # 真实 JPG 头像（JPG→PNG→SVG 回退）
+  assets/audio/     # 语音 WAV + phrases 短语音
+scripts/            # gen_avatars / gen_voices / gen_phrases / import_avatars
+test/               # 模拟 / E2E / 浏览器测试（run-all.js 为 npm test 入口）
 ```
 
 ## 后续可扩展
 
 - 更多扩展武将（SP系列、界限突破）
 - 武将配音情感化 / 更多语音台词
-- 国战 / 3v3 / 1v1 等其他模式
-- 录像回放 / 战绩统计
-- 武将技能可视化编辑器（脚本化 DIY）
+- 排位 / 天梯系统
+- 自定义游戏模式编辑器 UI
+- 对局内技能悬停提示弹窗（卡牌详情弹窗已有，见 `public/js/card-detail.js`）
+- 成就统计链路修复（服务端 stats 字段悬空、奖励发放未接线，详见 AGENTS.md 的 Known gaps 一节）
